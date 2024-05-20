@@ -73,8 +73,8 @@ while True:
         print('PDDL is invalid', feedback)
 
     # human-in-the-loop feedback
-    user_input = input("Enter 'exit' to finish, or provide additional instructions for refinement: ").strip()
-    if user_input.lower() == 'exit':
+    user_input = input("Enter 'exit' to finish, or provide additional instructions for refinement: ")
+    if user_input == 'exit':
         break
     else:
         prompt += f'\n{user_input}' + feedback # model.refine(pddl_domain, feedback)
