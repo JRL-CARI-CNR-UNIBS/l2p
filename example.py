@@ -18,12 +18,12 @@ Here is an example from the classical BlocksWorld domain for demonstrating the o
 """
 
 domain_prompts = ["Problem description:", "Domain description:", ["Example 1:", "Example 2:"], "Additional Instructions:"]
-problem_prompt = """PDDL formatted problem file"""
+problem_prompt = """Here is the task..."""
 
 # convert prompt to PDDL
 pddl_domain = model.convert(domain_prompt) # single conversation
-pddl_problem = model.convert(problem_prompt) # single conversation
-pddl_domain2, pddl_problem2 = model.convert_both(domain_prompt, problem_prompt) # generates both 
+pddl_problem = model.convert(problem_prompt)
+pddl_domain2, pddl_problem2 = model.convert_both(domain_prompt, problem_prompt) # combines both
 model.print_pddl_file(pddl_domain) # output PDDL domain
 
 # other library functions
@@ -31,7 +31,7 @@ model.convert_batch(domain_prompts) # multiple conversations
 
 verified, feedback = model.verify(pddl_domain, verifier='VAL') # returns boolean + string w/ feedback via external verifier
 model.refine(pddl_domain, feedback) # returns refined PDDL domain file (either human-in-loop or external verifier feedback)
-model.validate_plan(pddl_domain, pddl_problem)
+validated, response = model.validate_plan(pddl_domain, pddl_problem)
 
 model.get_fluents(pddl_domain) # extract predicates from generated PDDL domain file
 actions = model.get_actions(pddl_domain) # extract actions in a list from generated PDDL domain file
@@ -40,8 +40,8 @@ model.get_effects(actions[0]) # extract effects from generated PDDL domain file
 
 model.save_pddl_file(pddl_domain, "path/blocksworld_experiment.pddl")
 pddl_domain = model.load_pddl_file("path/blocksworld_experiment.pddl")
-model.get_llm()
 model.swap_model(model='meta-llama/Llama-2-7b-hf')
+model.get_llm()
 
 
 
