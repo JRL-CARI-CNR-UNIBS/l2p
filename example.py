@@ -38,6 +38,10 @@ actions = model.get_actions(pddl_domain) # extract actions in a list from genera
 model.get_preconditions(actions[0]) # extract preconditions from specific action in generated PDDL domain file
 model.get_effects(actions[0]) # extract effects from generated PDDL domain file
 
+model.get_objects(pddl_problem)
+model.get_initial_state(pddl_problem)
+model.get_goal_state(pddl_problem)
+
 model.save_pddl_file(pddl_domain, "path/blocksworld_experiment.pddl")
 pddl_domain = model.load_pddl_file("path/blocksworld_experiment.pddl")
 model.swap_model(model='meta-llama/Llama-2-7b-hf')
