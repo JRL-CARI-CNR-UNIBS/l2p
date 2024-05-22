@@ -1,6 +1,6 @@
 import requests
 
-API_URL = "https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-hf"
+API_URL = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-1.3B"
 headers = {"Authorization": "Bearer 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"}
 
 def query(payload):
@@ -8,7 +8,7 @@ def query(payload):
 	return response.json()
 	
 output = query({
-	"inputs": "Can you please let us know more details about your day?",
+	"inputs": "Generate a PDDL file"
 })
 
 print(output)
