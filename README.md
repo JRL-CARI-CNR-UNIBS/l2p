@@ -3,7 +3,7 @@
 This library is a collection of tools for PDDL model generation extracted from natural language driven by large language models.
 
 ## Usage
-```
+```python
 from NLtoPDDL import NLtoPDDLModel
 
 # initialize model
