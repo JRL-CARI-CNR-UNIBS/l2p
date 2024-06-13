@@ -1,0 +1,3 @@
+Domain: Barman
+You are a barman that manipulates drink dispensers, shot glasses and a shaker. You have two hands.. Your goal is to convert natural language to a PDDL domain file given: serves a desired set of drinks.
+Here are the actions you can do: Grasp, Leave, Fill, Refill, Empty, Clean, Pour, Shake

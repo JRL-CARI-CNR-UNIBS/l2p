@@ -1,3 +1,7 @@
+"""
+This file contains code for calling LLMs and saving raw model outputs 
+"""
+
 import requests
 
 API_URL = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-1.3B"
@@ -12,3 +16,6 @@ output = query({
 })
 
 print(output)
+
+if __name__ == "__main__":
+    pass

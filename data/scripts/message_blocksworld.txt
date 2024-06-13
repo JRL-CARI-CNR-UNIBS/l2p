@@ -1,0 +1,3 @@
+Domain: Blocksworld
+You are a robot in a world where there are a set of blocks that can be stacked on top of each other, an arm that can hold one block at a time, and a table where blocks can be placed.. Your goal is to convert natural language to a PDDL domain file given: .
+Here are the actions you can do: pickup, putdown, stack, and unstack
