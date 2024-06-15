@@ -7,18 +7,17 @@ import time
 import json
 import copy
 import requests
+from openai import OpenAI
 
-#model_name = "openai-community/gpt2"
-model_name = "meta-llama/Meta-Llama-3-8B"
-
-api_key = "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"
-
+# for any models in Huggingface API inference
+model_name = "openai-community/gpt2"
+HF_api_key = "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"
 API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
 
-headers = {"Authorization": f"Bearer {api_key}",
+headers = {"Authorization": f"Bearer {HF_api_key}",
            "Content-Type": "application/json"}
 
-def query(prompt, max_length=50, temperature=0.7):
+def HF_query(prompt, max_length=50, temperature=0.7):
     data = {
         "inputs": prompt,
         "parameters": {
@@ -29,11 +28,24 @@ def query(prompt, max_length=50, temperature=0.7):
 
     response = requests.post(API_URL, headers=headers, json=data)
     if response.status_code == 200:
-        return response.json()[0]['generated_text']
+        generated_text = response.json()[0]['generated_text']
+        
+		# removing the input prompt from the generated text
+        filtered_text = generated_text.replace(prompt, "").strip()
+        return filtered_text
     else:
         raise Exception(f"Failed to generate text: {response.status_code} {response.text}")
 
-if __name__ == "__main__":
-    prompt = "This is my PDDL file:"
-    generated_text = query(prompt)
-    print(generated_text)
+
+# for OpenAI LLM inference
+client = OpenAI()
+def GPT_query(prompt):
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are an assistant skilled in generating PDDL components."},
+            {"role": "user", "content": prompt}
+        ],
+    )
+    # extract the generated text
+    return completion.choices[0].message.content

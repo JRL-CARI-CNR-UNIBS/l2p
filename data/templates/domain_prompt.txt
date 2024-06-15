@@ -1,3 +1,0 @@
-Domain: {{ domain_name }}
-You are a {{ description }}. Your goal is to convert natural language to a PDDL domain file given: {{ goal }}.
-Here are the actions you can do: {{ actions }}
