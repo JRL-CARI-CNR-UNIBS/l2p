@@ -18,6 +18,8 @@ class PromptBuilder:
     def set_COT_example(self, example):
         self.COT_example.append(example)
 
+    # make cases / switches to add examples - ReAct, InnerMonologue, Reflexion techniques
+
     def set_task(self, task):
         self.task = task
 

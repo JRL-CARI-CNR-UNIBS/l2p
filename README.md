@@ -1,13 +1,13 @@
-# IntelliPDDL : LLM-driven PDDL library kit
+# l2p : LLM-driven PDDL library kit
 
 This library is a collection of tools for PDDL model generation extracted from natural language driven by large language models.
 
 ## Usage
 ```python
-from NLtoPDDL import NLtoPDDLModel
+from l2p import l2pModel
 
 # initialize model
-model = NLtoPDDLModel(model='gpt-2') # utilizes huggingface API
+model = l2pModel(model='gpt-2') # utilizes huggingface API
 
 # prompt from: https://github.com/GuanSuns/LLMs-World-Models-for-Planning/blob/main/prompts/common/action_description_prompt.txt
 domain_prompt = """
