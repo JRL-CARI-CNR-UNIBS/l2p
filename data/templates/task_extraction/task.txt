@@ -1,2 +1,0 @@
-Your task is with the extracted types found in the following domain description, return the corresponding
-types in PDDL format.

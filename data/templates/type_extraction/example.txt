@@ -27,7 +27,7 @@ Conversion to PDDL Types:
 PDDL Representation:
 
 2. Convert the identified entities into PDDL type definitions: 
-------------------------------------------------------------------------
+'''
 (:types
     customer  ; Represents a person who visits the coffee shop
     barista   ; Represents an employee who prepares and serves coffee
@@ -35,4 +35,4 @@ PDDL Representation:
     table     ; Represents a place where customers sit
     order     ; Represents a request made by a customer for coffee
 )
-------------------------------------------------------------------------
+'''
