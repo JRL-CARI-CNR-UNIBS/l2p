@@ -4,57 +4,37 @@ This file contains collection of functions for PDDL generation purposes
 EXPERIMENT IF IT IS BETTER TO CREATE KNOWLEDGE GRAPH OR HAVE ITERATED DOMAIN GENERATION
 """
 
+import re
+import ast
+
 class Domain_Builder:
-    def __init__(self,types, type_hierarchy, predicates, actions):
+    def __init__(self, types, type_hierarchy, predicates, actions):
         self.types=types
         self.type_hierarchy=type_hierarchy
         self.predicates=predicates
         self.actions=actions
 
     def extract_type(self, model, prompt):
+
         response = model.get_response(prompt)
-
-        print(response)
         
-        start_marker = "(:types"
-        end_marker = ")"
-
-        start_index = response.find(start_marker)
-        end_index = response.find(end_marker, start_index)
-
-        if start_index == -1 or end_index == -1:
-            raise ValueError("PDDL types section not found in the response")
-
-        # Extract the PDDL types section
-        pddl_section = response[start_index:end_index + len(end_marker)]
-
-        # Initialize an empty dictionary to store the parsed types
-        types_dict = {}
-
-        # Split the section by lines for processing
-        lines = pddl_section.strip().split('\n')
-
-        # Process each line in the types section
-
-        flag = False
-
-        for line in lines:
-            # Trim any leading/trailing whitespace
-            line = line.strip()
-
-            # Skip the (:types line and the closing parenthesis
-            if line.startswith("(:types") or line.startswith(")") and flag == False:
-                flag = True
-                continue
-            
-            # Split the line by ';' to separate type and description
-            if ';' in line:
-                type_name, description = line.split(';', 1)
-                type_name = type_name.strip()
-                description = description.strip()
-                types_dict[type_name] = description
-
-        return response, types_dict
+        try:
+            # Regular expression to find a dictionary pattern
+            dict_pattern = re.search(r'\{.*?\}', response, re.DOTALL)
+            if dict_pattern:
+                dict_str = dict_pattern.group(0)
+                # Use ast.literal_eval to safely evaluate the string as a dictionary
+                extracted_dict = ast.literal_eval(dict_str)
+                if isinstance(extracted_dict, dict):
+                    self.types=extracted_dict
+                    return response, extracted_dict
+                else:
+                    raise ValueError("The extracted content is not a dictionary.")
+            else:
+                raise ValueError("No dictionary found in the text.")
+        except (SyntaxError, ValueError) as e:
+            print(f"Error: {e}")
+            return None
     
 
     def extract_type_hierarchy(self, model, prompt, type_list):
@@ -107,10 +87,12 @@ class Domain_Builder:
         return response, knowledge_graph
 
 
-    def add_type():
+    def add_type(self, model, prompt):
         # user inputs prompt to add a type to the domain, LLM takes current domain info and dynamically modifies file to integrate new type
-        pass
+        user_input = input("Please describe the type you would like to add to the domain file: ")
+        response, types_dict = self.extract_type(model, prompt + "\n" + user_input + " Here are the types: \n" + str(self.types))
 
+        return response, types_dict
 
     def add_action():
         # user inputs prompt to add an action to the domain, LLM takes current domain info and dynamically modifies file to integrate new action

@@ -52,13 +52,24 @@ if __name__ == "__main__":
 
     print("Extracted types output:\n")
 
-    response, types = (domain_builder.extract_type(model=model, prompt=type_extraction_prompt))
+    response, types = domain_builder.extract_type(model=model, prompt=type_extraction_prompt)
     print("Types: ", types)
 
     print("\n\n---------------------------------\n\n")
     print("Type hierarchy output:\n")
 
-    response, type_hierarchy = (domain_builder.extract_type_hierarchy(model=model, prompt=type_hierarchy_prompt,type_list=types))
+    response, type_hierarchy = domain_builder.extract_type_hierarchy(model=model, prompt=type_hierarchy_prompt,type_list=types)
     type_hierarchy = format_json_output(type_hierarchy)
     print(type_hierarchy)
+
+    print("\n\n---------------------------------\n\n")
+    print("Adding new type output:\n")
+
+    add_type = "Your task is to add an additional type to the given current types in the domain, then convert the types back into PDDL format: "
+
+    response, types = domain_builder.add_type(model=model, prompt=add_type)
+
+    print(response)
+    print(types)
+
 
