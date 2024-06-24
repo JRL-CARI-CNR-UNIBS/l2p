@@ -50,6 +50,22 @@ if __name__ == "__main__":
     type_hierarchy_prompt.set_task(task_description)
     type_hierarchy_prompt = type_hierarchy_prompt.generate_prompt()
 
+    role_file_path = 'data/templates/action_extraction/role.txt'
+    role_description = open_file(role_file_path)
+    domain_file_path = 'data/templates/domains/blocksworld.txt'
+    domain_description = open_file(domain_file_path)
+    cot_file_path = 'data/templates/action_extraction/example.txt'
+    cot_description = open_file(cot_file_path)
+    task_file_path = 'data/templates/action_extraction/task.txt'
+    task_description = open_file(task_file_path)
+
+    action_extraction_prompt = PromptBuilder()
+    action_extraction_prompt.set_role(role_description)
+    action_extraction_prompt.set_domain_description(domain_description)
+    action_extraction_prompt.set_COT_example(cot_description)
+    action_extraction_prompt.set_task(task_description)
+    action_extraction_prompt = action_extraction_prompt.generate_prompt()
+
     print("Extracted types output:\n")
 
     response, types = domain_builder.extract_type(model=model, prompt=type_extraction_prompt)
@@ -61,6 +77,14 @@ if __name__ == "__main__":
     response, type_hierarchy = domain_builder.extract_type_hierarchy(model=model, prompt=type_hierarchy_prompt,type_list=types)
     type_hierarchy = format_json_output(type_hierarchy)
     print(type_hierarchy)
+
+    print("\n\n---------------------------------\n\n")
+    print("Natural language action output:\n")
+
+    response = domain_builder.extract_NL_actions(model=model, prompt=action_extraction_prompt)
+    print(response)
+
+# I want to add a new type called "car" that transports packages, as well as "bike" that does the same
 
     # print("\n\n---------------------------------\n\n")
     # print("Adding new type output:\n")
@@ -78,13 +102,4 @@ if __name__ == "__main__":
     # response, type_hierarchy = domain_builder.extract_type_hierarchy(model=model, prompt=type_hierarchy_prompt,type_list=types)
     # type_hierarchy = format_json_output(type_hierarchy)
     # print(type_hierarchy)
-
-    print("\n\n---------------------------------\n\n")
-    print("Natural language action output:\n")
-
-    action_prompt = "I want you to extract all the actions given the types listed and domain. List the actions and their required parameters, preconditions and effects as you would see in a PDDL action model. Include its natural language part, and then convert it to PDDL"
-
-    print(domain_builder.extract_NL_actions(model=model, prompt=action_prompt + " . Here is the domain: " + domain_description))
-
-# I want to add a new type called "car" that transports packages, as well as "bike" that does the same
 

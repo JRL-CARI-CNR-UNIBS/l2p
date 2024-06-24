@@ -58,7 +58,7 @@ So, all in all the hierarchy becomes:
         - house: A type of location. 
             - mansion: A type of house.
             - library: A type of house.
-    - depot: A type of location.
+        - depot: A type of location.
 
 4. Parsing:
 
@@ -91,9 +91,9 @@ So, all in all the hierarchy becomes:
                         {"name": "mansion", "children": []},
                         {"name": "library", "children": []}
                     ]
-                }
+                },
+                {"name": "depot", "children": []}
             ]
-        },
-        {"name": "depot", "children": []}
+        }
     ]
 }

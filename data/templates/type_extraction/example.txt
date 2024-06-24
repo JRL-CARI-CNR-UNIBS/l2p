@@ -5,7 +5,7 @@ Step-by-Step Reasoning:
 
 2. Describe Each Entity in Natural Language
 
-3. Parse described types into dictionary
+3. Parse described types into Python dictionary
 
 ------------------------------------------------------------------------
 

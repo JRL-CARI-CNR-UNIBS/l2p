@@ -4,6 +4,8 @@ This file contains collection of functions for PDDL generation purposes
 EXPERIMENT IF IT IS BETTER TO CREATE KNOWLEDGE GRAPH OR HAVE ITERATED DOMAIN GENERATION
 """
 
+## I want to implement a LLM-critic (LLM-driven feedback list) for soft-constraints
+
 import re
 import ast
 
@@ -66,7 +68,7 @@ class Domain_Builder:
         
     def extract_NL_actions(self, model, prompt):
         response = model.get_response(prompt + "\n" + str(self.types) + "\n" + str(self.type_hierarchy))
-        print(response)
+        return response
 
 
     def add_type(self, model, prompt):

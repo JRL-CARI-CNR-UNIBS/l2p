@@ -1,0 +1,1 @@
+Your role is to identify what actions an AI Agent would have available in a domain.
