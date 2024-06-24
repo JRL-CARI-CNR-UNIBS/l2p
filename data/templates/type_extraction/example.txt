@@ -5,9 +5,7 @@ Step-by-Step Reasoning:
 
 2. Describe Each Entity in Natural Language
 
-3. Translate Entities to PDDL Types
-
-4. Parse PDDL types into dictionary
+3. Parse described types into dictionary
 
 ------------------------------------------------------------------------
 
@@ -23,17 +21,6 @@ Step-by-Step Reasoning:
 - Table: Represents a place where customers sit to consume their coffee.
 - Order: Represents a request made by a customer to get a coffee.
 
-3. After defining the entities, we translate these descriptions into PDDL types. Each entity type corresponds to a keyword in PDDL.
-'''
-(:types
-    customer  ; Represents a person who visits the coffee shop
-    barista   ; Represents an employee who prepares and serves coffee
-    coffee    ; Represents the beverage served in the coffee shop
-    table     ; Represents a place where customers sit
-    order     ; Represents a request made by a customer for coffee
-)
-'''
-
-4. We now parse the PDDL types into Python dictionary as follows:
+3. We now parse the types into Python dictionary as follows:
 
 {'customer': 'Represents a person who visits the coffee shop', 'barista': 'Represents an employee who prepares and serves coffee', 'coffee': 'Represents the beverage served in the coffee shop', 'table': 'Represents a place where customers sit', 'order': 'Represents a request made by a customer for coffee'}

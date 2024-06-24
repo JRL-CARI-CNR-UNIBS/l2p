@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     role_file_path = 'data/templates/type_extraction/role.txt'
     role_description = open_file(role_file_path)
-    domain_file_path = 'data/templates/domains/logistics.txt'
+    domain_file_path = 'data/templates/domains/blocksworld.txt'
     domain_description = open_file(domain_file_path)
     cot_file_path = 'data/templates/type_extraction/example.txt'
     cot_description = open_file(cot_file_path)
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     role_file_path = 'data/templates/hierarchy_construction/role.txt'
     role_description = open_file(role_file_path)
-    domain_file_path = 'data/templates/domains/logistics.txt'
+    domain_file_path = 'data/templates/domains/blocksworld.txt'
     domain_description = open_file(domain_file_path)
     cot_file_path = 'data/templates/hierarchy_construction/example.txt'
     cot_description = open_file(cot_file_path)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     print("Extracted types output:\n")
 
     response, types = domain_builder.extract_type(model=model, prompt=type_extraction_prompt)
-    print("Types: ", types)
+    print("Types: ", format_json_output(types))
 
     print("\n\n---------------------------------\n\n")
     print("Type hierarchy output:\n")
@@ -62,14 +62,29 @@ if __name__ == "__main__":
     type_hierarchy = format_json_output(type_hierarchy)
     print(type_hierarchy)
 
+    # print("\n\n---------------------------------\n\n")
+    # print("Adding new type output:\n")
+
+    # cot_file_path = 'data/templates/type_extraction/example.txt'
+    # cot_description = open_file(cot_file_path)
+
+    # add_type = "Your task is to add an additional type to the given current types in the domain. Here is a CoT example to follow original:\n" + cot_description
+
+    # response, types = domain_builder.add_type(model=model, prompt=add_type)
+
+    # print("\n\n---------------------------------\n\n")
+    # print("Type hierarchy output:\n")
+
+    # response, type_hierarchy = domain_builder.extract_type_hierarchy(model=model, prompt=type_hierarchy_prompt,type_list=types)
+    # type_hierarchy = format_json_output(type_hierarchy)
+    # print(type_hierarchy)
+
     print("\n\n---------------------------------\n\n")
-    print("Adding new type output:\n")
+    print("Natural language action output:\n")
 
-    add_type = "Your task is to add an additional type to the given current types in the domain, then convert the types back into PDDL format: "
+    action_prompt = "I want you to extract all the actions given the types listed and domain. List the actions and their required parameters, preconditions and effects as you would see in a PDDL action model. Include its natural language part, and then convert it to PDDL"
 
-    response, types = domain_builder.add_type(model=model, prompt=add_type)
+    print(domain_builder.extract_NL_actions(model=model, prompt=action_prompt + " . Here is the domain: " + domain_description))
 
-    print(response)
-    print(types)
-
+# I want to add a new type called "car" that transports packages, as well as "bike" that does the same
 
