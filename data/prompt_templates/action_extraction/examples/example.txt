@@ -1,40 +1,24 @@
-Chain of Thought for organizing types in a house construction scheduling system
-Step-by-Step Reasoning:
-
-1. Iterate over each parent type. Within each parent type, elaborate further descrptions of the subtypes and assign possible related actions in domain. Specifically, assign their action names and a short description of what that action does.
-
-2. Go over given feedback checklist to check for inconsistencies and/or requirements and state the errors if there are any
-
-3. If there are errors, generate a suggestion response (i.e. deleting, modifying, adding actions)
-
-4. Re-iterate over the actions. Keep the actions the same if they do not need to be modified.
-
-------------------------------------------------------------------------
-
 [GIVEN DOMAIN]
 The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport things. Currently, there are a couple of trucks at the Chicago depot and we're trying to build three houses in the area. Jamie is the only administrator, but we've got Emma and Bob available for general work.
 
-[GIVEN TYPES]
-{'worker': 'Human workers which do things', 'administrator':'Workers who can create orders for other workers', 'general_worker':'Workers who can perform a variety of tasks, if there is an order for it', 'order':'Instructions to general_workers to perform something. Created by administrators', 'vehicle':'Used to transport workers', 'location':'Places where workers and machines can be', 'house':'What is constructed. Can be finalised when all components are built', 'depot':'Where material is stored and vehicles can be loaded'}
-
 [GIVEN TYPE HIERARCHY]
 {
-    "name": "object",
+    "object": "Object is always root, everything is an object",
     "children": [
         {
-            "name": "worker",
+            "worker": "A type of object consisting of humans who do things.",
             "children": [
-                {"name": "administrator", "children": []},
-                {"name": "general_worker", "children": []}
+                {"administrator": "A type of worker.", "children": []},
+                {"general_worker": "A type of worker.", "children": []}
             ]
         },
-        {"name": "order", "children": []},
-        {"name": "vehicle", "children": []},
+        {"order": "A type of object consisting of instructions.", "children": []},
+        {"vehicle": "A type of object consisting of vehicles.", "children": []},
         {
-            "name": "location",
+            "location": "A type of object consisting of places which can be visited.",
             "children": [
-                {"name": "house", "children": []},
-                {"name": "depot", "children": []}
+                {"house": "A type of location.", "children": []},
+                {"depot": "A type of location.", "children": []}
             ]
         }
     ]

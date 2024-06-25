@@ -1,2 +1,0 @@
-There are {number} blocks currently. The {color} block is on the {color} block which is on the {color}.
-The {color} and the {color} are on the table. I want the {color} on top of the {color}

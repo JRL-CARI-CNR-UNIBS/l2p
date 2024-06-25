@@ -1,0 +1,1 @@
+Your task is to iterate through all actions in the natural language action list. You will need to reiterate all actions once an action is generated with its new predicates to dynamically modify the overall action models.
