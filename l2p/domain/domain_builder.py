@@ -5,11 +5,11 @@ This file contains collection of functions for PDDL generation purposes
 ## I want to implement a LLM-critic (LLM-driven feedback list) for soft-constraints
 
 import re, ast, os, itertools, copy
-from .utils.pddl_output_utils import parse_new_predicates, parse_params, combine_blocks
-from .utils.pddl_types import Predicate, Action
-from .utils.logger import Logger
-from .utils.pddl_generator import PddlGenerator
-from .pddl_syntax_validator import PDDL_Syntax_Validator
+from ..utils.pddl_output_utils import parse_new_predicates, parse_params, combine_blocks
+from ..utils.pddl_types import Predicate, Action
+from ..utils.logger import Logger
+from ..utils.pddl_generator import PddlGenerator
+from ..pddl_syntax_validator import PDDL_Syntax_Validator
 
 class Domain_Builder:
     def __init__(self, domain, types, type_hierarchy, predicates, nl_actions, pddl_actions):

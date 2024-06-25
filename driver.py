@@ -1,5 +1,5 @@
 from l2p.prompt_builder import PromptBuilder
-from l2p.domain_builder import Domain_Builder
+from l2p.domain.domain_builder import Domain_Builder
 from l2p.llm_builder import get_llm
 
 import json
