@@ -4,7 +4,7 @@ This library is a collection of tools for PDDL model generation extracted from n
 
 ## Usage
 ```python
-from l2p import l2pModel
+from l2p import llm_model
 
 # initialize model
 model = l2pModel(model='gpt-2') # utilizes huggingface API
