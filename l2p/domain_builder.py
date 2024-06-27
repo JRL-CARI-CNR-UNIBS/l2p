@@ -5,11 +5,14 @@ This file contains collection of functions for PDDL generation purposes
 ## I want to implement a LLM-critic (LLM-driven feedback list) for soft-constraints
 
 import re, ast, os, itertools, copy
-from ..utils.pddl_output_utils import parse_new_predicates, parse_params, combine_blocks
-from ..utils.pddl_types import Predicate, Action
-from ..utils.logger import Logger
-from ..utils.pddl_generator import PddlGenerator
-from ..pddl_syntax_validator import PDDL_Syntax_Validator
+from .utils.pddl_output_utils import parse_new_predicates, parse_params, combine_blocks
+from .utils.pddl_types import Predicate, Action
+from .utils.logger import Logger
+from .utils.pddl_generator import PddlGenerator
+from .pddl_syntax_validator import PDDL_Syntax_Validator
+from .llm_builder import LLM_Chat, get_llm
+from .prompt_builder import PromptBuilder
+from .utils.pddl_types import Predicate, Action
 
 class Domain_Builder:
     def __init__(self, domain, types, type_hierarchy, predicates, nl_actions, pddl_actions):
@@ -22,6 +25,7 @@ class Domain_Builder:
 
 
     def extract_type(self, model, prompt):
+        """Requires prompt"""
 
         model.reset_token_usage()
 
@@ -49,6 +53,7 @@ class Domain_Builder:
     
 
     def extract_type_hierarchy(self, model, prompt, type_list):
+        """Requires list of types"""
 
         model.reset_token_usage()
 
@@ -72,194 +77,161 @@ class Domain_Builder:
             return None
         
 
-    def extract_NL_actions(self, model, prompt):
+    def extract_NL_actions(
+            self, 
+            model: LLM_Chat,
+            domain: str, 
+            prompt_template: PromptBuilder, 
+            type_hierarchy: dict, 
+            feedback: bool=False, 
+            feedback_template: str=None
+            ) -> dict[str,str]:
+        
+        """
+        Extract actions in natural language given domain description using LLM.
+
+        Args:
+            model (LLM_Chat): LLM
+            domain (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            type_hierarchy (dict): type hierarchy
+            feedback (bool): whether to request feedback from LM - default True
+            feedback_template (str): feedback template. Has to be specified if feedback is used - defaults None
+
+        Returns:
+            nl_actions (dict[str, str]): a dictionary of extracted actions, where the keys are action names and values are action descriptions
+        """
 
         model.reset_token_usage()
 
-        response = model.get_response(prompt + "\n\n Here are the given types and type hierarchy: \n" + str(self.types) + "\n" + str(self.type_hierarchy))
+        prompt_template = prompt_template.replace('{domain_desc}', domain)
+        prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
 
-        splits = response.split("```")
+        # feedback_template = feedback_template.replace('{domain_desc}', domain)
+        # feedback_template = feedback_template.replace('{type_hierarchy}', str(type_hierarchy))
+
+        llm_response = model.get_response(prompt=prompt_template) # get LLM response
+
+        # extract list of actions section
+        splits = llm_response.split("```")
         action_outputs = [splits[i].strip() for i in range(1, len(splits), 2)] # Every other split *should* be an action
 
+        # parse actions into dict[str, str]
         nl_actions = {}
         for action in action_outputs:
             name = action.split("\n")[0].strip()
-            desc = action.split("\n", maxsplit=1)[1].strip() # works even if there is no blank line
+            desc = action.split("\n", maxsplit=1)[1].strip() # Works even if there is no blank line
             nl_actions[name] = desc
+
+        """ SECTION TO ADD FEEDBACK MECHANISM
+        if feedback is not None:
+            if feedback.lower() == "human":
+                action_strs = "\n".join([f"- {name}: {desc}" for name, desc in actions.items()])
+                feedback_msg = human_feedback(f"\n\nThe actions extracted are:\n{action_strs}\n")
+            else:
+                feedback_msg = get_llm_feedback(llm_conn, actions, feedback_template)
+            if feedback_msg is not None:
+                messages = [
+                    {'role': 'user', 'content': act_extr_prompt},
+                    {'role': 'assistant', 'content': llm_output},
+                    {'role': 'user', 'content': feedback_msg}
+                ]
+                llm_response = llm_conn.get_response(messages=messages)
+                Logger.print("LLM Response:\n", llm_response)
+                actions = parse_actions(llm_response)
+        """
+
+        # action_strs = [f"{name}: {desc}" for name, desc in actions.items()]
+        # print(f"Extracted {len(actions)} actions: \n - ", "\n - ".join(action_strs))
 
         self.nl_actions=nl_actions
 
-
-    def extract_pddl_actions(self, model, prompt):
-
-        model.reset_token_usage()
-        response = model.get_response(prompt + "\n\n Here is the given type hierarchy and actions list: \n" + str(self.type_hierarchy) + "\n" + str(self.nl_actions))
-        self.pddl_actions = response
+        return nl_actions
 
 
 
-    def action_construction(
-        self, 
-        model, 
-        prompt_dir, 
-        unsupported_keywords: list[str] = [],
-        feedback: str | None = None,
-        max_attempts: int = 8,
-        shorten_message: bool = False,
-        max_iters: int = 2,
-        mirror_symmetry: bool = False
-        ):
+    def extract_pddl_action(
+            self, 
+            model: LLM_Chat, 
+            prompt_template: str, 
+            action: dict[str, str], 
+            predicates: list[Predicate], 
+            max_iters: int=8, 
+            feedback: bool=False, 
+            feedback_template: str=None
+            ) -> tuple[Action, list[Predicate]]:
+        """
+        Construct an action from a given action description using LLM
 
-        model.reset_token_usage()
-        
-        action_list = "\n".join([f"- {name}: {desc}" for name, desc in self.nl_actions.items()])
+        Args:
+            model (LLM_Chat): LLM
+            prompt_template (str): action construction prompt
+            action (dict[str,str]): name-description key-value pair
+            predicates (list[Predicate]): list of predicates
+            max_iters (int): max # of iterations to construct action
+            feedback (bool): whether to request feedback from LM - default True
+            feedback_template (str): feedback template. Has to be specified if feedback is used - defaults None
 
-        with open(os.path.join(prompt_dir, "main.txt")) as f:
-            act_constr_template = f.read().strip()
-        act_constr_template = act_constr_template.replace('{domain_desc}', self.domain)
-        act_constr_template = act_constr_template.replace('{type_hierarchy}', str(self.type_hierarchy))
-        act_constr_template = act_constr_template.replace('{action_list}', action_list)
+        Returns:
+            Action: constructed action class
+            new_predicates list[Predicate]: a list of new predicates
 
-        with open(os.path.join(prompt_dir, "feedback.txt")) as f:
-            feedback_template = f.read().strip()
-        feedback_template = feedback_template.replace('{domain_desc}', self.domain)
-        feedback_template = feedback_template.replace('{type_hierarchy}', str(self.type_hierarchy))
-        feedback_template = feedback_template.replace('{action_list}', action_list)
+        """
 
+        action_name, action_desc = action.items()[0] # extract action name and description
 
-        syntax_validator = PDDL_Syntax_Validator(self.type_hierarchy, unsupported_keywords=unsupported_keywords)
+        # replace action name/description and predicates in prompt template
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
 
-        predicates = []
-        for iter in range(max_iters):
-            actions = []
-            Logger.print(f"Starting iteration {iter + 1} of action construction", subsection=False)
-            current_preds = len(predicates)
-            for action_name, action_desc in self.nl_actions.items():
-                action, new_predicates = self.construct_action(
-                    model, act_constr_template, action_name, action_desc, predicates, syntax_validator, feedback_template, 
-                    max_iters=max_attempts, feedback=feedback, shorten_message=shorten_message, mirror_symmetry=mirror_symmetry
-                )
-                actions.append(action)
-                predicates.extend(new_predicates) 
-            if len(predicates) == current_preds:
-                Logger.print("No new predicates created. Stopping action construction.", subsection=False)
-                break
-        else:
-            Logger.print("Reached maximum iterations. Stopping action construction.", subsection=False)
-
-        predicates = self.prune_predicates(predicates, actions) # Remove predicates that are not used in any action
-        types = self.type_hierarchy.types()
-        pruned_types = self.prune_types(types, predicates, actions) # Remove types that are not used in any predicate or action
-
-        Logger.print("Constructed actions:\n", "\n".join([str(action) for action in actions]))
-        PddlGenerator.reset_actions()
-        for action in actions:
-            PddlGenerator.add_action(action)
-        predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
-        PddlGenerator.set_predicates(predicate_str)
-        Logger.print(f"PREDICATES: {predicate_str}")
-        
-        in_tokens, out_tokens = model.token_usage()
-        Logger.add_to_info(Action_Construction_Tokens=(in_tokens, out_tokens))
-
-        return actions, predicates, pruned_types
-    
-
-    def construct_action(self, model, act_constr_prompt: str,
-        action_name: str,
-        action_desc: str,
-        predicates: list[Predicate],
-        syntax_validator: PDDL_Syntax_Validator,
-        feedback_template: str = None,
-        max_iters=8,
-        shorten_message=False,
-        feedback=True,
-        mirror_symmetry=False):
-
-        # constract an action from a given action description
-
-        act_constr_prompt = act_constr_prompt.replace('{action_desc}', action_desc)
-        act_constr_prompt = act_constr_prompt.replace('{action_name}', action_name)
         if len(predicates) == 0:
-            predicate_str = "No predicate has been defined yet"
+            predicate_str = "No predicate has been defined yet."
         else:
             predicate_str = ""
-            for i, pred in enumerate(predicates): predicate_str += f"{i+1}. {pred['name']}: {pred['desc']}\n"            
-        act_constr_prompt = act_constr_prompt.replace('{predicate_list}', predicate_str)
+            for i, pred in enumerate(predicates): predicate_str += f"{i+1}. {pred['name']}: {pred['desc']}\n"  
+        
+        prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
 
+        # replace action name and description in feedback template
         if feedback_template is not None:
-            feedback_template = feedback_template.replace('{action_desc}', action_desc)
             feedback_template = feedback_template.replace('{action_name}', action_name)
+            feedback_template = feedback_template.replace('{action_desc}', action_desc)
         elif feedback:
             raise ValueError("Feedback template is required when feedback is enabled.")
+        
+        messages = [{'role': 'user', 'content': prompt_template}]
 
-        messages = [{'role': 'user', 'content': act_constr_prompt}]
+        # iteration phase to construct action 
+        recieved_feedback_at = None
+        for i in range(1, max_iters + 1 + (feedback is not None)):
+            print(f'Generating PDDL of action: `{action_name}` | # of messages: {len(messages)}')
 
-        received_feedback_at = None
-        for iter in range(1, max_iters + 1 + (feedback is not None)):
-            Logger.print(f'Generating PDDL of action: `{action_name}` | # of messages: {len(messages)}', subsection=False)
+            llm_response = model.get_response(prompt=None, messages=messages)
+            messages.append({'role': 'assistant', 'content': llm_response})
+            print("LLM Output:\n", llm_response)
 
-            msgs_to_send = messages if not shorten_message else self.shorten_messages(messages)
-            Logger.log("Messages to send:\n", "\n".join([m["content"] for m in msgs_to_send]))
-            llm_output = model.get_response(prompt=None, messages=msgs_to_send)
-            messages.append({'role': 'assistant', 'content': llm_output})
-            Logger.print("LLM Output:\n", llm_output)
+            new_predicates = parse_new_predicates(llm_response)
 
-            try:
-                new_predicates = parse_new_predicates(llm_output)
-                validation_info = syntax_validator.perform_validation(llm_output, curr_predicates = predicates, new_predicates = new_predicates)
-                no_error, error_type, _, error_msg = validation_info
-            except Exception as e:
-                no_error = False
-                error_msg = str(e)
-                error_type = str(e.__class__.__name__)
+            ## SECTION TO ADD FEEDBACK MECHANISM
 
-            if no_error or error_type == "all_validation_pass":
-                if received_feedback_at is None and feedback is not None:
-                    received_feedback_at = iter
-                    error_type = "feedback"
-                    if feedback.lower() == "human":
-                        action = self.parse_action(llm_output, action_name)
-                        new_predicates = parse_new_predicates(llm_output)
-                        preds = "\n".join([f"\t- {pred['clean']}" for pred in new_predicates])
-                        msg  = f"\n\nThe action {action_name} has been constructed.\n\n"
-                        msg += f"Action desc: \n\t{action_desc}\n\n"
-                        msg += f"Parameters: \n\t{action['parameters']}\n\n"
-                        msg += f"Preconditions: \n{action['preconditions']}\n\n"
-                        msg += f"Effects: \n{action['effects']}\n\n"
-                        msg += f"New predicates: \n{preds}\n"
-                        # error_msg = human_feedback(msg)
-                    else:
-                        error_msg = self.get_llm_feedback(model, feedback_template, llm_output, predicates, new_predicates)
-                    if error_msg is None:
-                        break # No feedback and no error, so we can stop iterating
-                else:
-                    break # No error and feedback finished, so we can stop iterating
-
-            Logger.print(f"Error of type {error_type} for action {action_name} iter {iter}:\n{error_msg}", subsection=False)
-
-            prompt_dir = 'data/prompt_templates/action_construction/'
-
-            with open(os.path.join(prompt_dir, "error.txt")) as f:
-                error_template = f.read().strip()
-            error_prompt = error_template.replace('{action_name}', action_name)
-            error_prompt = error_prompt.replace('{action_desc}', action_desc)
-            error_prompt = error_prompt.replace('{predicate_list}', predicate_str)
-            error_prompt = error_prompt.replace('{error_msg}', error_msg)
-
-            messages.append({'role': 'user', 'content': error_prompt})
         else:
-            Logger.print(f"Reached maximum iterations. Stopping action construction for {action_name}.", subsection=False)
+            print(f"Reached maximum iterations. Stopping action construction for {action_name}.")
 
-        action = self.parse_action(llm_output, action_name)
-        new_predicates = parse_new_predicates(llm_output)
-        # Remove re-defined predicates
+        action = self.parse_action(llm_response, action_name)
+        new_predicates = parse_new_predicates(llm_response)
+
+        # remove re-defined predicates
         new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]]
 
-        if mirror_symmetry:
-            action = self.mirror_action(action, predicates + new_predicates)
+        self.pddl_actions.append(action)
+        self.predicates.extend(new_predicates)
 
         return action, new_predicates
+
+
+        # model.reset_token_usage()
+        # response = model.get_response(prompt + "\n\n Here is the given type hierarchy and actions list: \n" + str(self.type_hierarchy) + "\n" + str(self.nl_actions))
+        # self.pddl_actions = response
     
 
     def shorten_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:

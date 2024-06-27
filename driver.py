@@ -1,7 +1,6 @@
 from l2p.prompt_builder import PromptBuilder
-from l2p.domain.domain_builder import Domain_Builder
+from l2p.domain_builder import Domain_Builder
 from l2p.llm_builder import get_llm
-
 import json
 import os
 
@@ -23,7 +22,7 @@ if __name__ == "__main__":
     model = get_llm("gpt-3.5-turbo-0125")
     # model = get_llm("gpt-4o")
 
-    domain_desc = open_file('data/domains/blocksworld.txt')
+    domain_desc = open_file('data/domains/logistics.txt')
     domain_builder = Domain_Builder(domain=domain_desc, types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
     role_desc = open_file('data/prompt_templates/type_extraction/role.txt')
@@ -70,21 +69,21 @@ if __name__ == "__main__":
     print("\n\n---------------------------------\n\n")
     print("Natural language action output:\n")
 
-    domain_builder.extract_NL_actions(model=model, prompt=nl_action_extraction_prompt.get_prompt())
+    domain_builder.extract_NL_actions(model=model, domain=domain_desc, prompt_template=nl_action_extraction_prompt.get_prompt(), type_hierarchy=type_hierarchy)
     nl_actions = domain_builder.get_nl_actions()
     print(nl_actions)
 
-    print("\n\n---------------------------------\n\n")
-    print("PDDL action output:\n")
+    # print("\n\n---------------------------------\n\n")
+    # print("PDDL action output:\n")
 
-    domain_builder.extract_pddl_actions(model=model, prompt=pddl_action_extraction_prompt.get_prompt())
-    pddl_actions = domain_builder.get_pddl_actions()
-    print(str(pddl_actions))
+    # domain_builder.extract_pddl_actions(model=model, prompt=pddl_action_extraction_prompt.get_prompt())
+    # pddl_actions = domain_builder.get_pddl_actions()
+    # print(str(pddl_actions))
 
-    print("\n\n---------------------------------\n\n")
-    print("PDDL domain output:\n")
+    # print("\n\n---------------------------------\n\n")
+    # print("PDDL domain output:\n")
 
-    domain_builder.generate_domain(model=model, prompt="With the given information, construct the PDDL domain file.")
+    # domain_builder.generate_domain(model=model, prompt="With the given information, construct the PDDL domain file.")
 
 
 # I want to add a new type called "car" that transports packages, as well as "bike" that does the same
