@@ -15,7 +15,7 @@ from .prompt_builder import PromptBuilder
 from .utils.pddl_types import Predicate, Action
 
 class Domain_Builder:
-    def __init__(self, domain, types, type_hierarchy, predicates, nl_actions, pddl_actions):
+    def __init__(self, domain, types, type_hierarchy, predicates, nl_actions, pddl_actions: list):
         self.domain=domain
         self.types=types
         self.type_hierarchy=type_hierarchy
@@ -154,9 +154,10 @@ class Domain_Builder:
             self, 
             model: LLM_Chat, 
             prompt_template: str, 
-            action: dict[str, str], 
+            action_name: str,
+            action_desc: str,
             predicates: list[Predicate], 
-            max_iters: int=8, 
+            max_iters: int=0, 
             feedback: bool=False, 
             feedback_template: str=None
             ) -> tuple[Action, list[Predicate]]:
@@ -166,7 +167,8 @@ class Domain_Builder:
         Args:
             model (LLM_Chat): LLM
             prompt_template (str): action construction prompt
-            action (dict[str,str]): name-description key-value pair
+            action_name (str): action name
+            action_desc (str): action description
             predicates (list[Predicate]): list of predicates
             max_iters (int): max # of iterations to construct action
             feedback (bool): whether to request feedback from LM - default True
@@ -177,8 +179,6 @@ class Domain_Builder:
             new_predicates list[Predicate]: a list of new predicates
 
         """
-
-        action_name, action_desc = action.items()[0] # extract action name and description
 
         # replace action name/description and predicates in prompt template
         prompt_template = prompt_template.replace('{action_name}', action_name)
@@ -223,8 +223,8 @@ class Domain_Builder:
         # remove re-defined predicates
         new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]]
 
-        self.pddl_actions.append(action)
-        self.predicates.extend(new_predicates)
+        # self.pddl_actions.append(action)
+        # self.predicates.extend(new_predicates)
 
         return action, new_predicates
 
@@ -234,7 +234,7 @@ class Domain_Builder:
         # self.pddl_actions = response
     
 
-    def shorten_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
+    def shorten_messages(self, messages: list[dict[str, str]]) -> list[dict[str, str]]:
         """
         Only keep the latest LLM output and correction feedback
         """
@@ -247,7 +247,7 @@ class Domain_Builder:
             return short_message
 
 
-    def parse_action(llm_output: str, action_name: str) -> Action:
+    def parse_action(self, llm_output: str, action_name: str) -> Action:
         """
         Parse an action from a given LLM output.
 
@@ -270,7 +270,7 @@ class Domain_Builder:
             raise Exception("Could not find the 'Effects' section in the output. Provide the entire response, including all headings even if some are unchanged.")
         return {"name": action_name, "parameters": parameters, "preconditions": preconditions, "effects": effects}
 
-    def get_llm_feedback(model, feedback_template: str, llm_output: str, predicates: list[Predicate], new_predicates: list[Predicate]) -> str | None:
+    def get_llm_feedback(self, model, feedback_template: str, llm_output: str, predicates: list[Predicate], new_predicates: list[Predicate]) -> str | None:
         all_predicates = predicates + [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]]
         action_params = combine_blocks(llm_output.split("Parameters")[1].split("##")[0])
         action_preconditions = llm_output.split("Preconditions")[1].split("##")[0].split("```")[1].strip(" `\n")
@@ -292,7 +292,7 @@ class Domain_Builder:
         
         return feedback
 
-    def prune_predicates(predicates: list[Predicate], actions: list[Action]) -> list[Predicate]:
+    def prune_predicates(self, predicates: list[Predicate], actions: list[Action]) -> list[Predicate]:
         """
         Remove predicates that are not used in any action.
 
@@ -314,7 +314,7 @@ class Domain_Builder:
                         break
         return used_predicates
 
-    def mirror_action(action: Action, predicates: list[Predicate]):
+    def mirror_action(self, action: Action, predicates: list[Predicate]):
         """
         Mirror any symmetrical predicates used in the action preconditions. 
 
@@ -385,7 +385,7 @@ class Domain_Builder:
                     mirrored["preconditions"] = mirrored["preconditions"].replace(use, combined)
         return mirrored
 
-    def prune_types(types: list[str], predicates: list[Predicate], actions: list[Action]):
+    def prune_types(self, types: list[str], predicates: list[Predicate], actions: list[Action]):
         """
         Prune types that are not used in any predicate or action.
 

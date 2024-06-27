@@ -1,6 +1,7 @@
 from l2p.prompt_builder import PromptBuilder
 from l2p.domain_builder import Domain_Builder
 from l2p.llm_builder import get_llm
+from l2p.utils.pddl_types import Predicate
 import json
 import os
 
@@ -73,13 +74,16 @@ if __name__ == "__main__":
     nl_actions = domain_builder.get_nl_actions()
     print(nl_actions)
 
-    # print("\n\n---------------------------------\n\n")
-    # print("PDDL action output:\n")
+    print("\n\n---------------------------------\n\n")
+    print("PDDL action output:\n")
 
-    # domain_builder.extract_pddl_actions(model=model, prompt=pddl_action_extraction_prompt.get_prompt())
-    # pddl_actions = domain_builder.get_pddl_actions()
-    # print(str(pddl_actions))
+    for action_name, action_desc in nl_actions.items():
+        action, new_predicates = domain_builder.extract_pddl_action(model=model, prompt_template=pddl_action_extraction_prompt.get_prompt(), action_name=action_name, action_desc=action_desc, predicates=[Predicate])
 
+        print("ACTION", action)
+        print("PREDICATES:", new_predicates)
+
+    
     # print("\n\n---------------------------------\n\n")
     # print("PDDL domain output:\n")
 
