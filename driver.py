@@ -55,24 +55,42 @@ if __name__ == "__main__":
 
     pddl_action_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
 
+
+
+
+
     print("Extracted types output:\n")
 
-    domain_builder.extract_type(model=model, domain_desc=domain_desc, prompt_template=type_extraction_prompt.get_prompt())
-    types = domain_builder.get_types()
-    print("Types: ", format_json_output(types))
+    types = domain_builder.extract_type(model=model, domain_desc=domain_desc, prompt_template=type_extraction_prompt.get_prompt())
+    domain_builder.set_types(types=types)
+    print("Types: ", format_json_output(domain_builder.get_types()))
 
     print("\n\n---------------------------------\n\n")
     print("Type hierarchy output:\n")
 
-    domain_builder.extract_type_hierarchy(model=model, domain_desc=domain_desc, prompt_template=type_hierarchy_prompt.get_prompt(), types=types)
-    type_hierarchy = domain_builder.get_type_hierarchy()
+    type_hierarchy = domain_builder.extract_type_hierarchy(model=model, domain_desc=domain_desc, prompt_template=type_hierarchy_prompt.get_prompt(), types=domain_builder.get_types())
+    domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
+    print(format_json_output(type_hierarchy))
+
+    print("\n\n---------------------------------\n\n")
+    print("Adding new type:\n")
+
+    types = domain_builder.add_type(model=model, domain_desc=domain_desc, prompt_template=type_extraction_prompt.get_prompt())
+    domain_builder.set_types(types=types)
+    print("New types: ", format_json_output(domain_builder.get_types()))
+
+    print("\n\n---------------------------------\n\n")
+    print("New type hierarchy output:\n")
+
+    type_hierarchy = domain_builder.extract_type_hierarchy(model=model, domain_desc=domain_desc, prompt_template=type_hierarchy_prompt.get_prompt(), types=domain_builder.get_types())
+    domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     print(format_json_output(type_hierarchy))
 
     print("\n\n---------------------------------\n\n")
     print("Natural language action output:\n")
 
-    domain_builder.extract_nl_actions(model=model, domain_desc=domain_desc, prompt_template=nl_action_extraction_prompt.get_prompt(), type_hierarchy=type_hierarchy)
-    nl_actions = domain_builder.get_nl_actions()
+    nl_actions = domain_builder.extract_nl_actions(model=model, domain_desc=domain_desc, prompt_template=nl_action_extraction_prompt.get_prompt(), type_hierarchy=type_hierarchy)
+    domain_builder.set_nl_actions(nl_actions)
     print(nl_actions)
 
     print("\n\n---------------------------------\n\n")
@@ -86,10 +104,10 @@ if __name__ == "__main__":
         curr_preds = len(predicates)
         for action_name, action_desc in nl_actions.items():
             action, new_predicates = domain_builder.extract_pddl_action(
-                model=model, 
-                prompt_template=pddl_action_extraction_prompt.get_prompt(), 
-                action_name=action_name, 
-                action_desc=action_desc, 
+                model=model,
+                prompt_template=pddl_action_extraction_prompt.get_prompt(),
+                action_name=action_name,
+                action_desc=action_desc,
                 predicates=[Predicate]
             )
             
@@ -107,10 +125,19 @@ if __name__ == "__main__":
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions)
 
     print("Constructed actions:\n", "\n\n".join([str(action) for action in actions]))
+    
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
-    print(f"PREDICATES: {predicate_str}")
 
-    # print("\n\nACTION", action)
-    # print("\n\nPREDICATES:", new_predicates)
-    # print("\n")
+    lines = predicate_str.strip().split('\n')
+    predicates = set()
 
+    for line in lines:
+        predicate = line.split(";")[0].strip()
+        predicates.add(predicate)
+
+    for i in predicates:
+        print(f"PREDICATES: {i}")
+
+    print(f"PRUNED TYPES: {str(pruned_types)}")
+
+# I would like to add the new types "country" and "continent"

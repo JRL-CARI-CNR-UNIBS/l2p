@@ -143,6 +143,29 @@ def parse_predicates(all_predicates):
                 pred['params'][param_name] = param_obj_type
     return all_predicates
 
+def parse_action(llm_response: str, action_name: str) -> Action:
+    """
+    Parse an action from a given LLM output.
+
+    Args:
+        llm_response (str): The LLM output.
+        action_name (str): The name of the action.
+
+    Returns:
+        Action: The parsed action.
+    """
+    #parameters = llm_response.split("Parameters:")[1].split("```")[1].strip()
+    parameters = parse_params(llm_response)
+    try:
+        preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
+    except:
+        raise Exception("Could not find the 'Preconditions' section in the output. Provide the entire response, including all headings even if some are unchanged.")
+    try:
+        effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
+    except:
+        raise Exception("Could not find the 'Effects' section in the output. Provide the entire response, including all headings even if some are unchanged.")
+    return {"name": action_name, "parameters": parameters, "preconditions": preconditions, "effects": effects}
+
 
 def read_object_types(hierarchy_info):
     obj_types = set()
@@ -270,3 +293,88 @@ def extract_types(type_hierarchy):
         for child in type_hierarchy.get("children", []):
             types.extend(extract_types(child))
         return types
+
+
+def shorten_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
+    """
+    Only keep the latest LLM output and correction feedback
+    """
+    if len(messages) == 1:
+        return [messages[0]]
+    else:
+        short_message = [messages[0]] + messages[-2:]
+        assert short_message[1]['role'] == 'assistant'
+        assert short_message[2]['role'] == 'user'
+        return short_message
+
+
+def mirror_action(action: Action, predicates: list[Predicate]):
+    """
+    Mirror any symmetrical predicates used in the action preconditions. 
+
+    Example:
+        Original action:
+        (:action drive
+            :parameters (
+                ?truck - truck
+                ?from - location
+                ?to - location
+            )
+            :precondition
+                (and
+                    (at ?truck ?from)
+                    (connected ?to ?from)
+                )
+            :effect
+                (at ?truck ?to )
+            )
+        )
+        
+        Mirrored action:
+        (:action drive
+            :parameters (
+                ?truck - truck
+                ?from - location
+                ?to - location
+            )
+            :precondition
+                (and
+                    (at ?truck ?from)
+                    ((connected ?to ?from) or (connected ?from ?to))
+                )
+            :effect
+                (at ?truck ?to )
+            )
+        )
+    """
+    mirrored = copy.deepcopy(action)
+    for pred in predicates:
+        if pred["name"] not in action["preconditions"]:
+            continue # The predicate is not used in the preconditions
+        param_types = list(pred["params"].values())
+        for type in set(param_types): 
+            # For each type
+            if not param_types.count(type) > 1:
+                continue # The type is not repeated
+            # The type is repeated
+            occs = [i for i, x in enumerate(param_types) if x == type]
+            perms = list(itertools.permutations(occs))
+            if len(occs) > 2:
+                Logger.print(f"[WARNING] Mirroring predicate with {len(occs)} occurences of {type}.", subsection=False)
+            uses = re.findall(f"\({pred['name']}.*\)", action["preconditions"]) # Find all occurrences of the predicate used in the preconditions
+            for use in uses:
+                versions = [] # The different versions of the predicate
+                args = [use.strip(" ()").split(" ")[o+1] for o in occs] # The arguments of the predicate
+                template = use
+                for i, arg in enumerate(args): # Replace the arguments with placeholders
+                    template = template.replace(arg, f"[MIRARG{i}]", 1)
+                for perm in perms:
+                    ver = template
+                    for i, p in enumerate(perm):
+                        # Replace the placeholders with the arguments in the permutation
+                        ver = ver.replace(f"[MIRARG{i}]", args[p])
+                    if ver not in versions:
+                        versions.append(ver) # In case some permutations are the same (repeated args)
+                combined = "(" + " or ".join(versions) + ")"
+                mirrored["preconditions"] = mirrored["preconditions"].replace(use, combined)
+    return mirrored

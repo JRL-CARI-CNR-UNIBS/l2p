@@ -1,7 +1,5 @@
 import os, datetime, json, logging
 
-from .paths import results_dir
-
 class LoggerClass:
     def __init__(self):
         self.started = False

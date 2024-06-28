@@ -3,13 +3,14 @@ This file contains collection of functions for PDDL generation purposes
 """
 
 import re, ast, itertools, copy
-from .utils.pddl_output_utils import parse_new_predicates, parse_params, combine_blocks
+from .utils.pddl_output_utils import parse_new_predicates, parse_action, combine_blocks
 from .utils.pddl_types import Predicate, Action
-from .utils.pddl_generator import PddlGenerator
 from .pddl_syntax_validator import PDDL_Syntax_Validator
 from .utils.logger import Logger
 from .llm_builder import LLM_Chat, get_llm
 from .prompt_builder import PromptBuilder
+
+# COMMMENT: Pass in only the required parameters. Everything else (i.e. types, hierarchy, nl_action list etc., are to be used within the class, not passed through)
 
 class Domain_Builder:
     def __init__(
@@ -79,10 +80,10 @@ class Domain_Builder:
             for t in types
         }
 
-        self.types=type_dict
+        # self.set_types(type_dict)
 
         return type_dict
-    
+
 
     def extract_type_hierarchy(
             self, 
@@ -123,7 +124,7 @@ class Domain_Builder:
             # safely evaluate the string to convert it into a Python dictionary
             try:
                 type_hierarchy = ast.literal_eval(dict_str)
-                self.type_hierarchy = type_hierarchy
+                # self.type_hierarchy = type_hierarchy
                 return type_hierarchy
             except Exception as e:
                 print(f"Error parsing dictionary: {e}")
@@ -200,10 +201,9 @@ class Domain_Builder:
         # action_strs = [f"{name}: {desc}" for name, desc in actions.items()]
         # print(f"Extracted {len(actions)} actions: \n - ", "\n - ".join(action_strs))
 
-        self.nl_actions=nl_actions
+        # self.nl_actions=nl_actions
 
         return nl_actions
-
 
 
     def extract_pddl_action(
@@ -273,7 +273,7 @@ class Domain_Builder:
         else:
             print(f"Reached maximum iterations. Stopping action construction for {action_name}.")
 
-        action = self.parse_action(llm_response, action_name)
+        action = parse_action(llm_response=llm_response, action_name=action_name)
         new_predicates = parse_new_predicates(llm_response)
 
         # remove re-defined predicates
@@ -283,199 +283,80 @@ class Domain_Builder:
         # self.predicates.extend(new_predicates)
 
         return action, new_predicates
-    
 
-    def shorten_messages(self, messages: list[dict[str, str]]) -> list[dict[str, str]]:
+
+    """Add functions"""
+    def add_type(
+            self, 
+            model: LLM_Chat, 
+            domain_desc: str, 
+            prompt_template: PromptBuilder
+            ) -> dict[str,str]:
         """
-        Only keep the latest LLM output and correction feedback
-        """
-        if len(messages) == 1:
-            return [messages[0]]
-        else:
-            short_message = [messages[0]] + messages[-2:]
-            assert short_message[1]['role'] == 'assistant'
-            assert short_message[2]['role'] == 'user'
-            return short_message
-
-
-    def parse_action(self, llm_response: str, action_name: str) -> Action:
-        """
-        Parse an action from a given LLM output.
-
-        Args:
-            llm_response (str): The LLM output.
-            action_name (str): The name of the action.
-
-        Returns:
-            Action: The parsed action.
-        """
-        #parameters = llm_response.split("Parameters:")[1].split("```")[1].strip()
-        parameters = parse_params(llm_response)
-        try:
-            preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
-        except:
-            raise Exception("Could not find the 'Preconditions' section in the output. Provide the entire response, including all headings even if some are unchanged.")
-        try:
-            effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
-        except:
-            raise Exception("Could not find the 'Effects' section in the output. Provide the entire response, including all headings even if some are unchanged.")
-        return {"name": action_name, "parameters": parameters, "preconditions": preconditions, "effects": effects}
-
-
-    def get_llm_feedback(self, model, feedback_template: str, llm_response: str, predicates: list[Predicate], new_predicates: list[Predicate]) -> str | None:
-        all_predicates = predicates + [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]]
-        action_params = combine_blocks(llm_response.split("Parameters")[1].split("##")[0])
-        action_preconditions = llm_response.split("Preconditions")[1].split("##")[0].split("```")[1].strip(" `\n")
-        action_effects = llm_response.split("Effects")[1].split("##")[0].split("```")[-2].strip(" `\n")
-        predicate_list = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in all_predicates])
-
-        feedback_prompt = feedback_template.replace('{action_params}', action_params)
-        feedback_prompt = feedback_prompt.replace('{action_preconditions}', action_preconditions)
-        feedback_prompt = feedback_prompt.replace('{action_effects}', action_effects)
-        feedback_prompt = feedback_prompt.replace('{predicate_list}', predicate_list)
-
-        Logger.print("Requesting feedback from LLM", subsection=False)
-        Logger.log("Feedback prompt:\n", feedback_prompt)
-        feedback = model.get_response(prompt=feedback_prompt).strip()
-        Logger.log("Received feedback:\n", feedback)
-        if "no feedback" in feedback.lower() or len(feedback.strip()) == 0:
-            Logger.print(f"No Received feedback:\n {feedback}")
-            return None
+        User inputs prompt to add a type to the domain, LLM takes current domain info and dynamically modifies file to integrate new type
         
-        return feedback
-
-    def mirror_action(self, action: Action, predicates: list[Predicate]):
+        Args:
+        Returns:
         """
-        Mirror any symmetrical predicates used in the action preconditions. 
-
-        Example:
-            Original action:
-            (:action drive
-                :parameters (
-                    ?truck - truck
-                    ?from - location
-                    ?to - location
-                )
-                :precondition
-                    (and
-                        (at ?truck ?from)
-                        (connected ?to ?from)
-                    )
-                :effect
-                    (at ?truck ?to )
-                )
-            )
-            
-            Mirrored action:
-            (:action drive
-                :parameters (
-                    ?truck - truck
-                    ?from - location
-                    ?to - location
-                )
-                :precondition
-                    (and
-                        (at ?truck ?from)
-                        ((connected ?to ?from) or (connected ?from ?to))
-                    )
-                :effect
-                    (at ?truck ?to )
-                )
-            )
-        """
-        mirrored = copy.deepcopy(action)
-        for pred in predicates:
-            if pred["name"] not in action["preconditions"]:
-                continue # The predicate is not used in the preconditions
-            param_types = list(pred["params"].values())
-            for type in set(param_types): 
-                # For each type
-                if not param_types.count(type) > 1:
-                    continue # The type is not repeated
-                # The type is repeated
-                occs = [i for i, x in enumerate(param_types) if x == type]
-                perms = list(itertools.permutations(occs))
-                if len(occs) > 2:
-                    Logger.print(f"[WARNING] Mirroring predicate with {len(occs)} occurences of {type}.", subsection=False)
-                uses = re.findall(f"\({pred['name']}.*\)", action["preconditions"]) # Find all occurrences of the predicate used in the preconditions
-                for use in uses:
-                    versions = [] # The different versions of the predicate
-                    args = [use.strip(" ()").split(" ")[o+1] for o in occs] # The arguments of the predicate
-                    template = use
-                    for i, arg in enumerate(args): # Replace the arguments with placeholders
-                        template = template.replace(arg, f"[MIRARG{i}]", 1)
-                    for perm in perms:
-                        ver = template
-                        for i, p in enumerate(perm):
-                            # Replace the placeholders with the arguments in the permutation
-                            ver = ver.replace(f"[MIRARG{i}]", args[p])
-                        if ver not in versions:
-                            versions.append(ver) # In case some permutations are the same (repeated args)
-                    combined = "(" + " or ".join(versions) + ")"
-                    mirrored["preconditions"] = mirrored["preconditions"].replace(use, combined)
-        return mirrored
-
-
-
-    def add_type(self, model, prompt):
-        # user inputs prompt to add a type to the domain, LLM takes current domain info and dynamically modifies file to integrate new type
         user_input = input("Please describe the type you would like to add to the domain file: ")
-        self.extract_type(model, prompt + "\n" + user_input + " Here are the original types: \n" + str(self.types))
 
-        # self.extract_NL_actions(model, ) ** WORK ON THIS TO COMPLETE REITERATED PIPELINE
+        # REPLACE WITH TEMPLATE REPLACEMENT CODE
+        types = self.extract_type(model=model, domain_desc=domain_desc, prompt_template=prompt_template + "\n" + user_input + " Here are the original types. Do not change them: \n" + str(self.types))
 
+        return types
 
-    def add_action():
+    def add_action(self):
         # user inputs prompt to add an action to the domain, LLM takes current domain info and dynamically modifies file to integrate new action
         pass
 
-
-    def delete_type():
+    def add_predicates(self):
         pass
 
 
-    def delete_action():
+    """Delete functions"""
+    def delete_type(self):
+        # DELETE BY NAME, NOT INDEX
+        pass
+
+    def delete_action(self):
+        pass
+
+    def delete_predicates(self):
         pass
 
 
-    def extract_NL_action():
-        # singular action
-        pass
+    """Set functions"""
+    def set_types(self, types: dict[str,str]):
+        self.types=types
+
+    def set_type_hierarchy(self, type_hierarchy: dict[str,str]):
+        self.type_hierarchy=type_hierarchy
+
+    def set_nl_actions(self, nl_actions: dict[str,str]):
+        self.nl_actions=nl_actions
+
+    def set_pddl_action(self, pddl_action: tuple[Action, list[Predicate]]):
+        self.pddl_actions.append(pddl_action)
 
 
-    def extract_action():
-        pass
-
-
-    def generate_domain(self, model, prompt):
-        model.reset_token_usage()
-        response = model.get_response(prompt + "\n\n Here is the given type hierarchy and actions list: \n" + str(self.type_hierarchy) + "\n" + str(self.nl_actions) + "\n" + str(self.pddl_actions))
-        print(response)
-
-
+    """Get functions"""
     def get_types(self):
         return self.types
-
 
     def get_type_hierarchy(self):
         return self.type_hierarchy
 
-
     def get_nl_actions(self):
         return self.nl_actions
-
 
     def get_pddl_actions(self):
         return self.pddl_actions
 
-
     def get_type_checklist():
         pass
 
-
     def get_hierarchy_checklist():
         pass
-
 
     def get_action_checklist():
         pass
