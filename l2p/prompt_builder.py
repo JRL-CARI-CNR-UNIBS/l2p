@@ -5,12 +5,11 @@ This file uses inputted NL descriptions to generate prompts for LLM
 import os
 
 class PromptBuilder:
-    def __init__(self, role, technique, examples: list, task, domain):
+    def __init__(self, role, technique, examples: list, task):
         self.role = role
         self.technique = technique
         self.examples = examples
         self.task = task
-        self.domain = domain
         self.prompt = self.generate_prompt()
 
 
@@ -30,10 +29,6 @@ class PromptBuilder:
         self.task = task
         self.prompt = self.generate_prompt()
 
-    def set_domain(self, domain):
-        self.domain = domain
-        self.prompt = self.generate_prompt()
-
 
     def get_role(self):
         return self.role
@@ -46,9 +41,6 @@ class PromptBuilder:
 
     def get_task(self):
         return self.task
-
-    def get_domain(self):
-        return self.domain
 
     def get_prompt(self):
         return self.prompt
@@ -70,10 +62,6 @@ class PromptBuilder:
         self.task = ""
         self.prompt = self.generate_prompt()
 
-    def remove_domain(self):
-        self.domain = ""
-        self.prompt = self.generate_prompt()
-
 
     def generate_prompt(self):
         prompt = ""
@@ -91,9 +79,6 @@ class PromptBuilder:
 
         if self.task:
             prompt += f"[TASK]: {self.task}\n\n"
-
-        if self.domain:
-            prompt += f"[DOMAIN]: {self.domain}\n"
 
         return prompt.strip()
     

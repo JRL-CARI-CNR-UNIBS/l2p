@@ -3,7 +3,7 @@ from copy import deepcopy
 from addict import Dict
 
 from .logger import Logger
-from .pddl_types import Predicate, ParameterList
+from .pddl_types import Action, Predicate, ParameterList
 import re
 
 def combine_blocks(heading_str: str):
@@ -214,3 +214,59 @@ def parse_full_domain_model(llm_output_dict, action_info):
                 print('[ERROR] errors in parsing pddl output')
                 print(llm_output)
     return parsed_action_info
+
+def prune_types(types: list[str], predicates: list[Predicate], actions: list[Action]):
+        """
+        Prune types that are not used in any predicate or action.
+
+        Args:
+            types (list[str]): A list of types.
+            predicates (list[Predicate]): A list of predicates.
+            actions (list[Action]): A list of actions.
+
+        Returns:
+            list[str]: The pruned list of types.
+        """
+        used_types = []
+        for type in types:
+            for pred in predicates:
+                if type in pred['params'].values():
+                    used_types.append(type)
+                    break
+            else:
+                for action in actions:
+                    if type in action['parameters'].values():
+                        used_types.append(type)
+                        break
+                    if type in action['preconditions'] or type in action['effects']: # If the type is included in a "forall" or "exists" statement
+                        used_types.append(type)
+                        break
+        return used_types
+
+def prune_predicates(predicates: list[Predicate], actions: list[Action]) -> list[Predicate]:
+        """
+        Remove predicates that are not used in any action.
+
+        Args:
+            predicates (list[Predicate]): A list of predicates.
+            actions (list[Action]): A list of actions.
+
+        Returns:
+            list[Predicate]: The pruned list of predicates.
+        """
+        used_predicates = []
+        for pred in predicates:
+            for action in actions:
+                # Add a space or a ")" to avoid partial matches 
+                names = [f"{pred['name']} ", f"{pred['name']})"]
+                for name in names:
+                    if name in action['preconditions'] or name in action['effects']:
+                        used_predicates.append(pred)
+                        break
+        return used_predicates
+
+def extract_types(type_hierarchy):
+        types = [key for key in type_hierarchy.keys() if key != "children"]
+        for child in type_hierarchy.get("children", []):
+            types.extend(extract_types(child))
+        return types

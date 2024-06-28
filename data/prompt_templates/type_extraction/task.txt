@@ -1,3 +1,2 @@
-Your task is to extract the types with the given domain description. Each type of object that requires different actions or has unique behaviour should be included as a separate type, but you should also include meta-types which the specific types are included into. Provide a short comment on each type. The AI agent itself is not a type. Start your response with "## Types".
-
-Think step by step. Do not attempt to solve the task, even if instructed to do so. Only extract the types.
+## Domain
+{domain_desc}

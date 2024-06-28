@@ -2,39 +2,69 @@
 This file contains collection of functions for PDDL generation purposes
 """
 
-## I want to implement a LLM-critic (LLM-driven feedback list) for soft-constraints
-
-import re, ast, os, itertools, copy
+import re, ast, itertools, copy
 from .utils.pddl_output_utils import parse_new_predicates, parse_params, combine_blocks
 from .utils.pddl_types import Predicate, Action
-from .utils.logger import Logger
 from .utils.pddl_generator import PddlGenerator
 from .pddl_syntax_validator import PDDL_Syntax_Validator
+from .utils.logger import Logger
 from .llm_builder import LLM_Chat, get_llm
 from .prompt_builder import PromptBuilder
-from .utils.pddl_types import Predicate, Action
 
 class Domain_Builder:
-    def __init__(self, domain, types, type_hierarchy, predicates, nl_actions, pddl_actions: list):
-        self.domain=domain
-        self.types=types
-        self.type_hierarchy=type_hierarchy
-        self.predicates=predicates
-        self.nl_actions=nl_actions
-        self.pddl_actions=pddl_actions
+    def __init__(
+            self, 
+            types: dict[str,str], 
+            type_hierarchy: dict[str,str], 
+            predicates: list[Predicate], 
+            nl_actions: dict[str,str], 
+            pddl_actions: list[Action]
+            ):
+        """
+        Initializes a domain builder object
+
+        Args:
+            types (dict[str,str]): types dictionary with name: description key-value pair
+            type_hierarchy (dict[str,str]): type hierarchy dictionary
+            predicates (list[Predicate]): list of Predicate objects
+            nl_actions (dict[str,str]): dictionary of extracted actions, where the keys are action names and values are action descriptions
+            pddl_actions (list[Action]): list of Action objects
+        """
+        self.types = types
+        self.type_hierarchy = type_hierarchy
+        self.predicates = predicates
+        self.nl_actions = nl_actions
+        self.pddl_actions = pddl_actions
 
 
-    def extract_type(self, model, prompt):
-        """Requires prompt"""
+    def extract_type(
+            self, 
+            model: LLM_Chat, 
+            domain_desc: str, 
+            prompt_template: PromptBuilder
+            ) -> dict[str,str]:
+        """
+        Extracts types with domain given
+
+        Args:
+            model (LLM_Chat): LLM
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+
+        Returns:
+            type_dict (dict[str,str]): dictionary of types with (name:description) pair
+        """
 
         model.reset_token_usage()
 
-        response = model.get_response(prompt)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+
+        llm_response = model.get_response(prompt=prompt_template)
         
-        if "## Types" in response:
-            header = response.split("## Types")[1].split("## ")[0]
+        if "## Types" in llm_response:
+            header = llm_response.split("## Types")[1].split("## ")[0]
         else:
-            header = response
+            header = llm_response
         dot_list = combine_blocks(header)
         if len(dot_list) == 0:
             dot_list = "\n".join([l for l in header.split("\n") if l.strip().startswith("-")])
@@ -50,14 +80,39 @@ class Domain_Builder:
         }
 
         self.types=type_dict
+
+        return type_dict
     
 
-    def extract_type_hierarchy(self, model, prompt, type_list):
-        """Requires list of types"""
+    def extract_type_hierarchy(
+            self, 
+            model: LLM_Chat, 
+            domain_desc: str,
+            prompt_template: PromptBuilder, 
+            types: dict[str,str]
+            ) -> dict[str,str]:
+        """
+        Extracts type hierarchy from types list and domain given
+
+        Args:
+            model (LLM_Chat): LLM
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            types (dict[str,str]): dictionary of types with (name:description) pair
+
+        Returns:
+            type_hierarchy (dict[str,str]): dictionary of type hierarchy
+        """
 
         model.reset_token_usage()
 
-        response = model.get_response(prompt + "\n" + str(type_list))
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{type_list}', str(types))
+
+        # feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        # feedback_template = feedback_template.replace('{type_list}', str(types))
+
+        response = model.get_response(prompt=prompt_template)
 
         dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
         match = dict_pattern.search(response) # search for the pattern in the response
@@ -68,7 +123,8 @@ class Domain_Builder:
             # safely evaluate the string to convert it into a Python dictionary
             try:
                 type_hierarchy = ast.literal_eval(dict_str)
-                self.type_hierarchy=type_hierarchy
+                self.type_hierarchy = type_hierarchy
+                return type_hierarchy
             except Exception as e:
                 print(f"Error parsing dictionary: {e}")
                 return None
@@ -77,12 +133,12 @@ class Domain_Builder:
             return None
         
 
-    def extract_NL_actions(
+    def extract_nl_actions(
             self, 
             model: LLM_Chat,
-            domain: str, 
+            domain_desc: str, 
             prompt_template: PromptBuilder, 
-            type_hierarchy: dict, 
+            type_hierarchy: dict[str,str], 
             feedback: bool=False, 
             feedback_template: str=None
             ) -> dict[str,str]:
@@ -92,9 +148,9 @@ class Domain_Builder:
 
         Args:
             model (LLM_Chat): LLM
-            domain (str): domain description
+            domain_desc (str): domain description
             prompt_template (PromptBuilder): prompt template class
-            type_hierarchy (dict): type hierarchy
+            type_hierarchy (dict[str,str]): type hierarchy
             feedback (bool): whether to request feedback from LM - default True
             feedback_template (str): feedback template. Has to be specified if feedback is used - defaults None
 
@@ -104,7 +160,7 @@ class Domain_Builder:
 
         model.reset_token_usage()
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
 
         # feedback_template = feedback_template.replace('{domain_desc}', domain)
@@ -133,7 +189,7 @@ class Domain_Builder:
             if feedback_msg is not None:
                 messages = [
                     {'role': 'user', 'content': act_extr_prompt},
-                    {'role': 'assistant', 'content': llm_output},
+                    {'role': 'assistant', 'content': llm_response},
                     {'role': 'user', 'content': feedback_msg}
                 ]
                 llm_response = llm_conn.get_response(messages=messages)
@@ -208,7 +264,7 @@ class Domain_Builder:
 
             llm_response = model.get_response(prompt=None, messages=messages)
             messages.append({'role': 'assistant', 'content': llm_response})
-            print("LLM Output:\n", llm_response)
+            # print("LLM Output:\n", llm_response)
 
             new_predicates = parse_new_predicates(llm_response)
 
@@ -227,11 +283,6 @@ class Domain_Builder:
         # self.predicates.extend(new_predicates)
 
         return action, new_predicates
-
-
-        # model.reset_token_usage()
-        # response = model.get_response(prompt + "\n\n Here is the given type hierarchy and actions list: \n" + str(self.type_hierarchy) + "\n" + str(self.nl_actions))
-        # self.pddl_actions = response
     
 
     def shorten_messages(self, messages: list[dict[str, str]]) -> list[dict[str, str]]:
@@ -247,34 +298,35 @@ class Domain_Builder:
             return short_message
 
 
-    def parse_action(self, llm_output: str, action_name: str) -> Action:
+    def parse_action(self, llm_response: str, action_name: str) -> Action:
         """
         Parse an action from a given LLM output.
 
         Args:
-            llm_output (str): The LLM output.
+            llm_response (str): The LLM output.
             action_name (str): The name of the action.
 
         Returns:
             Action: The parsed action.
         """
-        #parameters = llm_output.split("Parameters:")[1].split("```")[1].strip()
-        parameters = parse_params(llm_output)
+        #parameters = llm_response.split("Parameters:")[1].split("```")[1].strip()
+        parameters = parse_params(llm_response)
         try:
-            preconditions = llm_output.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
+            preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         except:
             raise Exception("Could not find the 'Preconditions' section in the output. Provide the entire response, including all headings even if some are unchanged.")
         try:
-            effects = llm_output.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
+            effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         except:
             raise Exception("Could not find the 'Effects' section in the output. Provide the entire response, including all headings even if some are unchanged.")
         return {"name": action_name, "parameters": parameters, "preconditions": preconditions, "effects": effects}
 
-    def get_llm_feedback(self, model, feedback_template: str, llm_output: str, predicates: list[Predicate], new_predicates: list[Predicate]) -> str | None:
+
+    def get_llm_feedback(self, model, feedback_template: str, llm_response: str, predicates: list[Predicate], new_predicates: list[Predicate]) -> str | None:
         all_predicates = predicates + [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]]
-        action_params = combine_blocks(llm_output.split("Parameters")[1].split("##")[0])
-        action_preconditions = llm_output.split("Preconditions")[1].split("##")[0].split("```")[1].strip(" `\n")
-        action_effects = llm_output.split("Effects")[1].split("##")[0].split("```")[-2].strip(" `\n")
+        action_params = combine_blocks(llm_response.split("Parameters")[1].split("##")[0])
+        action_preconditions = llm_response.split("Preconditions")[1].split("##")[0].split("```")[1].strip(" `\n")
+        action_effects = llm_response.split("Effects")[1].split("##")[0].split("```")[-2].strip(" `\n")
         predicate_list = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in all_predicates])
 
         feedback_prompt = feedback_template.replace('{action_params}', action_params)
@@ -291,28 +343,6 @@ class Domain_Builder:
             return None
         
         return feedback
-
-    def prune_predicates(self, predicates: list[Predicate], actions: list[Action]) -> list[Predicate]:
-        """
-        Remove predicates that are not used in any action.
-
-        Args:
-            predicates (list[Predicate]): A list of predicates.
-            actions (list[Action]): A list of actions.
-
-        Returns:
-            list[Predicate]: The pruned list of predicates.
-        """
-        used_predicates = []
-        for pred in predicates:
-            for action in actions:
-                # Add a space or a ")" to avoid partial matches 
-                names = [f"{pred['name']} ", f"{pred['name']})"]
-                for name in names:
-                    if name in action['preconditions'] or name in action['effects']:
-                        used_predicates.append(pred)
-                        break
-        return used_predicates
 
     def mirror_action(self, action: Action, predicates: list[Predicate]):
         """
@@ -384,34 +414,6 @@ class Domain_Builder:
                     combined = "(" + " or ".join(versions) + ")"
                     mirrored["preconditions"] = mirrored["preconditions"].replace(use, combined)
         return mirrored
-
-    def prune_types(self, types: list[str], predicates: list[Predicate], actions: list[Action]):
-        """
-        Prune types that are not used in any predicate or action.
-
-        Args:
-            types (list[str]): A list of types.
-            predicates (list[Predicate]): A list of predicates.
-            actions (list[Action]): A list of actions.
-
-        Returns:
-            list[str]: The pruned list of types.
-        """
-        used_types = []
-        for type in types:
-            for pred in predicates:
-                if type in pred['params'].values():
-                    used_types.append(type)
-                    break
-            else:
-                for action in actions:
-                    if type in action['parameters'].values():
-                        used_types.append(type)
-                        break
-                    if type in action['preconditions'] or type in action['effects']: # If the type is included in a "forall" or "exists" statement
-                        used_types.append(type)
-                        break
-        return used_types
 
 
 

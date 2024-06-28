@@ -1,1 +1,6 @@
-Your task is, following the same format as the CoT example, construct the type hierarchy with the following types: 
+## Domain
+{domain_desc}
+
+## Types
+The types are:
+{type_list}
