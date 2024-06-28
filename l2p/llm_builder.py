@@ -3,14 +3,9 @@ This file contains code for calling LLMs and saving raw model outputs
 """
 
 import os
-import time
-import json
-import copy
-import requests
 import tiktoken
 from retry import retry
 from openai import OpenAI
-# from .utils.logger import Logger
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
 

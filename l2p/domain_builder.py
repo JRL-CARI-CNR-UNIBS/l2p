@@ -2,10 +2,10 @@
 This file contains collection of functions for PDDL generation purposes
 """
 
-import re, ast, itertools, copy
+import re, ast
 from .utils.pddl_output_utils import parse_new_predicates, parse_action, combine_blocks
 from .utils.pddl_types import Predicate, Action
-from .pddl_syntax_validator import PDDL_Syntax_Validator
+from .utils.pddl_syntax_validator import PDDL_Syntax_Validator
 from .utils.logger import Logger
 from .llm_builder import LLM_Chat, get_llm
 from .prompt_builder import PromptBuilder
@@ -84,7 +84,6 @@ class Domain_Builder:
 
         return type_dict
 
-
     def extract_type_hierarchy(
             self, 
             model: LLM_Chat, 
@@ -133,7 +132,6 @@ class Domain_Builder:
             print("No dictionary found in the response.")
             return None
         
-
     def extract_nl_actions(
             self, 
             model: LLM_Chat,
@@ -204,7 +202,6 @@ class Domain_Builder:
         # self.nl_actions=nl_actions
 
         return nl_actions
-
 
     def extract_pddl_action(
             self, 

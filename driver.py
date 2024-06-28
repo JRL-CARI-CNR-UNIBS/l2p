@@ -3,23 +3,28 @@ from l2p.domain_builder import Domain_Builder
 from l2p.llm_builder import get_llm
 from l2p.utils.pddl_types import Predicate
 from l2p.utils.pddl_output_utils import prune_predicates, prune_types, extract_types
+from pddl.logic import Predicate, constants, variables
+from pddl.core import Domain, Problem
+from pddl.action import Action
+from pddl.formatter import domain_to_string, problem_to_string
+from pddl.requirements import Requirements
 import json
 import os
 
-if __name__ == "__main__":
-
-    def format_json_output(data):
+def format_json_output(data):
         return json.dumps(data, indent=4)
 
-    def open_file(file_path):
-        with open(file_path, 'r') as file:
-            file = file.read().strip()
-        return file
-    
-    def open_examples(examples_dir):
-        example_files = [f for f in os.listdir(examples_dir) if os.path.isfile(os.path.join(examples_dir, f))]
-        examples = [open_file(os.path.join(examples_dir, f)) for f in example_files]
-        return examples
+def open_file(file_path):
+    with open(file_path, 'r') as file:
+        file = file.read().strip()
+    return file
+
+def open_examples(examples_dir):
+    example_files = [f for f in os.listdir(examples_dir) if os.path.isfile(os.path.join(examples_dir, f))]
+    examples = [open_file(os.path.join(examples_dir, f)) for f in example_files]
+    return examples
+
+if __name__ == "__main__":
 
     model = get_llm("gpt-3.5-turbo-0125")
     # model = get_llm("gpt-4o")
@@ -54,10 +59,6 @@ if __name__ == "__main__":
     task_desc = open_file('data/prompt_templates/action_construction/task.txt')
 
     pddl_action_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
-
-
-
-
 
     print("Extracted types output:\n")
 
