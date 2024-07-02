@@ -267,32 +267,32 @@ def prune_types(types: list[str], predicates: list[Predicate], actions: list[Act
         return used_types
 
 def prune_predicates(predicates: list[Predicate], actions: list[Action]) -> list[Predicate]:
-        """
-        Remove predicates that are not used in any action.
+    """
+    Remove predicates that are not used in any action.
 
-        Args:
-            predicates (list[Predicate]): A list of predicates.
-            actions (list[Action]): A list of actions.
+    Args:
+        predicates (list[Predicate]): A list of predicates.
+        actions (list[Action]): A list of actions.
 
-        Returns:
-            list[Predicate]: The pruned list of predicates.
-        """
-        used_predicates = []
-        for pred in predicates:
-            for action in actions:
-                # Add a space or a ")" to avoid partial matches 
-                names = [f"{pred['name']} ", f"{pred['name']})"]
-                for name in names:
-                    if name in action['preconditions'] or name in action['effects']:
+    Returns:
+        list[Predicate]: The pruned list of predicates.
+    """
+    used_predicates = []
+    seen_predicate_names = set()
+
+    for pred in predicates:
+        for action in actions:
+            # Add a space or a ")" to avoid partial matches 
+            names = [f"{pred['name']} ", f"{pred['name']})"]
+            for name in names:
+                if name in action['preconditions'] or name in action['effects']:
+                    if pred['name'] not in seen_predicate_names:
                         used_predicates.append(pred)
-                        break
-        return used_predicates
+                        seen_predicate_names.add(pred['name'])
+                    break
 
-# def extract_types(type_hierarchy):
-#         types = [key for key in type_hierarchy.keys() if key != "children"]
-#         for child in type_hierarchy.get("children", []):
-#             types.extend(extract_types(child))
-#         return types
+    return used_predicates
+
 
 def extract_types(type_hierarchy):
     def process_node(node, parent_type=None):

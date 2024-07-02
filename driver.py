@@ -96,15 +96,20 @@ if __name__ == "__main__":
     else: 
         print("Reached maximum iterations. Stopping action construction.")
 
-    print("PREDICATES RAW:")
-    for i in predicates:
-        print(i, "\n")
+    # print("PREDICATES RAW:")
+    # for i in predicates:
+    #     print(i, "\n")
 
     predicates = prune_predicates(predicates=predicates, actions=actions)
+
+    print("PRUNED PREDICATES:", predicates)
+
     types = extract_types(type_hierarchy)
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions)
 
-    predicates = [pred["clean"].split(":")[0].strip() for pred in predicates]
+    # predicates = [pred["clean"].split(":")[0].strip() for pred in predicates]
+
+    predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
 
     formatted_types = ""
     for i in pruned_types:
@@ -115,7 +120,7 @@ if __name__ == "__main__":
         formatted_predicates += f"{i}\n"
 
     print("[DOMAIN]\n")
-    print(domain_builder.generate_domain(domain="test_domain", types=formatted_types, predicates=formatted_predicates, actions=actions))
+    print(domain_builder.generate_domain(domain="test_domain", types=formatted_types, predicates=predicate_str, actions=actions))
 
 
 
