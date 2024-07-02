@@ -5,12 +5,9 @@ This file contains collection of functions for PDDL generation purposes
 import re, ast
 from .utils.pddl_output_utils import parse_new_predicates, parse_action, combine_blocks
 from .utils.pddl_types import Predicate, Action
-from .utils.pddl_syntax_validator import PDDL_Syntax_Validator
 from .utils.logger import Logger
-from .llm_builder import LLM_Chat, get_llm
+from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
-
-# COMMMENT: Pass in only the required parameters. Everything else (i.e. types, hierarchy, nl_action list etc., are to be used within the class, not passed through)
 
 class Domain_Builder:
     def __init__(
@@ -36,7 +33,6 @@ class Domain_Builder:
         self.predicates = predicates
         self.nl_actions = nl_actions
         self.pddl_actions = pddl_actions
-
 
     def extract_type(
             self, 
@@ -79,8 +75,6 @@ class Domain_Builder:
                 t.split(":")[1].strip()
             for t in types
         }
-
-        # self.set_types(type_dict)
 
         return type_dict
 
@@ -255,7 +249,7 @@ class Domain_Builder:
         messages = [{'role': 'user', 'content': prompt_template}]
 
         # iteration phase to construct action 
-        recieved_feedback_at = None
+        # recieved_feedback_at = None
         for i in range(1, max_iters + 1 + (feedback is not None)):
             print(f'Generating PDDL of action: `{action_name}` | # of messages: {len(messages)}')
 
@@ -281,6 +275,37 @@ class Domain_Builder:
 
         return action, new_predicates
 
+    def generate_domain(self, domain: str, types: str, predicates: str, actions: list[Action]):
+        # Write domain file
+        desc = ""
+        desc += f"(define (domain {domain})\n"
+        desc += self.indent(f"(:requirements\n   :strips :typing :equality :negative-preconditions :disjunctive-preconditions\n   :universal-preconditions :conditional-effects\n)", 1) + "\n\n"
+        desc += f"   (:types \n{self.indent(types)}\n   )\n\n"
+        desc += f"   (:predicates \n{self.indent(predicates)}\n   )"
+        desc += self.action_descs(actions)
+        desc += "\n)"
+        desc = desc.replace("AND","and").replace("OR","or") # The python PDDL package can't handle capital AND and OR
+        return desc
+    
+    def action_descs(self, actions = None) -> str:
+        if actions is None:
+            actions = self.actions
+        desc = ""
+        for action in actions:
+            desc += "\n\n" + self.indent(self.action_desc(action),1)
+        return desc
+    
+    def action_desc(self, action: Action):
+        param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()]) # name includes ?
+        desc  = f"(:action {action['name']}\n"
+        desc += f"   :parameters (\n{self.indent(param_str,2)}\n   )\n"
+        desc += f"   :precondition\n{self.indent(action['preconditions'],2)}\n"
+        desc += f"   :effect\n{self.indent(action['effects'],2)}\n"
+        desc +=  ")"
+        return desc
+    
+    def indent(self, string: str, level: int = 2):
+        return "   " * level + string.replace("\n", f"\n{'   ' * level}")
 
     """Add functions"""
     def add_type(
@@ -332,7 +357,7 @@ class Domain_Builder:
     def set_nl_actions(self, nl_actions: dict[str,str]):
         self.nl_actions=nl_actions
 
-    def set_pddl_action(self, pddl_action: tuple[Action, list[Predicate]]):
+    def set_pddl_action(self, pddl_action: Action):
         self.pddl_actions.append(pddl_action)
 
 

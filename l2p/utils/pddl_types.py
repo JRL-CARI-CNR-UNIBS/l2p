@@ -18,3 +18,10 @@ class Action(TypedDict):
     parameters: ParameterList
     preconditions: str
     effects: str
+
+class Type(TypedDict):
+    name: str
+    desc: str
+    raw: str
+    parent: str
+    children: dict[str,str]

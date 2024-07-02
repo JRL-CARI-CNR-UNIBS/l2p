@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from .utils.pddl_output_utils import parse_params, parse_new_predicates, parse_predicates, read_object_types
+from .pddl_output_utils import parse_params, parse_new_predicates, parse_predicates, read_object_types
 
 class PDDL_Syntax_Validator:
     def __init__(self, obj_hierarchy,

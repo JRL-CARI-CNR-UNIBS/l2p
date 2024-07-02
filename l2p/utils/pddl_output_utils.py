@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from copy import deepcopy
 from addict import Dict
-
 from .logger import Logger
 from .pddl_types import Action, Predicate, ParameterList
 import re
@@ -250,18 +249,19 @@ def prune_types(types: list[str], predicates: list[Predicate], actions: list[Act
         Returns:
             list[str]: The pruned list of types.
         """
+
         used_types = []
         for type in types:
             for pred in predicates:
-                if type in pred['params'].values():
+                if type.split(' ')[0] in pred['params'].values():
                     used_types.append(type)
                     break
             else:
                 for action in actions:
-                    if type in action['parameters'].values():
+                    if type.split(' ')[0] in action['parameters'].values():
                         used_types.append(type)
                         break
-                    if type in action['preconditions'] or type in action['effects']: # If the type is included in a "forall" or "exists" statement
+                    if type.split(' ')[0] in action['preconditions'] or type.split(' ')[0] in action['effects']: # If the type is included in a "forall" or "exists" statement
                         used_types.append(type)
                         break
         return used_types
@@ -288,12 +288,26 @@ def prune_predicates(predicates: list[Predicate], actions: list[Action]) -> list
                         break
         return used_predicates
 
-def extract_types(type_hierarchy):
-        types = [key for key in type_hierarchy.keys() if key != "children"]
-        for child in type_hierarchy.get("children", []):
-            types.extend(extract_types(child))
-        return types
+# def extract_types(type_hierarchy):
+#         types = [key for key in type_hierarchy.keys() if key != "children"]
+#         for child in type_hierarchy.get("children", []):
+#             types.extend(extract_types(child))
+#         return types
 
+def extract_types(type_hierarchy):
+    def process_node(node, parent_type=None):
+        current_type = list(node.keys())[0]
+        description = node[current_type]
+        parent_type = parent_type if parent_type else current_type
+        formatted_str = f"{current_type} - {parent_type} ; {description}" if current_type != parent_type else f"{current_type} ; {description}"
+        
+        result.append(formatted_str)
+        for child in node.get("children", []):
+            process_node(child, current_type)
+
+    result = []
+    process_node(type_hierarchy)
+    return result
 
 def shorten_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
     """
