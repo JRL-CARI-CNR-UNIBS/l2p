@@ -237,7 +237,7 @@ def parse_full_domain_model(llm_output_dict, action_info):
                 print(llm_output)
     return parsed_action_info
 
-def prune_types(types: list[str], predicates: list[Predicate], actions: list[Action]):
+def prune_types(types: dict[str,str], predicates: list[Predicate], actions: list[Action]) -> dict[str,str]:
         """
         Prune types that are not used in any predicate or action.
 
@@ -250,19 +250,19 @@ def prune_types(types: list[str], predicates: list[Predicate], actions: list[Act
             list[str]: The pruned list of types.
         """
 
-        used_types = []
+        used_types = {}
         for type in types:
             for pred in predicates:
                 if type.split(' ')[0] in pred['params'].values():
-                    used_types.append(type)
+                    used_types[type] = types[type]
                     break
             else:
                 for action in actions:
                     if type.split(' ')[0] in action['parameters'].values():
-                        used_types.append(type)
+                        used_types[type] = types[type]
                         break
                     if type.split(' ')[0] in action['preconditions'] or type.split(' ')[0] in action['effects']: # If the type is included in a "forall" or "exists" statement
-                        used_types.append(type)
+                        used_types[type] = types[type]
                         break
         return used_types
 
@@ -294,18 +294,21 @@ def prune_predicates(predicates: list[Predicate], actions: list[Action]) -> list
     return used_predicates
 
 
-def extract_types(type_hierarchy):
+def extract_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
     def process_node(node, parent_type=None):
         current_type = list(node.keys())[0]
         description = node[current_type]
         parent_type = parent_type if parent_type else current_type
-        formatted_str = f"{current_type} - {parent_type} ; {description}" if current_type != parent_type else f"{current_type} ; {description}"
+
+        name = f"{current_type} - {parent_type}" if current_type != parent_type else f"{current_type}"
+        desc = f"; {description}"
         
-        result.append(formatted_str)
+        result[name] = desc
+
         for child in node.get("children", []):
             process_node(child, current_type)
 
-    result = []
+    result = {}
     process_node(type_hierarchy)
     return result
 

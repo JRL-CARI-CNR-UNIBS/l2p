@@ -5,105 +5,133 @@
    )
 
    (:types 
-      object ; Object is always root, everything is an object
-      block - movable_object ; An object that can be picked up and placed on the table or on top of another block.
-      location - object ; A type of object consisting of places where objects can be placed.
-      table - location ; A surface where blocks can be placed.
+      robot - object
+      tool - object
+      wrench - tool
+      jack - tool
+      pump - tool
+      flat_tire - object
+      car - object
+      hub - car
+      nut - hub
    )
 
    (:predicates 
-      (at ?o - object ?l - location) ;  true if the object ?o is at the location ?l
-      (held ?o - object) ;  true if the object ?o is being held
+      (has_tool ?robot - robot ?wrench - wrench) ;  true if the robot ?robot has the tool ?wrench in its possession
+      (has_nut ?tire - flat_tire) ;  true if the flat tire ?tire has a nut that needs to be undone
+      (car_lifted ?car - car ?hub - hub) ;  true if the car ?car is lifted at the hub ?hub
+      (tire_on_hub ?tire - flat_tire ?hub - hub) ;  true if the flat tire ?tire is mounted on the hub ?hub
+      (inflated ) ;  true if the spare tire ?tire has been inflated
    )
 
-   (:action pick_up_block
+   (:action fetch_tool
       :parameters (
-         ?robot_arm - object
-         ?block - object
-         ?current_location - location
+         ?robot - object
+         ?tool - object
       )
       :precondition
          (and
-             (at ?robot_arm ?current_location) ; The robot arm is at the current location of the block
-             (not (held ?block)) ; The block is not already being held
+             (at ?robot ?car_location) ; The robot is at the location of the car
+             (in_boot ?tool) ; The tool is in the car's boot
          )
       :effect
          (and
-             (held ?block) ; The block is now held by the robot arm
-             (not (at ?block ?current_location)) ; The block is no longer at its current location
+             (not (in_boot ?tool)) ; The tool is no longer in the car's boot
+             (holding ?robot ?tool) ; The robot is now holding the tool
          )
    )
 
-   (:action place_on_table
+   (:action undo_nut
       :parameters (
-         ?robot_arm - object
-         ?block - object
+         ?robot - robot
+         ?wrench - wrench
+         ?tire - flat_tire
       )
       :precondition
          (and
-             (held ?block) ; The block is being held by the robot arm
-             (not (at ?block table)) ; The block is not already on the table
+             (has_tool ?robot ?wrench) ; The robot has the wrench
+             (has_nut ?tire) ; The flat tire has a nut that needs to be undone
          )
       :effect
          (and
-             (not (held ?block)) ; The block is no longer held
-             (at ?block table) ; The block is now on the table
+             (not (has_nut ?tire)) ; The nut on the flat tire is undone
          )
    )
 
-   (:action place_on_block
+   (:action jack_up
       :parameters (
-         ?robot_arm - object
-         ?block_to_place - object
-         ?block_below - object
+         ?robot - robot
+         ?car - car
+         ?hub - hub
+         ?jack - tool
       )
       :precondition
          (and
-             (held ?block_to_place) ; The robot arm is holding the block to be placed
-             (at ?robot_arm ?block_below) ; The robot arm is at the same location as the block below
-             (not (held ?block_below)) ; The block below is clear
+             (has_tool ?robot ?jack) ; The robot has the jack tool
+             (valid_hub ?car ?hub) ; The hub specified is a valid hub of the car
          )
       :effect
          (and
-             (not (held ?block_to_place)) ; The block to be placed is no longer held
-             (at ?block_to_place ?block_below) ; The block to be placed is now at the same location as the block below
+             (car_lifted ?car ?hub) ; The car is lifted at the specified hub
          )
    )
 
-   (:action move_block
+   (:action remove_tire
       :parameters (
-         ?robot_arm - object
-         ?block - object
-         ?from - location
-         ?to - location
+         ?robot - robot
+         ?tire - flat_tire
+         ?hub - hub
+         ?wrench - wrench
       )
       :precondition
          (and
-             (at ?robot_arm ?from) ; The robot arm is at the location where the block is being moved from
-             (at ?block ?from) ; The block is at the location where it is being moved from
-             (not (held ?block)) ; The robot arm is not holding any other object
-             (not (= ?from ?to)) ; The locations are different
+             (has_tool ?robot ?wrench) ; The robot has the tool to remove the tire
+             (has_nut ?tire) ; The flat tire has a nut that needs to be undone
+             (car_lifted ?car ?hub) ; The car is lifted at the hub where the tire is being removed
          )
       :effect
          (and
-             (not (at ?block ?from)) ; The block is no longer at the location it was moved from
-             (at ?block ?to) ; The block is now at the location it was moved to
+             (not (has_nut ?tire)) ; The flat tire no longer has a nut
+             (not (tire_on_hub ?tire ?hub)) ; The hub is now without a tire
          )
    )
 
-   (:action clear_block
+   (:action inflate_spare_tire
       :parameters (
-         ?b - block
+         ?robot - robot
+         ?tire - flat_tire
+         ?pump - pump
       )
       :precondition
          (and
-             (not (held ?b)) ; The block is not being held
-             (not (exists (?other_block - block) (and (on ?other_block ?b)))) ; The block is not under any other block
+             (has_tool ?robot ?pump) ; The robot has the pump
+             (tire_on_hub ?tire ?hub) ; The tire is mounted on the hub
+             (car_lifted ?car ?hub) ; The car is lifted at the hub
          )
       :effect
          (and
-             (not (held ?b)) ; The block is no longer being held
-             (clear ?b) ; The block is now clear and not under any other block
+             (inflated ?tire) ; The spare tire is now inflated
+             (not (has_tool ?robot ?pump)) ; The robot no longer has the pump
+         )
+   )
+
+   (:action put_on_spare_tire
+      :parameters (
+         ?robot - robot
+         ?tire - flat_tire
+         ?hub - hub
+         ?wrench - wrench
+      )
+      :precondition
+         (and
+             (has_tool ?robot ?wrench) ; The robot has the necessary tool
+             (has_nut ?tire) ; The flat tire has a nut that needs to be undone
+             (car_lifted ?car ?hub) ; The car is lifted at the hub where the spare tire is being mounted
+         )
+      :effect
+         (and
+             (tire_on_hub ?tire ?hub) ; The spare tire is mounted on the hub
+             (inflated ?tire) ; The spare tire is inflated
          )
    )
 )

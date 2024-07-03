@@ -612,5 +612,108 @@ from pddl.requirements import Requirements
 from pddl import parse_domain
 
 domain = parse_domain('data/domain.pddl')
-
 print(domain_to_string(domain))
+
+
+
+# def extract_types(type_hierarchy) -> dict[str,str]:
+#     def process_node(node, parent_type=None):
+#         current_type = list(node.keys())[0]
+#         description = node[current_type]
+#         parent_type = parent_type if parent_type else current_type
+#         formatted_str = f"{current_type} - {parent_type} ; {description}" if current_type != parent_type else f"{current_type} ; {description}"
+        
+#         result.add(formatted_str)
+#         for child in node.get("children", []):
+#             process_node(child, current_type)
+
+#     result = {}
+#     process_node(type_hierarchy)
+#     return result
+
+
+# def extract_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
+#     def process_node(node, parent_type=None):
+#         current_type = list(node.keys())[0]
+#         description = node[current_type]
+#         parent_type = parent_type if parent_type else current_type
+
+#         name = f"{current_type} - {parent_type}" if current_type != parent_type else f"{current_type}"
+#         desc = f"; {description}"
+        
+#         result[name] = desc
+
+#         for child in node.get("children", []):
+#             process_node(child, current_type)
+
+#     result = {}
+#     process_node(type_hierarchy)
+#     return result
+
+
+# type_hierarchy = {
+#     "object": "Object is always root, everything is an object",
+#     "children": [
+#         {
+#             "place": "A type of object consisting of locations within a city.",
+#             "children": [
+#                 {
+#                     "location": "A type of place.",
+#                     "children": []
+#                 },
+#                 {
+#                     "city": "A type of place containing multiple locations.",
+#                     "children": []
+#                 }
+#             ]
+#         },
+#         {
+#             "package": "A type of object consisting of items that need to be transported.",
+#             "children": []
+#         },
+#         {
+#             "vehicle": "A type of object consisting of vehicles.",
+#             "children": [
+#                 {
+#                     "truck": "A type of vehicle.",
+#                     "children": []
+#                 },
+#                 {
+#                     "airplane": "A type of vehicle.",
+#                     "children": []
+#                 }
+#             ]
+#         }
+#     ]
+# }
+
+
+# types = extract_types(type_hierarchy=type_hierarchy)
+# print(types)
+
+
+"""
+- object: The root type, everything is an object.
+    - person: A type of object that includes individuals within the Catholic Church.
+        - Catholic: A person who practices the Catholic faith.
+            - clergy: A Catholic who has taken holy orders and serves the Church.
+                - Priest: A clergy member who serves the Church.
+                    - Bishop: A higher-ranking priest responsible for overseeing a diocese.
+                        - Archbishop: A bishop who oversees an archdiocese and other bishops.
+                            - Cardinal: A bishop or archbishop appointed by the Pope to the College of Cardinals.
+                                - Pope: The highest-ranking leader of the Catholic Church.
+    - role: A type of object representing various roles within the Catholic Church.
+        - Priesthood: The role and duties of a priest.
+        - Leadership: Positions of authority such as bishops, archbishops, and cardinals.
+    - location: A type of object representing places within the Catholic Church.
+        - Church: The general place of worship and community for Catholics.
+        - Diocese: A district under the pastoral care of a bishop.
+        - Archdiocese: A larger district under the pastoral care of an archbishop.
+        - Vatican: The sovereign state and residence of the Pope.
+    - process: A type of object representing various processes within the Catholic Church.
+        - Rite of Christian Initiation: The process of becoming a Catholic.
+        - Catechism: Education in the Catholic faith.
+        - Ordination: The process by which a person becomes a priest.
+        - Conclave: The process of electing a new Pope.
+"""
+

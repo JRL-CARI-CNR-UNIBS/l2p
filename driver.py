@@ -4,6 +4,9 @@ from l2p.task_builder import Task_Builder
 from l2p.llm_builder import get_llm
 from l2p.utils.pddl_output_utils import prune_predicates, prune_types, extract_types
 import os, json
+from pddl.formatter import domain_to_string, problem_to_string
+from pddl.requirements import Requirements
+from pddl import parse_domain
 
 # micro-functions
 def format_json_output(data):
@@ -21,11 +24,14 @@ def open_examples(examples_dir):
 
 if __name__ == "__main__":
 
+    # THIS IS IMPORTANT TO LOOK INTO
+    unsupported_keywords = ['object']
+
     model = get_llm("gpt-3.5-turbo-0125")
     # model = get_llm("gpt-4o")
 
     # instantiate domain builder class
-    domain_desc = open_file('data/domains/blocksworld.txt')
+    domain_desc = open_file('data/domains/tyreworld.txt')
     domain_builder = Domain_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
     # open and create type extraction prompt builder class
@@ -109,8 +115,10 @@ if __name__ == "__main__":
                 action_desc=action_desc,
                 predicates=predicates
             )
+
             actions.append(action)
             predicates.extend(new_predicates)
+            predicates = prune_predicates(predicates=predicates, actions=actions)
 
         if len (predicates) == curr_preds:
             print("No new predicates created. Stopping action construction.")
@@ -122,10 +130,12 @@ if __name__ == "__main__":
     types = extract_types(type_hierarchy) # retrieve types
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
 
+    # remove unsupported words (IMPLEMENT THIS AS A HELPER FUNCTION)
+    pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords}
+
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
     types_str = "\n".join(pruned_types)
 
-    # print domain file
     print("[DOMAIN]\n") 
     pddl_domain = domain_builder.generate_domain(domain="test_domain", types=types_str, predicates=predicate_str, actions=actions)
     print(pddl_domain)
@@ -138,6 +148,9 @@ if __name__ == "__main__":
         f.write(pddl_domain)
 
     print(f"PDDL domain written to {domain_file}")
+
+    domain = parse_domain('data/domain.pddl')
+    print(domain_to_string(domain))
 
     # task_builder = Task_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
