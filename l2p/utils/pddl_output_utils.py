@@ -1,18 +1,11 @@
 from collections import OrderedDict
 from copy import deepcopy
-from addict import Dict
-from .logger import Logger
-from .pddl_types import Action, Predicate, ParameterList
-import re
+from .pddl_types import Action, Predicate
+import re, ast
 
 def combine_blocks(heading_str: str):
     """Combine the inside of blocks from the heading string into a single string."""
-    if heading_str.count("```") % 2 != 0:
-        Logger.print("WARNING: Could not find an even number of blocks in the heading string")
-        Logger.print("#"*10, "LLM Output", "#"*10)
-        Logger.print(heading_str)
-        Logger.print("#"*30)
-        #raise ValueError("Could not find an even number of blocks in the heading string")
+
     possible_blocks = heading_str.split("```")
     blocks = [possible_blocks[i] for i in range(1, len(possible_blocks), 2)] # Get the text between the ```s, every other one
     combined = "\n".join(blocks) # Join the blocks together
@@ -65,11 +58,11 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
     except:
         raise Exception("Could not find the 'New Predicates' section in the output. Provide the entire response, including all headings even if some are unchanged.")
     predicate_output = combine_blocks(predicate_heading)
-    #Logger.print(f'Parsing new predicates from: \n---\n{predicate_output}\n---\n', subsection=False)
+    #print(f'Parsing new predicates from: \n---\n{predicate_output}\n---\n', )
     for p_line in predicate_output.split('\n'):
         if ('.' not in p_line or not p_line.split('.')[0].strip().isdigit()) and not (p_line.startswith('-') or p_line.startswith('(')):
             if len(p_line.strip()) > 0:
-                Logger.print(f'[WARNING] unable to parse the line: "{p_line}"', subsection=False)
+                print(f'[WARNING] unable to parse the line: "{p_line}"')
             continue
         predicate_info = p_line.split(': ')[0].strip(" 1234567890.(-)`").split(' ')
         predicate_name = predicate_info[0]
@@ -87,7 +80,7 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
         for p in predicate_type_info:
             if next_is_type:
                 if p.startswith('?'):
-                    Logger.print(f"[WARNING] `{p}` is not a valid type for a variable, but it is being treated as one. Should be checked by syntax check later.", subsection=False)
+                    print(f"[WARNING] `{p}` is not a valid type for a variable, but it is being treated as one. Should be checked by syntax check later.")
                 for up in upcoming_params:
                     params[up] = p
                 next_is_type = False
@@ -97,12 +90,12 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
             elif p.startswith('?'):
                 upcoming_params.append(p) # the next type will be for this variable
             else:
-                Logger.print(f"[WARNING] `{p}` is not corrrectly formatted. Assuming it's a variable name.", subsection=False)
+                print(f"[WARNING] `{p}` is not corrrectly formatted. Assuming it's a variable name.")
                 upcoming_params.append(f"?{p}")
         if next_is_type:
-            Logger.print(f"[WARNING] The last type is not specified for `{p_line}`. Undefined are discarded.", subsection=False)
+            print(f"[WARNING] The last type is not specified for `{p_line}`. Undefined are discarded.")
         if len(upcoming_params) > 0:
-            Logger.print(f"[WARNING] The last {len(upcoming_params)} is not followed by a type name for {upcoming_params}. These are discarded", subsection=False)
+            print(f"[WARNING] The last {len(upcoming_params)} is not followed by a type name for {upcoming_params}. These are discarded")
 
         # generate a clean version of the predicate
         clean = f"({predicate_name} {' '.join([f'{k} - {v}' for k, v in params.items()])}): {predicate_desc}"
@@ -116,7 +109,7 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
             'params': params,
             'clean': clean,
         })
-    #Logger.print(f"Parsed {len(new_predicates)} new predicates: {[p['name'] for p in new_predicates]}", subsection=False)
+    #print(f"Parsed {len(new_predicates)} new predicates: {[p['name'] for p in new_predicates]}", )
     return new_predicates
 
 
@@ -165,77 +158,6 @@ def parse_action(llm_response: str, action_name: str) -> Action:
         raise Exception("Could not find the 'Effects' section in the output. Provide the entire response, including all headings even if some are unchanged.")
     return {"name": action_name, "parameters": parameters, "preconditions": preconditions, "effects": effects}
 
-
-def read_object_types(hierarchy_info):
-    obj_types = set()
-    for obj_type in hierarchy_info:
-        obj_types.add(obj_type)
-        if len(hierarchy_info[obj_type]) > 0:
-            obj_types.update(hierarchy_info[obj_type])
-    return obj_types
-
-
-def flatten_pddl_output(pddl_str):
-    open_parentheses = 0
-    old_count = 0
-    flat_str = ''
-    pddl_lines = pddl_str.strip().split('\n')
-    for line_i, pddl_line in enumerate(pddl_lines):
-        pddl_line = pddl_line.strip()
-        # process parentheses
-        for char in pddl_line:
-            if char == '(':
-                open_parentheses += 1
-            elif char == ')':
-                open_parentheses -= 1
-        if line_i == 0:
-            flat_str += pddl_line + '\n'
-        elif line_i == len(pddl_lines) - 1:
-            flat_str += pddl_line
-        else:
-            assert open_parentheses >= 1, f'{open_parentheses}'
-            leading_space = ' ' if old_count > 1 else '  '
-            if open_parentheses == 1:
-                flat_str += leading_space + pddl_line + '\n'
-            else:
-                flat_str += leading_space + pddl_line
-        old_count = open_parentheses
-    return flat_str
-
-
-def parse_full_domain_model(llm_output_dict, action_info):
-    def find_leftmost_dot(string):
-        for i, char in enumerate(string):
-            if char == '.':
-                return i
-        return 0
-
-    parsed_action_info = Dict()
-    for act_name in action_info:
-        if act_name in llm_output_dict:
-            llm_output = llm_output_dict[act_name]['llm_output']
-            try:
-                # the first part is parameters
-                parsed_action_info[act_name]['parameters'] = list()
-                params_str = llm_output.split('\nParameters:')[1].strip().split('\n\n')[0]
-                for line in params_str.split('\n'):
-                    if line.strip() == '' or '.' not in line:
-                        continue
-                    if not line.split('.')[0].strip().isdigit():
-                        continue
-                    leftmost_dot_idx = find_leftmost_dot(line)
-                    param_line = line[leftmost_dot_idx + 1:].strip()
-                    parsed_action_info[act_name]['parameters'].append(param_line)
-                # the second part is preconditions
-                parsed_action_info[act_name]['preconditions'] = flatten_pddl_output(llm_output.split('Preconditions:')[1].split('```')[1].strip())
-                # the third part is effects
-                parsed_action_info[act_name]['effects'] = flatten_pddl_output(llm_output.split('Effects:')[1].split('```')[1].strip())
-                # include the act description
-                parsed_action_info[act_name]['action_desc'] = llm_output_dict[act_name]['action_desc'] if 'action_desc' in llm_output_dict[act_name] else ''
-            except:
-                print('[ERROR] errors in parsing pddl output')
-                print(llm_output)
-    return parsed_action_info
 
 def prune_types(types: dict[str,str], predicates: list[Predicate], actions: list[Action]) -> dict[str,str]:
         """
@@ -312,86 +234,19 @@ def extract_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
     process_node(type_hierarchy)
     return result
 
-def shorten_messages(messages: list[dict[str, str]]) -> list[dict[str, str]]:
-    """
-    Only keep the latest LLM output and correction feedback
-    """
-    if len(messages) == 1:
-        return [messages[0]]
+def convert_to_dict(llm_response: str) -> dict[str,str]:
+    dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
+    match = dict_pattern.search(llm_response) # search for the pattern in the llm_response
+
+    # safely evaluate the string to convert it into a Python dictionary
+    if match:
+        dict_str = match.group(0)
+        try:
+            dict = ast.literal_eval(dict_str)
+            return dict
+        except Exception as e:
+            print(f"Error parsing dictionary: {e}")
+            return None
     else:
-        short_message = [messages[0]] + messages[-2:]
-        assert short_message[1]['role'] == 'assistant'
-        assert short_message[2]['role'] == 'user'
-        return short_message
-
-
-def mirror_action(action: Action, predicates: list[Predicate]):
-    """
-    Mirror any symmetrical predicates used in the action preconditions. 
-
-    Example:
-        Original action:
-        (:action drive
-            :parameters (
-                ?truck - truck
-                ?from - location
-                ?to - location
-            )
-            :precondition
-                (and
-                    (at ?truck ?from)
-                    (connected ?to ?from)
-                )
-            :effect
-                (at ?truck ?to )
-            )
-        )
-        
-        Mirrored action:
-        (:action drive
-            :parameters (
-                ?truck - truck
-                ?from - location
-                ?to - location
-            )
-            :precondition
-                (and
-                    (at ?truck ?from)
-                    ((connected ?to ?from) or (connected ?from ?to))
-                )
-            :effect
-                (at ?truck ?to )
-            )
-        )
-    """
-    mirrored = copy.deepcopy(action)
-    for pred in predicates:
-        if pred["name"] not in action["preconditions"]:
-            continue # The predicate is not used in the preconditions
-        param_types = list(pred["params"].values())
-        for type in set(param_types): 
-            # For each type
-            if not param_types.count(type) > 1:
-                continue # The type is not repeated
-            # The type is repeated
-            occs = [i for i, x in enumerate(param_types) if x == type]
-            perms = list(itertools.permutations(occs))
-            if len(occs) > 2:
-                Logger.print(f"[WARNING] Mirroring predicate with {len(occs)} occurences of {type}.", subsection=False)
-            uses = re.findall(f"\({pred['name']}.*\)", action["preconditions"]) # Find all occurrences of the predicate used in the preconditions
-            for use in uses:
-                versions = [] # The different versions of the predicate
-                args = [use.strip(" ()").split(" ")[o+1] for o in occs] # The arguments of the predicate
-                template = use
-                for i, arg in enumerate(args): # Replace the arguments with placeholders
-                    template = template.replace(arg, f"[MIRARG{i}]", 1)
-                for perm in perms:
-                    ver = template
-                    for i, p in enumerate(perm):
-                        # Replace the placeholders with the arguments in the permutation
-                        ver = ver.replace(f"[MIRARG{i}]", args[p])
-                    if ver not in versions:
-                        versions.append(ver) # In case some permutations are the same (repeated args)
-                combined = "(" + " or ".join(versions) + ")"
-                mirrored["preconditions"] = mirrored["preconditions"].replace(use, combined)
-    return mirrored
+        print("No dictionary found in the llm_response.")
+        return None

@@ -1,8 +1,9 @@
-[GIVEN DOMAIN]
+The following is an in-context example following the step-by-step technique.
+
+Given domain:
 The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport things. Currently, there are a couple of trucks at the Chicago depot and we're trying to build three houses in the area. Jamie is the only administrator, but we've got Emma and Bob available for general work.
 
-1. ## Types
-First, we'll need types for the houses that are built and the depot. We'll also add a general location type to organize this.
+1. First, we'll need types for the houses that are built and the depot. We'll also add a general location type to organize this.
 ```
 - location: Can be visited and travelled between.
 - house: Constructed by the company. Are a type of location.
@@ -27,7 +28,7 @@ Lastly, I've repeatedly assumed the existence of construction materials. This is
 - material: Assorted material for constructing houses. Transported by vehicles.
 ``` 
 
-2. ## Feedback
+2. Feedback:
     1: Are there any more types which are needed to model the domain?
         No. There is no need to include any more types.
 
@@ -47,24 +48,16 @@ Lastly, I've repeatedly assumed the existence of construction materials. This is
     - general_worker: A type of worker who can perform a variety of jobs based on orders.
     - administrator: A type of worker who can create orders.
 
+The feedback raises some valid points, but not all are correct. I agree that exchanging "jamie", "emma" and "bob" with "administrator" and "general_worker" is correct. However, modelling "helicopter" and "excavator" would be too much. We shouldn't include more types than is actually needed and useful for the task at hand, and since no helicopters or excavators exist we'll skip those. 
 
-Start with a "## Response" header, then re-iterate an updated version of the "## Types" header. 
+4. Extract types in Python dictionary format
 
-## Response
-The feedback raises some valid points, but not all are correct.
-
-I agree that exchanging "jamie", "emma" and "bob" with "administrator" and "general_worker" is correct. 
-
-However, modelling "helicopter" and "excavator" would be too much. We shouldn't include more types than is actually needed and useful for the task at hand, and since no helicopters or excavators exist we'll skip those. 
-
-4. 
-## Types
 First, I have to re-iterate all the types I want to keep:
 ```
 - location: Locations can be visited and travelled between.
 - house: Constructed by the company. Are a type of location.
 - depot: Contains trucks and likely material for the construction. 
-- vehicle: Vehicles can transport things, such as material or personell, between locattions.
+- vehicle: Vehicles can transport things, such as material or personel, between locations.
 - truck: A type of vehicle for ground transport. 
 - material: Assorted material for constructing houses. Transported by vehicles.
 ```
@@ -74,3 +67,15 @@ Then, I also want to add the new general worker types:
 - general_worker: A type of worker who can perform a variety of jobs based on orders.
 - administrator: A type of worker who can create orders.
 ```
+
+## OUTPUT
+{
+    "location": "Locations can be visited and travelled between.",
+    "house": "Constructed by the company. Are a type of location.",
+    "depot": "Contains trucks and likely material for the construction.",
+    "vehicle": "Vehicles can transport things, such as material or personel, between locations.",
+    "truck": "A type of vehicle for ground transport.",
+    "material": "Assorted material for constructing houses. Transported by vehicles.",
+    "general_worker": "A type of worker who can perform a variety of jobs based on orders.",
+    "administrator": "A type of worker who can create orders."
+}

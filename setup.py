@@ -32,75 +32,6 @@
 # - [ ] Implement external planner tool
 # # I would like to add the new types "country" and "continent"s
 
-# """
-
-# from pddl.logic import Predicate, constants, variables
-# from pddl.core import Domain, Problem
-# from pddl.action import Action
-# from pddl.formatter import domain_to_string, problem_to_string
-# from pddl.requirements import Requirements
-
-# # # set up variables and constants
-# # x, y, z = variables("x y z", types=["type_1"])
-# # a, b, c = constants("a b c", type_="type_1")
-
-# # # define predicates
-# # p1 = Predicate("p1", x, y, z)
-# # p2 = Predicate("p2", x, y)
-
-# # # define actions
-# # a1 = Action(
-# #     "action-1",
-# #     parameters=[x, y, z],
-# #     precondition=p1(x, y, z) & ~p2(y, z),
-# #     effect=p2(y, z)
-# # )
-
-# # # define the domain object.
-# # requirements = [Requirements.STRIPS, Requirements.TYPING]
-# # domain = Domain("my_domain",
-# #                 requirements=requirements,
-# #                 types={"type_1": None},
-# #                 constants=[a, b, c],
-# #                 predicates=[p1, p2],
-# #                 actions=[a1])
-
-# # print(domain_to_string(domain))
-
-# # """
-# # (define (domain my_domain)
-# #     (:requirements :strips :typing)
-# #     (:types type_1)
-# #     (:constants a b c - type_1)
-# #     (:predicates (p1 ?x - type_1 ?y - type_1 ?z - type_1)  (p2 ?x - type_1 ?y - type_1))
-# #     (:action action-1
-# #         :parameters (?x - type_1 ?y - type_1 ?z - type_1)
-# #         :precondition (and (p1 ?x ?y ?z) (not (p2 ?y ?z)))
-# #         :effect (p2 ?y ?z)
-# #     )
-# # )
-# # """
-
-# # problem = Problem(
-# #     "problem-1",
-# #     domain=domain,
-# #     requirements=requirements,
-# #     objects=[a, b, c],
-# #     init=[p1(a, b, c), ~p2(b, c)],
-# #     goal=p2(b, c)
-# # )
-# # print(problem_to_string(problem))
-
-# # """
-# # (define (problem problem-1)
-# #     (:domain my_domain)
-# #     (:requirements :strips :typing)
-# #     (:objects a b c - type_1)
-# #     (:init (not (p2 b c)) (p1 a b c))
-# #     (:goal (p2 b c))
-# # )
-# # """
-
 # # def parse_predicate(predicate_str):
 # #     # Remove "PREDICATES: " prefix, parentheses and split the string
 # #     predicate_str = predicate_str.strip(' ()')
@@ -604,17 +535,6 @@
 # """
 
 
-from pddl.logic import Predicate, constants, variables
-from pddl.core import Domain, Problem
-from pddl.action import Action
-from pddl.formatter import domain_to_string, problem_to_string
-from pddl.requirements import Requirements
-from pddl import parse_domain
-
-domain = parse_domain('data/domain.pddl')
-print(domain_to_string(domain))
-
-
 
 # def extract_types(type_hierarchy) -> dict[str,str]:
 #     def process_node(node, parent_type=None):
@@ -717,3 +637,136 @@ print(domain_to_string(domain))
         - Conclave: The process of electing a new Pope.
 """
 
+        # """ FEEDBACK MECHANISM """
+        # if feedback is not None:
+        #     if feedback.lower() == "human":
+        #         feedback_msg = human_feedback(f"\n\nThe types extracted are:\n{type_str}\n")
+        #     else:
+        #         feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        #         feedback_template = feedback_template.replace('{type_list}', type_str)
+        #         feedback_msg = self.type_get_llm_feedback(model, feedback_template)
+        #     if feedback_msg is not None:
+        #         messages = [
+        #             {'role': 'user', 'content': prompt_template},
+        #             {'role': 'assistant', 'content': llm_response},
+        #             {'role': 'user', 'content': feedback_msg}
+        #         ]
+        #         llm_response = model.get_output(messages=messages)
+        #         if "## Types" in llm_response:
+        #             header = llm_response.split("## Types")[1].split("## ")[0]
+        #         else:
+        #             header = llm_response
+        #         dot_list = combine_blocks(header)
+        #         if len(dot_list) == 0:
+        #             dot_list = "\n".join([l for l in header.split("\n") if l.strip().startswith("-")])
+        #         if dot_list.count("-") == 0: # No types
+        #             return {}
+        #         types = dot_list.split('\n')
+        #         types = [t.strip("- \n") for t in types if t.strip("- \n")] # Remove empty strings and dashes
+
+        #         type_dict = {
+        #                 t.split(":")[0].strip().replace(" ", "_"): 
+        #                 t.split(":")[1].strip()
+        #             for t in types
+        #         }
+
+                # dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
+        # match = dict_pattern.search(llm_response) # search for the pattern in the llm_response
+
+        # if match:
+        #     dict_str = match.group(0)
+
+        #     """ FEEDBACK MECHANISM """
+        #     if feedback is not None:
+        #         if feedback.lower() == "human":
+        #             feedback_msg = human_feedback(f"\n\nThe hierarchy constructed is:\n{dict_str}\n")
+        #         else:
+        #             feedback_template = feedback_template.replace('{type_hierarchy}', dict_str)
+        #             feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        #             feedback_msg = self.hierarchy_get_llm_feedback(model, feedback_template)
+
+        #         if feedback_msg is not None:
+        #             messages = [
+        #                 {'role': 'user', 'content': prompt_template},
+        #                 {'role': 'assistant', 'content': llm_response},
+        #                 {'role': 'user', 'content': feedback_msg}
+        #             ]
+        #             llm_response = model.get_output(messages=messages)
+        #             dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
+        #             match = dict_pattern.search(llm_response) # search for the pattern in the llm_response
+
+        #     # safely evaluate the string to convert it into a Python dictionary
+        #     try:
+        #         type_hierarchy = ast.literal_eval(dict_str)
+  
+        #         return type_hierarchy
+        #     except Exception as e:
+        #         print(f"Error parsing dictionary: {e}")
+        #         return None
+        # else:
+        #     print("No dictionary found in the llm_response.")
+        #     return None
+
+                # if feedback is not None:
+        #     if feedback.lower() == "human":
+        #         action_strs = "\n".join([f"- {name}: {desc}" for name, desc in nl_actions.items()])
+        #         feedback_msg = human_feedback(f"\n\nThe actions extracted are:\n{action_strs}\n")
+        #     else:
+        #         feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        #         feedback_template = feedback_template.replace('{type_hierarchy}', str(type_hierarchy))
+        #         feedback_msg = self.nl_action_get_llm_feedback(model, nl_actions, feedback_template)
+        #     if feedback_msg is not None:
+        #         messages = [
+        #             {'role': 'user', 'content': prompt_template},
+        #             {'role': 'assistant', 'content': llm_response},
+        #             {'role': 'user', 'content': feedback_msg}
+        #         ]
+        #         llm_response = model.get_output(messages=messages)
+
+        #         # extract list of actions section
+        #         splits = llm_response.split("```")
+        #         action_outputs = [splits[i].strip() for i in range(1, len(splits), 2)] # Every other split *should* be an action
+
+        #         # parse actions into dict[str, str]
+        #         nl_actions = {}
+        #         for action in action_outputs:
+        #             name = action.split("\n")[0].strip()
+        #             desc = action.split("\n", maxsplit=1)[1].strip() # Works even if there is no blank line
+        #             nl_actions[name] = desc
+
+# from pddl.logic import Predicate, constants, variables
+# from pddl.core import Domain, Problem
+# from pddl.action import Action
+# from pddl.formatter import domain_to_string, problem_to_string
+# from pddl.requirements import Requirements
+# from pddl import parse_domain
+
+# domain = parse_domain('data/domain.pddl')
+# print(domain_to_string(domain))
+
+
+    # print("\n\n---------------------------------\n\nAdding new type output:\n")
+
+    # user_input = input("Please enter the type you want to add:\n")
+    # prompt = "You are to add a new type into the types already listed. Format it the same way in Python dictionary\n\n" + user_input 
+
+    # new_types = domain_builder.add_type(
+    #      model=model,
+    #      domain_desc=domain_desc,
+    #      prompt_template=prompt
+    # )
+    # domain_builder.set_types(types=new_types)
+    # print("New types: ", format_json_output(domain_builder.get_types()))
+
+    # # extract type hierarchy
+    # print("\n\n---------------------------------\n\nType hierarchy output:\n")
+    # type_hierarchy = domain_builder.extract_type_hierarchy(
+    #     model=model, 
+    #     domain_desc=domain_desc, 
+    #     prompt_template=type_hierarchy_prompt.get_prompt(), 
+    #     types=domain_builder.get_types(),
+    #     feedback="LLM",
+    #     feedback_template=open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
+    #     )
+    # domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
+    # print(format_json_output(type_hierarchy))

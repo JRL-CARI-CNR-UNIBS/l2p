@@ -3,10 +3,10 @@ from l2p.domain_builder import Domain_Builder
 from l2p.task_builder import Task_Builder
 from l2p.llm_builder import get_llm
 from l2p.utils.pddl_output_utils import prune_predicates, prune_types, extract_types
-import os, json
 from pddl.formatter import domain_to_string, problem_to_string
 from pddl.requirements import Requirements
 from pddl import parse_domain
+import os, json
 
 # micro-functions
 def format_json_output(data):
@@ -86,6 +86,7 @@ if __name__ == "__main__":
         )
     domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     print(format_json_output(type_hierarchy))
+
     
     # extract NL action descriptions
     print("\n\n---------------------------------\n\nNatural language action output:\n")
@@ -140,17 +141,17 @@ if __name__ == "__main__":
     pddl_domain = domain_builder.generate_domain(domain="test_domain", types=types_str, predicates=predicate_str, actions=actions)
     print(pddl_domain)
 
-    # Define the domain file path
-    domain_file = "data/domain.pddl"
+    # # Define the domain file path
+    # domain_file = "data/domain.pddl"
 
-    # Write PDDL domain string to a file
-    with open(domain_file, "w") as f:
-        f.write(pddl_domain)
+    # # Write PDDL domain string to a file
+    # with open(domain_file, "w") as f:
+    #     f.write(pddl_domain)
 
-    print(f"PDDL domain written to {domain_file}")
+    # print(f"PDDL domain written to {domain_file}")
 
-    domain = parse_domain('data/domain.pddl')
-    print(domain_to_string(domain))
+    # domain = parse_domain('data/domain.pddl')
+    # print(domain_to_string(domain))
 
     # task_builder = Task_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 

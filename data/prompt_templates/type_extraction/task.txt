@@ -1,2 +1,2 @@
-## Domain
+Here is the provided domain to perform your task on:
 {domain_desc}

@@ -1,12 +1,6 @@
-Chain of Thought for organizing types in a house construction scheduling system
-Step-by-Step Reasoning:
+Chain of Thought for organizing types:
 
 1. Identify Key Entities and describe each entity in natural language
-
 2. Go over given feedback checklist to check for inconsistencies and/or requirements and state the errors if there are any
-
 3. If there are errors, generate a suggestion response (i.e. deleting, modifying, adding types)
-
-4. Re-iterate over the types. Keep the types the same if they do not need to be modified.
-
-------------------------------------------------------------------------
+4. Re-iterate over the types and put them into dictionary pair '{'name':'description'}'. Keep the types the same if they do not need to be modified.

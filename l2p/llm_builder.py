@@ -29,13 +29,13 @@ class LLM_Chat:
     def __init__(self, *args, **kwargs):
         pass
 
-    def get_response(self, prompt=None, messages=None):
+    def get_output(self, prompt=None, messages=None):
         raise NotImplementedError
     
     def token_usage(self) -> tuple[int, int]:
         raise NotImplementedError
     
-    def reset_token_usage(self):
+    def reset_tokens(self):
         raise NotImplementedError
 
 class GPT_Chat(LLM_Chat):
@@ -62,7 +62,7 @@ class GPT_Chat(LLM_Chat):
         self.out_tokens = 0
         print(f"Seed is not used for OpenAI models. Discarding seed {seed}")
 
-    def get_response(self, prompt=None, messages=None, end_when_error=False, max_retry=5, est_margin = 200):
+    def get_output(self, prompt=None, messages=None, end_when_error=False, max_retry=5, est_margin = 200):
         if prompt is None and messages is None:
             raise ValueError("prompt and messages cannot both be None")
         if messages is not None:
@@ -112,7 +112,7 @@ class GPT_Chat(LLM_Chat):
     def token_usage(self) -> tuple[int, int]:
         return self.in_tokens, self.out_tokens
     
-    def reset_token_usage(self):
+    def reset_tokens(self):
         self.in_tokens = 0
         self.out_tokens = 0
 
@@ -122,7 +122,7 @@ def get_llm(engine, **kwargs) -> LLM_Chat:
 
 if __name__ == '__main__':
     model = get_llm("gpt-3.5-turbo-0125")
-    print(model.get_response("Hello world!"))
+    print(model.get_output("Hello world!"))
 
 
 
