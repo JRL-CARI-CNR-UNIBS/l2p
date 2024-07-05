@@ -1,8 +1,9 @@
-[GIVEN DOMAIN]
+The following is an in-context example following the CoT technique.
+
+Given domain:
 The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport things.
 
-[GIVEN TYPES]
-The types are:
+Given types:
 - administrator: Workers who can create orders for other workers
 - wall: The exterior of a house. Requires a floor to be built first
 - order: Instructions to general_workers to perform something. Created by administrators
@@ -17,18 +18,14 @@ The types are:
 - mansion: A large type of house
 - library: A building filled with books
 
-1. ## Reasoning
+1. Reasoning
 The "administrator" and "general_worker" are both types of human workers, so we should probably create a "worker" meta-type class for those.
-
 Furthermore, there are several different types of "house_component": "floor", "roof", and "wall". However, these aren't a subtype of "house" since a "floor" is not a "house" for example.
-
 On the other hand, there are actually two subtypes of "house": "mansion" and "library". Both of these are types of houses.
-
 Additionally, "house" and "depot" are both types of locations which can be visited. So, they're subtypes of "location".
-
 "vehicle" is not a subtype or meta-type to any of the others. Same thing holds for "order". 
 
-2. ## Hierarchy
+2. Hierarchy
 So, all in all the hierarchy becomes:
 
 - object: Object is always root, everything is an object
@@ -47,7 +44,7 @@ So, all in all the hierarchy becomes:
             - library: A type of house.
         - depot: A type of location.
 
-3. ## Feedback
+3. Feedback
     1: Is any child NOT a subtype of its parent? 
         No. This is correct. 
 
@@ -61,14 +58,10 @@ So, all in all the hierarchy becomes:
         - Move the "depot" type to be a subtype of "location".
         - Add a "construction_equipment" meta-type with "house_component" and "vehicle" as subtypes. 
 
-Start with a "## Response" header, then re-iterate an updated version of the "## Hierarchy" header. 
+4. Response:
+The feedback is partially correct. Moving the "depot" type is valid and should be done. However, adding "construction_equipment" would group objects which behave too differently.
 
-4. ## Response
-    The feedback is partially correct. Moving the "depot" type is valid and should be done. However, adding "construction_equipment" would group objects which behave too differently.
-
-5. ## Re-iterate and convert to nested Python dictionary
-
-As such, the corrected hierarchy becomes:
+5. Re-iterate and convert to nested Python dictionary:
 ```
 - object: Object is always root, everything is an object
     - worker: A type of object consisting of humans who do things.
@@ -87,8 +80,7 @@ As such, the corrected hierarchy becomes:
         - depot: A type of location.
 ```
 
-## Convert
-
+## OUTPUT
 {
     "object": "Object is always root, everything is an object",
     "children": [

@@ -734,15 +734,27 @@
         #             desc = action.split("\n", maxsplit=1)[1].strip() # Works even if there is no blank line
         #             nl_actions[name] = desc
 
-# from pddl.logic import Predicate, constants, variables
-# from pddl.core import Domain, Problem
-# from pddl.action import Action
-# from pddl.formatter import domain_to_string, problem_to_string
-# from pddl.requirements import Requirements
-# from pddl import parse_domain
+from pddl.logic import Predicate, constants, variables
+from pddl.core import Domain, Problem
+from pddl.action import Action
+from pddl.formatter import domain_to_string, problem_to_string
+from pddl.requirements import Requirements
+from pddl import parse_domain
 
-# domain = parse_domain('data/domain.pddl')
-# print(domain_to_string(domain))
+domain_file = 'data/domain.pddl'
+
+domain = parse_domain(domain_file)
+pddl_domain = domain_to_string(domain)
+
+print(pddl_domain)
+
+# Write PDDL domain string to a file
+with open(domain_file, "w") as f:
+    f.write(pddl_domain)
+
+print(f"PDDL domain written to {domain_file}")
+
+
 
 
     # print("\n\n---------------------------------\n\nAdding new type output:\n")

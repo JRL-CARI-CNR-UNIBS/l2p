@@ -1,4 +1,4 @@
-from .pddl_output_utils import parse_new_predicates, parse_params, combine_blocks
+from .pddl_parser import parse_new_predicates, parse_params, combine_blocks
 from .pddl_types import Action, Predicate
 from l2p.llm_builder import LLM_Chat
 

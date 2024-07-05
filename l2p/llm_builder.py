@@ -23,7 +23,6 @@ def connect_openai(engine, messages, temperature, max_tokens,
         stop=stop
     )
 
-
 class LLM_Chat:
     # Simple abstract class for the LLM chat
     def __init__(self, *args, **kwargs):
@@ -32,7 +31,7 @@ class LLM_Chat:
     def get_output(self, prompt=None, messages=None):
         raise NotImplementedError
     
-    def token_usage(self) -> tuple[int, int]:
+    def get_tokens(self) -> tuple[int, int]:
         raise NotImplementedError
     
     def reset_tokens(self):
@@ -109,7 +108,7 @@ class GPT_Chat(LLM_Chat):
 
         return llm_output
     
-    def token_usage(self) -> tuple[int, int]:
+    def get_tokens(self) -> tuple[int, int]:
         return self.in_tokens, self.out_tokens
     
     def reset_tokens(self):
@@ -124,51 +123,43 @@ if __name__ == '__main__':
     model = get_llm("gpt-3.5-turbo-0125")
     print(model.get_output("Hello world!"))
 
+    # # for any models in Huggingface API inference
+    # model_name = "openai-community/gpt2"
+    # HF_api_key = "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"
+    # API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
+
+    # headers = {"Authorization": f"Bearer {HF_api_key}",
+    #            "Content-Type": "application/json"}
+
+    # def HF_query(prompt, max_length=50, temperature=0.7):
+    #     data = {
+    #         "inputs": prompt,
+    #         "parameters": {
+    #             "max_length": max_length,
+    #             "temperature": temperature
+    #         }
+    #     }
+
+    #     response = requests.post(API_URL, headers=headers, json=data)
+    #     if response.status_code == 200:
+    #         generated_text = response.json()[0]['generated_text']
+            
+    # 		# removing the input prompt from the generated text
+    #         filtered_text = generated_text.replace(prompt, "").strip()
+    #         return filtered_text
+    #     else:
+    #         raise Exception(f"Failed to generate text: {response.status_code} {response.text}")
 
 
-
-
-
-# # for any models in Huggingface API inference
-# model_name = "openai-community/gpt2"
-# HF_api_key = "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"
-# API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
-
-# headers = {"Authorization": f"Bearer {HF_api_key}",
-#            "Content-Type": "application/json"}
-
-# def HF_query(prompt, max_length=50, temperature=0.7):
-#     data = {
-#         "inputs": prompt,
-#         "parameters": {
-#             "max_length": max_length,
-#             "temperature": temperature
-#         }
-#     }
-
-#     response = requests.post(API_URL, headers=headers, json=data)
-#     if response.status_code == 200:
-#         generated_text = response.json()[0]['generated_text']
-        
-# 		# removing the input prompt from the generated text
-#         filtered_text = generated_text.replace(prompt, "").strip()
-#         return filtered_text
-#     else:
-#         raise Exception(f"Failed to generate text: {response.status_code} {response.text}")
-
-
-# # for OpenAI LLM inference
-# client = OpenAI()
-# def GPT_query(prompt):
-#     completion = client.chat.completions.create(
-#         model="gpt-3.5-turbo",
-#         messages=[
-#             {"role": "system", "content": "You are an assistant skilled in generating PDDL components."},
-#             {"role": "user", "content": prompt}
-#         ],
-#     )
-#     # extract the generated text
-#     return completion.choices[0].message.content
-
-
-
+    # # for OpenAI LLM inference
+    # client = OpenAI()
+    # def GPT_query(prompt):
+    #     completion = client.chat.completions.create(
+    #         model="gpt-3.5-turbo",
+    #         messages=[
+    #             {"role": "system", "content": "You are an assistant skilled in generating PDDL components."},
+    #             {"role": "user", "content": prompt}
+    #         ],
+    #     )
+    #     # extract the generated text
+    #     return completion.choices[0].message.content

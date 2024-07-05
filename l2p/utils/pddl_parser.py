@@ -235,6 +235,7 @@ def extract_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
     return result
 
 def convert_to_dict(llm_response: str) -> dict[str,str]:
+    
     dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
     match = dict_pattern.search(llm_response) # search for the pattern in the llm_response
 

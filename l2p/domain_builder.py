@@ -3,7 +3,7 @@ This file contains collection of functions for PDDL generation purposes
 """
 
 import re, ast
-from .utils.pddl_output_utils import parse_new_predicates, parse_action, convert_to_dict
+from .utils.pddl_parser import parse_new_predicates, parse_action, convert_to_dict
 from .utils.pddl_types import Predicate, Action
 from .utils.human_feedback import human_feedback
 from .llm_builder import LLM_Chat
@@ -58,8 +58,8 @@ class Domain_Builder:
         model.reset_tokens() # reset tokens
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc) # replace template holders
-
         llm_response = model.get_output(prompt=prompt_template) # prompt model
+
         types = convert_to_dict(llm_response=llm_response)
         
         return types
@@ -129,17 +129,7 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
-
-        # extract list of actions section
-        splits = llm_response.split("```")
-        action_outputs = [splits[i].strip() for i in range(1, len(splits), 2)]
-
-        # parse actions into dict[str, str]
-        nl_actions = {}
-        for action in action_outputs:
-            name = action.split("\n")[0].strip()
-            desc = action.split("\n", maxsplit=1)[1].strip()
-            nl_actions[name] = desc
+        nl_actions = convert_to_dict(llm_response=llm_response)
 
         return nl_actions
 
@@ -197,37 +187,34 @@ class Domain_Builder:
         return action, new_predicates
 
 
-    def generate_domain(self, domain: str, types: str, predicates: str, actions: list[Action]):
-        # Write domain file
+    def generate_domain(self, domain: str, types: str, predicates: str, actions: list[Action]) -> str:
+        # Helper function to format individual action descriptions
+        def action_desc(action: Action) -> str:
+            param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
+            desc = f"(:action {action['name']}\n"
+            desc += f"   :parameters (\n{param_str}\n   )\n"
+            desc += f"   :precondition\n{action['preconditions']}\n"
+            desc += f"   :effect\n{action['effects']}\n"
+            desc += ")"
+            return desc
+
+        # Helper function to combine all action descriptions
+        def action_descs(actions) -> str:
+            desc = ""
+            for action in actions:
+                desc += "\n\n" + action_desc(action)
+            return desc
+
+        # Main function to generate the domain description
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += self.indent(f"(:requirements\n   :strips :typing :equality :negative-preconditions :disjunctive-preconditions\n   :universal-preconditions :conditional-effects\n)", 1) + "\n\n"
-        desc += f"   (:types \n{self.indent(types)}\n   )\n\n"
-        desc += f"   (:predicates \n{self.indent(predicates)}\n   )"
-        desc += self.action_descs(actions)
+        desc += f"(:requirements\n   :strips :typing :equality :negative-preconditions :disjunctive-preconditions\n   :universal-preconditions :conditional-effects\n)\n"
+        desc += f"   (:types \n{types}\n   )\n\n"
+        desc += f"   (:predicates \n{predicates}\n   )"
+        desc += action_descs(actions)
         desc += "\n)"
-        desc = desc.replace("AND","and").replace("OR","or") # The python PDDL package can't handle capital AND and OR
+        desc = desc.replace("AND", "and").replace("OR", "or")  # The python PDDL package can't handle capital AND and OR
         return desc
-    
-    def action_descs(self, actions = None) -> str:
-        if actions is None:
-            actions = self.actions
-        desc = ""
-        for action in actions:
-            desc += "\n\n" + self.indent(self.action_desc(action),1)
-        return desc
-    
-    def action_desc(self, action: Action):
-        param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()]) # name includes ?
-        desc  = f"(:action {action['name']}\n"
-        desc += f"   :parameters (\n{self.indent(param_str,2)}\n   )\n"
-        desc += f"   :precondition\n{self.indent(action['preconditions'],2)}\n"
-        desc += f"   :effect\n{self.indent(action['effects'],2)}\n"
-        desc +=  ")"
-        return desc
-    
-    def indent(self, string: str, level: int = 2):
-        return "   " * level + string.replace("\n", f"\n{'   ' * level}")
 
 
     """Add functions"""

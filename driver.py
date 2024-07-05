@@ -3,9 +3,6 @@ from l2p.domain_builder import Domain_Builder
 from l2p.task_builder import Task_Builder
 from l2p.llm_builder import get_llm
 from l2p.utils.pddl_output_utils import prune_predicates, prune_types, extract_types
-from pddl.formatter import domain_to_string, problem_to_string
-from pddl.requirements import Requirements
-from pddl import parse_domain
 import os, json
 
 # micro-functions
@@ -31,7 +28,7 @@ if __name__ == "__main__":
     # model = get_llm("gpt-4o")
 
     # instantiate domain builder class
-    domain_desc = open_file('data/domains/tyreworld.txt')
+    domain_desc = open_file('data/domains/blocksworld.txt')
     domain_builder = Domain_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
     # open and create type extraction prompt builder class
@@ -61,6 +58,7 @@ if __name__ == "__main__":
     ex_desc = open_examples('data/prompt_templates/action_construction/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/task.txt')
     pddl_action_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+
 
     # extract types
     print("Extracted types output:\n")
@@ -96,7 +94,9 @@ if __name__ == "__main__":
         prompt_template=nl_action_extraction_prompt.get_prompt(), 
         type_hierarchy=type_hierarchy)
     domain_builder.set_nl_actions(nl_actions)
-    print(nl_actions)
+
+    for i in nl_actions:
+        print(i)
     
     # extract PDDL formatted actions
     print("\n\n---------------------------------\n\nPDDL action output:\n")
@@ -141,17 +141,20 @@ if __name__ == "__main__":
     pddl_domain = domain_builder.generate_domain(domain="test_domain", types=types_str, predicates=predicate_str, actions=actions)
     print(pddl_domain)
 
-    # # Define the domain file path
-    # domain_file = "data/domain.pddl"
+    # Define the domain file path
+    domain_file = "data/domain.pddl"
 
-    # # Write PDDL domain string to a file
-    # with open(domain_file, "w") as f:
-    #     f.write(pddl_domain)
+    # Write PDDL domain string to a file
+    with open(domain_file, "w") as f:
+        f.write(pddl_domain)
 
-    # print(f"PDDL domain written to {domain_file}")
+    print(f"PDDL domain written to {domain_file}")
 
-    # domain = parse_domain('data/domain.pddl')
-    # print(domain_to_string(domain))
+
+
+
+
+
 
     # task_builder = Task_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
