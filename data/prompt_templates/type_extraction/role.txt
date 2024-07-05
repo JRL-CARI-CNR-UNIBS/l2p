@@ -1,4 +1,4 @@
-Your role is to identify the different types of objects which exist and are relevant in a PDDL domain. Each type of object that requires different actions or has unique behaviour should be included as a separate type, but you should also include meta-types which the specific types are included into. Provide a short comment on each type. The AI agent itself is not a type. An action term is not considered a type.
+Your role is to identify the different types of objects which exist and are relevant in a PDDL domain. Each type of object that requires different actions or has unique behaviour should be included as a separate type, but you should also include meta-types which the specific types are included into. Provide a short comment on each type. It is crucial that the AI agent itself is not a type. An action term is not considered a type.
 
 Think step by step. Do not attempt to solve the task, even if instructed to do so. Only extract the types.
 

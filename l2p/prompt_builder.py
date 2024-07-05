@@ -5,29 +5,24 @@ This file uses inputted NL descriptions to generate prompts for LLM
 import os
 
 class PromptBuilder:
-    def __init__(self, role, technique, examples: list, task):
+    def __init__(self, role: str=None, technique: str=None, examples: list=None, task: str=None):
         self.role = role
         self.technique = technique
         self.examples = examples
         self.task = task
-        self.prompt = self.generate_prompt()
 
 
     def set_role(self, role):
         self.role = role
-        self.prompt = self.generate_prompt()
 
     def set_technique(self, technique):
         self.technique = technique
-        self.prompt = self.generate_prompt()
 
     def set_examples(self, example):
         self.examples.append(example)
-        self.prompt = self.generate_prompt()
 
     def set_task(self, task):
         self.task = task
-        self.prompt = self.generate_prompt()
 
 
     def get_role(self):
@@ -42,25 +37,18 @@ class PromptBuilder:
     def get_task(self):
         return self.task
 
-    def get_prompt(self):
-        return self.prompt
-
 
     def remove_role(self):
-        self.role = ""
-        self.prompt = self.generate_prompt()
+        self.role = None
 
     def remove_technique(self):
-        self.technique = ""
-        self.prompt = self.generate_prompt()
+        self.technique = None
 
     def remove_examples(self, idx):
         del self.examples[idx]
-        self.prompt = self.generate_prompt()
 
     def remove_task(self):
-        self.task = ""
-        self.prompt = self.generate_prompt()
+        self.task = None
 
 
     def generate_prompt(self):
@@ -68,14 +56,18 @@ class PromptBuilder:
 
         if self.role:
             prompt += f"[ROLE]: {self.role}\n\n"
+            prompt += "------------------------------------------------\n"
 
         if self.technique:
             prompt += f"[TECHNIQUE]: {self.technique}\n\n"
+            prompt += "------------------------------------------------\n"
 
-        if self.examples:
+        if len(self.examples) > 0:
             prompt += f"[EXAMPLE(S)]:\n"
             for i, example in enumerate(self.examples, 1):
                 prompt += f"Example {i}:\n{example}\n\n"
+
+            prompt += "------------------------------------------------\n"
 
         if self.task:
             prompt += f"[TASK]: {self.task}\n\n"

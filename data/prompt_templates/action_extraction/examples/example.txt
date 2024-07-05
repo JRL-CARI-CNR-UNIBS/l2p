@@ -14,6 +14,8 @@ Given types:
         - house: What is constructed. Can be finalised when all components are built
         - depot: Where material is stored and vehicles can be loaded
 
+-----------------------------------------------------
+
 1. Iterate over parent types and extract actions:
 ### Worker related actions
 There are two general types of workers, administrators and general_workers. 
@@ -123,7 +125,7 @@ create_finalize_order: An administrator creates an order to build the finalize a
 
 These are all the actions needed for the domain. 
 
-4. Re-Iterated Actions into Python dictionary:
+4. Re-Iterated actions into Python dictionary:
 
 ## OUTPUT
 {

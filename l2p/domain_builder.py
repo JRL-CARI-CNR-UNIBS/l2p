@@ -2,7 +2,6 @@
 This file contains collection of functions for PDDL generation purposes
 """
 
-import re, ast
 from .utils.pddl_parser import parse_new_predicates, parse_action, convert_to_dict
 from .utils.pddl_types import Predicate, Action
 from .utils.human_feedback import human_feedback
@@ -39,9 +38,7 @@ class Domain_Builder:
             self, 
             model: LLM_Chat, 
             domain_desc: str, 
-            prompt_template: PromptBuilder,
-            feedback: str=None, 
-            feedback_template: str=None
+            prompt_template: PromptBuilder
             ) -> dict[str,str]:
         """
         Extracts types with domain given
@@ -60,9 +57,12 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc) # replace template holders
         llm_response = model.get_output(prompt=prompt_template) # prompt model
 
-        types = convert_to_dict(llm_response=llm_response)
-        
-        return types
+        try:
+            types = convert_to_dict(llm_response=llm_response)
+            return types
+        except Exception as e:
+            print(f"An error occurred: {e}\n")
+            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
     
 
     def extract_type_hierarchy(
@@ -70,9 +70,7 @@ class Domain_Builder:
             model: LLM_Chat, 
             domain_desc: str,
             prompt_template: PromptBuilder, 
-            types: dict[str,str],
-            feedback: str=None, 
-            feedback_template: str=None
+            types: dict[str,str]
             ) -> dict[str,str]:
         """
         Extracts type hierarchy from types list and domain given
@@ -93,9 +91,13 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{type_list}', str(types))
 
         llm_response = model.get_output(prompt=prompt_template)
-        type_hierarchy = convert_to_dict(llm_response=llm_response)
 
-        return type_hierarchy
+        try:
+            type_hierarchy = convert_to_dict(llm_response=llm_response)
+            return type_hierarchy
+        except Exception as e:
+            print(f"An error occurred: {e}\n")
+            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
 
         
     def extract_nl_actions(
@@ -103,9 +105,7 @@ class Domain_Builder:
             model: LLM_Chat,
             domain_desc: str, 
             prompt_template: PromptBuilder, 
-            type_hierarchy: dict[str,str], 
-            feedback: str=None, 
-            feedback_template: str=None
+            type_hierarchy: dict[str,str]
             ) -> dict[str,str]:
         
         """
@@ -129,21 +129,23 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
-        nl_actions = convert_to_dict(llm_response=llm_response)
 
-        return nl_actions
+        try:
+            nl_actions = convert_to_dict(llm_response=llm_response)
+            return nl_actions
+        except Exception as e:
+            print(f"An error occurred: {e}\n")
+            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
 
 
+    # FIX PROMPT TEMPLATE AND CODE TO ACCOMODATE MORE UNIVERSAL PROMPT INPUTS
     def extract_pddl_action(
             self, 
             model: LLM_Chat, 
             prompt_template: str, 
             action_name: str,
             action_desc: str,
-            predicates: list[Predicate], 
-            max_iters: int=0, 
-            feedback: bool=False, 
-            feedback_template: str=None
+            predicates: list[Predicate]
             ) -> tuple[Action, list[Predicate]]:
         """
         Construct an action from a given action description using LLM
@@ -164,57 +166,84 @@ class Domain_Builder:
 
         """
 
+        model.reset_tokens()
+
         # replace action name/description and predicates in prompt template
         prompt_template = prompt_template.replace('{action_name}', action_name)
         prompt_template = prompt_template.replace('{action_desc}', action_desc)
 
-        if len(predicates) == 0:
-            predicate_str = "No predicate has been defined yet."
-        else:
-            predicate_str = ""
-            for i, pred in enumerate(predicates): predicate_str += f"{i+1}. {pred['name']}: {pred['desc']}\n"  
+        predicate_str = (
+            "No predicate has been defined yet."
+            if len(predicates) == 0
+            else "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
+        )
         
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
         llm_response = model.get_output(prompt=prompt_template)
 
-        # print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION", llm_response)
+        print(llm_response)
 
-        # extract actions and predicates
-        action = parse_action(llm_response=llm_response, action_name=action_name)
-        new_predicates = parse_new_predicates(llm_response)
-        new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
+        try: 
+            # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
+            action = parse_action(llm_response=llm_response, action_name=action_name)
+            new_predicates = parse_new_predicates(llm_response)
+            new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
-        return action, new_predicates
+            return action, new_predicates
+        except Exception as e:
+            print(f"An error occurred: {e}\n")
+            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
 
 
-    def generate_domain(self, domain: str, types: str, predicates: str, actions: list[Action]) -> str:
-        # Helper function to format individual action descriptions
-        def action_desc(action: Action) -> str:
-            param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
-            desc = f"(:action {action['name']}\n"
-            desc += f"   :parameters (\n{param_str}\n   )\n"
-            desc += f"   :precondition\n{action['preconditions']}\n"
-            desc += f"   :effect\n{action['effects']}\n"
-            desc += ")"
-            return desc
+    def extract_parameters(
+            self, 
+            model: LLM_Chat, 
+            prompt_template: str, 
+            action_name: str, 
+            action_desc: str, 
+            types: dict[str,str]
+            ) -> list[str]:
+        """
+        Constructs parameters for singular action.
+        Returns: 
+            params (list[str]): list of parameter strings
+        """
+        pass
 
-        # Helper function to combine all action descriptions
-        def action_descs(actions) -> str:
-            desc = ""
-            for action in actions:
-                desc += "\n\n" + action_desc(action)
-            return desc
+    def extract_preconditions(
+            self, 
+            model: LLM_Chat, 
+            prompt_template: str, 
+            action_name: str, 
+            action_desc: str, 
+            params: list[str], 
+            preds: list[Predicate]
+            ) -> tuple[str, list[Predicate]]:
+        """
+        Constructs preconditions for singular action.
+        Returns: 
+            precond (str): string containing PDDL preconditions
+            preds (list[Predicate]): list of Predicate instances
+        """
+        pass
 
-        # Main function to generate the domain description
-        desc = ""
-        desc += f"(define (domain {domain})\n"
-        desc += f"(:requirements\n   :strips :typing :equality :negative-preconditions :disjunctive-preconditions\n   :universal-preconditions :conditional-effects\n)\n"
-        desc += f"   (:types \n{types}\n   )\n\n"
-        desc += f"   (:predicates \n{predicates}\n   )"
-        desc += action_descs(actions)
-        desc += "\n)"
-        desc = desc.replace("AND", "and").replace("OR", "or")  # The python PDDL package can't handle capital AND and OR
-        return desc
+    def extract_effects(
+            self, 
+            model: LLM_Chat, 
+            prompt_template: str, 
+            action_name: str, 
+            action_desc: str, 
+            preds: list[Predicate],
+            params: list[str],
+            precond: str
+            ) -> tuple[str, list[Predicate]]:
+        """
+        Constructs effects for singular action.
+        Returns: 
+            effects (str): string containing PDDL effects
+            preds (list[Predicate]): list of Predicate instances
+        """
+        pass
 
 
     """Add functions"""
@@ -289,6 +318,35 @@ class Domain_Builder:
     def get_action_checklist():
         pass
 
+
+    def generate_domain(self, domain: str, types: str, predicates: str, actions: list[Action]) -> str:
+        # Helper function to format individual action descriptions
+        def action_desc(action: Action) -> str:
+            param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
+            desc = f"(:action {action['name']}\n"
+            desc += f"   :parameters (\n{param_str}\n   )\n"
+            desc += f"   :precondition\n{action['preconditions']}\n"
+            desc += f"   :effect\n{action['effects']}\n"
+            desc += ")"
+            return desc
+
+        # Helper function to combine all action descriptions
+        def action_descs(actions) -> str:
+            desc = ""
+            for action in actions:
+                desc += "\n\n" + action_desc(action)
+            return desc
+
+        # Main function to generate the domain description
+        desc = ""
+        desc += f"(define (domain {domain})\n"
+        desc += f"(:requirements\n   :strips :typing :equality :negative-preconditions :disjunctive-preconditions\n   :universal-preconditions :conditional-effects\n)\n"
+        desc += f"   (:types \n{types}\n   )\n\n"
+        desc += f"   (:predicates \n{predicates}\n   )"
+        desc += action_descs(actions)
+        desc += "\n)"
+        desc = desc.replace("AND", "and").replace("OR", "or")  # The python PDDL package can't handle capital AND and OR
+        return desc
 
 if __name__ == "__main__":
     pass

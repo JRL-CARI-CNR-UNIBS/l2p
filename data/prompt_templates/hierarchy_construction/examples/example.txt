@@ -18,6 +18,8 @@ Given types:
 - mansion: A large type of house
 - library: A building filled with books
 
+-----------------------------------------------------
+
 1. Reasoning
 The "administrator" and "general_worker" are both types of human workers, so we should probably create a "worker" meta-type class for those.
 Furthermore, there are several different types of "house_component": "floor", "roof", and "wall". However, these aren't a subtype of "house" since a "floor" is not a "house" for example.

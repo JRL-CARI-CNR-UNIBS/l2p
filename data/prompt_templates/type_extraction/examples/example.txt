@@ -3,6 +3,8 @@ The following is an in-context example following the CoT technique.
 Given domain:
 The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport things. Currently, there are a couple of trucks at the Chicago depot and we're trying to build three houses in the area. Jamie is the only administrator, but we've got Emma and Bob available for general work.
 
+-----------------------------------------------------
+
 1. First, we'll need types for the houses that are built and the depot. We'll also add a general location type to organize this.
 ```
 - location: Can be visited and travelled between.

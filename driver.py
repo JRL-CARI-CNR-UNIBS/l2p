@@ -2,7 +2,7 @@ from l2p.prompt_builder import PromptBuilder
 from l2p.domain_builder import Domain_Builder
 from l2p.task_builder import Task_Builder
 from l2p.llm_builder import get_llm
-from l2p.utils.pddl_output_utils import prune_predicates, prune_types, extract_types
+from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
 import os, json
 
 # micro-functions
@@ -59,15 +59,12 @@ if __name__ == "__main__":
     task_desc = open_file('data/prompt_templates/action_construction/task.txt')
     pddl_action_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
 
-
     # extract types
     print("Extracted types output:\n")
     types = domain_builder.extract_type(
         model=model, 
         domain_desc=domain_desc, 
-        prompt_template=type_extraction_prompt.get_prompt(),
-        feedback="LLM",
-        feedback_template=open_file('data/prompt_templates/type_extraction/feedback.txt')
+        prompt_template=type_extraction_prompt.generate_prompt(),
         )
     domain_builder.set_types(types=types)
     print("Types: ", format_json_output(domain_builder.get_types()))
@@ -77,10 +74,8 @@ if __name__ == "__main__":
     type_hierarchy = domain_builder.extract_type_hierarchy(
         model=model, 
         domain_desc=domain_desc, 
-        prompt_template=type_hierarchy_prompt.get_prompt(), 
+        prompt_template=type_hierarchy_prompt.generate_prompt(), 
         types=domain_builder.get_types(),
-        feedback="LLM",
-        feedback_template=open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
         )
     domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     print(format_json_output(type_hierarchy))
@@ -91,10 +86,9 @@ if __name__ == "__main__":
     nl_actions = domain_builder.extract_nl_actions(
         model=model, 
         domain_desc=domain_desc, 
-        prompt_template=nl_action_extraction_prompt.get_prompt(), 
+        prompt_template=nl_action_extraction_prompt.generate_prompt(), 
         type_hierarchy=type_hierarchy)
     domain_builder.set_nl_actions(nl_actions)
-
     for i in nl_actions:
         print(i)
     
@@ -111,7 +105,7 @@ if __name__ == "__main__":
         for action_name, action_desc in nl_actions.items():
             action, new_predicates = domain_builder.extract_pddl_action(
                 model=model,
-                prompt_template=pddl_action_extraction_prompt.get_prompt(),
+                prompt_template=pddl_action_extraction_prompt.generate_prompt(),
                 action_name=action_name,
                 action_desc=action_desc,
                 predicates=predicates
