@@ -11,11 +11,6 @@
 {predicates}
 ```
 
-## Actions
-```
-{actions}
-```
-
 ## Problem description
 ```
 {problem_desc}

@@ -1,5 +1,5 @@
 from .utils.pddl_types import Predicate, Action
-from .utils.pddl_parser import parse_objects, parse_initial, parse_goal
+from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, convert_to_dict
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
 
@@ -11,31 +11,27 @@ class Task_Builder:
 
     def extract_objects(self, 
             model: LLM_Chat, 
+            problem_desc: str,
             domain_desc: str, 
             prompt_template: PromptBuilder,
             type_hierarchy: dict[str,str], 
-            predicates: list[Predicate],
-            action_desc: dict[str,str]
+            predicates: list[Predicate]
             ) -> dict[str,str]:
         
-        model.reset_token_usage()
+        model.reset_tokens()
 
         predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-
-        action_str = ""
-        for action, description in action_desc.items():
-            action_str += f"Action: {action}\nDescription: {description}\n\n"
+        types_str = "\n".join(type_hierarchy)
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
+        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{actions}', action_str)
-
-        llm_response = model.get_response(prompt=prompt_template) # get LLM response
-
-        # implement parsing function to obtain dict[str,str] consisting of PDDL objects {"name": "desc"}
-
-        pass
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+        
+        llm_response = model.get_output(prompt=prompt_template) # get LLM response
+        objects = convert_to_dict(llm_response=llm_response)
+        return objects
+    
 
     def extract_initial_state(self, model: LLM_Chat, prompt_template: PromptBuilder):
         llm_response = model.get_response(prompt_template)
@@ -62,20 +58,12 @@ class Task_Builder:
         model.reset_tokens()
 
         predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-
-        desc = ""
-        for action in actions:
-            param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
-            desc += f"(:action {action['name']}\n"
-            desc += f"   :parameters (\n{param_str}\n   )\n"
-            desc += f"   :precondition\n{action['preconditions']}\n"
-            desc += f"   :effect\n{action['effects']}\n"
-            desc += ")\n\n"
+        action_str = self.format_action(actions=actions)
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{actions}', desc)
+        prompt_template = prompt_template.replace('{actions}', action_str)
         prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
         llm_response = model.get_output(prompt=prompt_template)
@@ -89,8 +77,6 @@ class Task_Builder:
         return objects, initial, goal
 
 
-
-
     def generate_task(self, domain: str, objects: str, initial: str, goal: str):
         # Write problem file
         desc = "(define\n"
@@ -102,10 +88,20 @@ class Task_Builder:
         desc += ")"
         desc = desc.replace("AND","and").replace("OR","or") # The python PDDL package can't handle capital AND and OR
         return desc
-
-if __name__ == "__main__":
     
 
+    def format_action(self, actions: list[Action]) -> str:
+        desc = ""
+        for action in actions:
+            param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
+            desc += f"(:action {action['name']}\n"
+            desc += f"   :parameters (\n{param_str}\n   )\n"
+            desc += f"   :precondition\n{action['preconditions']}\n"
+            desc += f"   :effect\n{action['effects']}\n"
+            desc += ")\n\n"
+        return desc
+
+if __name__ == "__main__":
     actions_dict = {
     'pick_up_block': 'The robot arm picks up a block from its current location. Example: robot_arm picks up block_1 from table.',
     'place_on_table': 'The robot arm places a block on the table. Example: robot_arm places block_2 on table.',
@@ -115,7 +111,5 @@ if __name__ == "__main__":
     }
 
     action_str = ""
-    for action, description in actions_dict.items():
-        action_str += f"Action: {action}\n Description: {description}\n\n"
-
+    for action, description in actions_dict.items(): action_str += f"Action: {action}\n Description: {description}\n\n"
     print(action_str)

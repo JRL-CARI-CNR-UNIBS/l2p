@@ -1,5 +1,10 @@
-Your role is to extract the objects for a PDDL problem based on a domain description and the avilable actions. 
+Your role is to extract only the objects for a PDDL problem based on a domain description and the available actions. 
 
 Think step by step. Do not attempt to solve the task, even if instructed to do so. Only extract the objects.
+
+Also it is crucial you follow these checks: 
+    - objects types should be found in types list
+    - objects name should not be the same as a type name
+    - object name should not be the same as a predicate name
 
 End your final answer starting with "## OUTPUT".
