@@ -34,14 +34,20 @@ Lastly, I've repeatedly assumed the existence of construction materials. This is
     1: Are there any more types which are needed to model the domain?
         No. There is no need to include any more types.
 
-    2:  Are any more types needed for organisation?
+    2:  Are any more types needed for organisation? For example, if both "carbonara" and "sushi" are both included, a "food" meta-type should likely be included as well.
         Yes. Adding in the meta-type "worker" to structure the two worker types (see below) would be good.
 
-    3: Are any of the supposed types actually objects?
+    3: Are any of the supposed types actually objects? For example, is a name listed as a type? If so, it should be replaced with the general type.
         Yes. Jamie, Emma and Bob are all individual objects (or in this case people). They should be replaced with their types, administrator and general_worker. 
 
-    4: Should any of the types be removed?
+    4: Are any of the types actually actions? If so, they should be removed.
         No. Beyond the people mentioned above the types are reasonable.
+
+    5: Are any of the types actually properties? If so, they should later be modelled with predicates instead and thereby removed.
+    6: Is the acting agent itself or the resulting plans included? If only one instance of the agent exists, such as the entire problem modelling behaviour for one robot, it should be removed.  
+    7: Will any of the included types only ever be used once? If so, it should be removed and modelled implicitly.
+    8: Is the acting agent itself or the resulting plans included? The domain might be better modelled in PDDL if some parts are modelled not as objects and types, even if they technically are. 
+
 
 3. I'd suggest the following:
 - Remove "jamie", "emma" and "bob".

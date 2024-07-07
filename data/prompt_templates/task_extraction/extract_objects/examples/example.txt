@@ -1,0 +1,4 @@
+1. Identify all key terms in the description describing a certain type
+2. For each object extracted, identify the cardinality of each object described
+3. Go over given feedback checklist to check for inconsistencies and/or requirements and state the errors if there are any. If there are errors, generate a suggestion
+4. Re-iterate over the objects and put them into a Python dictionary pair '{'name':'description'}'. Keep the objects the same if they do not need to be modified.

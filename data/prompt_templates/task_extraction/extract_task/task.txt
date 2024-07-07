@@ -1,0 +1,22 @@
+## Domain
+{domain_desc}
+
+## Types
+```
+{type_hierarchy}
+```
+
+## Predicates
+```
+{predicates}
+```
+
+## Actions
+```
+{actions}
+```
+
+## Problem description
+```
+{problem_desc}
+```

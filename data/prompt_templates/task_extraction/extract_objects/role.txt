@@ -1,0 +1,5 @@
+Your role is to extract the objects for a PDDL problem based on a domain description and the avilable actions. 
+
+Think step by step. Do not attempt to solve the task, even if instructed to do so. Only extract the objects.
+
+End your final answer starting with "## OUTPUT".

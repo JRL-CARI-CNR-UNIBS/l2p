@@ -68,17 +68,20 @@ finalise_house: The house is finalised (walls painted, interior prepared and so 
 ```
 
 2. Feedback
-    1: Are there any more actions needed for this domain?
+    1: Are there any more actions needed for this domain? Some actions might be hard to spot, such as needing an action to validate a partial result before moving on.
         Yes. For the vehicles to be able to transport workers we need to add actions to allow workers to step on and off the vehicles, "enter_vehicle" and "exit_vehicle". Definitions are given below. 
 
-    2: Should any of the actions be split or combined?
+    2: Should any of the actions be split or combined? To model actions in PDDL its sometimes required to split it into three parts, one which initiates the action, one which performs a part of the action and is usually repeated, and lastly an action ending the action.
         Yes. In PDDL it's not functional to have a single "create_order" action for all parts of the house (floor, walls, roof and finalisation). The results of applying the action have to be simple, so we'll split it into "order_floor" and so on. 
 
-    3: Should any of the actions be removed?
+    3: Should any of the actions be removed? For example, actions which model irrelevant details.
         Yes. The "build_floor" action should be removed since building floors isn't needed. 
 
-    4: Should the actions and constraints be clarified or the examples modified?
+    4: Should the actions and constraints be clarified or the examples modified? Are they currently unclear or missing objects?
         No. The action descriptions and constraints are stated.
+
+    5: Should any preconditions be changed? For example, are any preconditions such as object states or action ordering missing? Are any unnecessary preconditions included?
+    6: Should any effects be changed? For example, is some effect forgotten? Is any any incorrect effect included?
 
 3. My concrete suggestions are the following:
     - Add the following two vehicle-related actions:

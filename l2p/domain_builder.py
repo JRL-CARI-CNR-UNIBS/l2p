@@ -4,7 +4,6 @@ This file contains collection of functions for PDDL generation purposes
 
 from .utils.pddl_parser import parse_new_predicates, parse_action, convert_to_dict
 from .utils.pddl_types import Predicate, Action
-from .utils.human_feedback import human_feedback
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
 
@@ -56,6 +55,8 @@ class Domain_Builder:
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc) # replace template holders
         llm_response = model.get_output(prompt=prompt_template) # prompt model
+        
+        # print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
 
         try:
             types = convert_to_dict(llm_response=llm_response)
@@ -64,7 +65,6 @@ class Domain_Builder:
             print(f"An error occurred: {e}\n")
             print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
     
-
     def extract_type_hierarchy(
             self, 
             model: LLM_Chat, 
@@ -99,7 +99,6 @@ class Domain_Builder:
             print(f"An error occurred: {e}\n")
             print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
 
-        
     def extract_nl_actions(
             self, 
             model: LLM_Chat,
@@ -136,9 +135,7 @@ class Domain_Builder:
         except Exception as e:
             print(f"An error occurred: {e}\n")
             print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
-
-
-    # FIX PROMPT TEMPLATE AND CODE TO ACCOMODATE MORE UNIVERSAL PROMPT INPUTS
+    
     def extract_pddl_action(
             self, 
             model: LLM_Chat, 
@@ -147,6 +144,9 @@ class Domain_Builder:
             action_desc: str,
             predicates: list[Predicate]
             ) -> tuple[Action, list[Predicate]]:
+        
+        # FIX PROMPT TEMPLATE AND CODE TO ACCOMODATE MORE UNIVERSAL PROMPT INPUTS
+
         """
         Construct an action from a given action description using LLM
 
@@ -181,7 +181,7 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
         llm_response = model.get_output(prompt=prompt_template)
 
-        print(llm_response)
+        # print(llm_response)
 
         try: 
             # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
@@ -189,11 +189,13 @@ class Domain_Builder:
             new_predicates = parse_new_predicates(llm_response)
             new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
+            # print("Action:", action['name'])
+            # print("Predicates:", predicates)
+
             return action, new_predicates
         except Exception as e:
             print(f"An error occurred: {e}\n")
             print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
-
 
     def extract_parameters(
             self, 
@@ -257,10 +259,16 @@ class Domain_Builder:
         types = self.extract_type(model=model, domain_desc=domain_desc, prompt_template=prompt_template + "\nHere are the original types. Do not change them: \n" + str(self.types))
         return types
     
-    def add_nl_action(self, model: LLM_Chat, domain_desc: str, prompt_template: PromptBuilder) -> tuple[dict[str,str], str]:
+    def add_nl_action(self, model: LLM_Chat, domain_desc: str, prompt_template: PromptBuilder, type_hierarchy: dict[str,str]=None) -> dict[str,str]:
         prompt_template += "\nHere is the provided domain to perform your task on: {domain_desc}"
         prompt_template += "\nHere is the provided type hierarchy to perform your task on: {domain_desc}"
-        nl_actions = self.extract_nl_actions(model, domain_desc, prompt_template, self.type_hierarchy)
+        nl_actions = self.extract_nl_actions(
+            model, 
+            domain_desc, 
+            prompt_template + "\nHere are the original actions. Do not change them: \n" + str(self.nl_actions), 
+            type_hierarchy)
+
+        return nl_actions
 
     def add_pddl_action(self):
         # user inputs prompt to add an action to the domain, LLM takes current domain info and dynamically modifies file to integrate new action

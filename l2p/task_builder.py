@@ -1,54 +1,21 @@
 from .utils.pddl_types import Predicate, Action
-from .llm_builder import LLM_Chat, get_llm
+from .utils.pddl_parser import parse_objects, parse_initial, parse_goal
+from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
 
 class Task_Builder:
-    def __init__(self, domain, objects, initial, goal):
-        self.domain=domain
+    def __init__(self, objects: dict[str,str], initial: dict[str,str], goal: str):
         self.objects=objects
         self.initial=initial
         self.goal=goal
 
-    def extract_nl_objects(
-            self, 
+    def extract_objects(self, 
             model: LLM_Chat, 
             domain_desc: str, 
             prompt_template: PromptBuilder,
             type_hierarchy: dict[str,str], 
             predicates: list[Predicate],
-            action_desc: dict[str,str],
-            feedback: bool=False, 
-            feedback_template: str=None
-            ) -> dict[str,str]:
-        
-        model.reset_token_usage()
-
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-
-        action_str = ""
-        for action, description in action_desc.items():
-            action_str += f"Action: {action}\nDescription: {description}\n\n"
-
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
-        prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{actions}', action_str)
-
-        llm_response = model.get_response(prompt=prompt_template) # get LLM response
-
-        # implement parsing function to obtain dict[str,str] consisting of NL objects {"name": "desc"}
-
-        pass
-
-    def extract_pddl_objects(self, 
-            model: LLM_Chat, 
-            domain_desc: str, 
-            prompt_template: PromptBuilder,
-            type_hierarchy: dict[str,str], 
-            predicates: list[Predicate],
-            action_desc: dict[str,str],
-            feedback: bool=False, 
-            feedback_template: str=None
+            action_desc: dict[str,str]
             ) -> dict[str,str]:
         
         model.reset_token_usage()
@@ -70,22 +37,74 @@ class Task_Builder:
 
         pass
 
-    def extract_initial_state(self, model: LLM_Chat, prompt_template: str):
+    def extract_initial_state(self, model: LLM_Chat, prompt_template: PromptBuilder):
         llm_response = model.get_response(prompt_template)
         print(llm_response.strip())
 
-    def extract_goal_state():
+    def extract_goal_state(self, model: LLM_Chat, prompt_template: PromptBuilder):
         pass
 
-    def generate_task():
-        pass
+
+    def extract_task(
+            self, 
+            model: LLM_Chat, 
+            problem_desc: str,
+            domain_desc: str, 
+            prompt_template: PromptBuilder, 
+            types: dict[str,str], 
+            predicates: list[Predicate],
+            actions: list[Action]
+            ) -> tuple[str,str,str]:
+        """
+        Extracts objects, initial, and goal states from LLM output given domain description, types, and predicates
+        Returns -> tuple[str,str,str]
+        """
+        model.reset_tokens()
+
+        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
+
+        desc = ""
+        for action in actions:
+            param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
+            desc += f"(:action {action['name']}\n"
+            desc += f"   :parameters (\n{param_str}\n   )\n"
+            desc += f"   :precondition\n{action['preconditions']}\n"
+            desc += f"   :effect\n{action['effects']}\n"
+            desc += ")\n\n"
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{actions}', desc)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+
+        llm_response = model.get_output(prompt=prompt_template)
+
+        print("LLM RESPONSE TASK BUILDER:\n", llm_response)
+
+        objects = parse_objects(llm_response)
+        initial = parse_initial(llm_response)
+        goal = parse_goal(llm_response)
+
+        return objects, initial, goal
+
+
+
+
+    def generate_task(self, domain: str, objects: str, initial: str, goal: str):
+        # Write problem file
+        desc = "(define\n"
+        desc += f"   (problem {domain}_problem)\n"
+        desc += f"   (:domain {domain})\n\n"
+        desc += f"   (:objects \n{objects}\n   )\n\n"
+        desc += f"   (:init\n{initial}\n   )\n\n"
+        desc += f"   (:goal\n{goal}\n   )\n\n"
+        desc += ")"
+        desc = desc.replace("AND","and").replace("OR","or") # The python PDDL package can't handle capital AND and OR
+        return desc
 
 if __name__ == "__main__":
     
-    # task = Task_Builder()
-    # description = "The AI agent here is a mechanical robot arm that can pick and place the blocks. Only one block may be moved at a time: it may either be placed on the table or placed atop another block. Because of this, any blocks that are, at a given time, under another block cannot be moved."
-    
-    # print(task.extract_initial_state("GPT-3.5-Turbo", description))
 
     actions_dict = {
     'pick_up_block': 'The robot arm picks up a block from its current location. Example: robot_arm picks up block_1 from table.',
