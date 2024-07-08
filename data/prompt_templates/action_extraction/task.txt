@@ -3,3 +3,6 @@
 
 ## Types 
 {type_hierarchy}
+
+## Available Actions
+{actions}

@@ -47,7 +47,7 @@ class Task_Builder:
             type_hierarchy: dict[str,str], 
             predicates: list[Predicate],
             objects: dict[str,str]
-            ) -> dict[str,str]:
+            ) -> str:
         
         model.reset_tokens()
 
@@ -63,11 +63,15 @@ class Task_Builder:
 
         llm_response = model.get_output(prompt=prompt_template)
 
+        # FIX THIS SO THAT IT JUST RETURNS STRING INSTEAD OF DICT
+
         parts = llm_response.split('## OUTPUT', 1)
         if len(parts) > 1:
             initial = convert_to_dict(parts[1].strip())
         else:
             initial = {}
+
+        initial = "\n".join(initial.keys())
 
         return initial
         
@@ -131,7 +135,7 @@ class Task_Builder:
 
         llm_response = model.get_output(prompt=prompt_template)
 
-        print("LLM RESPONSE TASK BUILDER:\n", llm_response)
+        # print("LLM RESPONSE TASK BUILDER:\n", llm_response)
 
         objects = parse_objects(llm_response)
         initial = parse_initial(llm_response)
@@ -164,19 +168,5 @@ class Task_Builder:
         return desc
 
 if __name__ == "__main__":
-    # actions_dict = {
-    # 'pick_up_block': 'The robot arm picks up a block from its current location. Example: robot_arm picks up block_1 from table.',
-    # 'place_on_table': 'The robot arm places a block on the table. Example: robot_arm places block_2 on table.',
-    # 'place_on_block': 'The robot arm places a block on top of another block. Example: robot_arm places block_3 on top of block_4.',
-    # 'move_block': 'The robot arm moves a block from one location to another. Example: robot_arm moves block_5 from table to stack_1.',
-    # 'move_arm': 'The robot arm moves to a different location. Example: robot_arm moves to table.'
-    # }
 
-    # action_str = ""
-    # for action, description in actions_dict.items(): action_str += f"Action: {action}\n Description: {description}\n\n"
-    # print(action_str)s
-
-    objects = {'blue': 'block', 'red': 'block', 'yellow': 'block', 'green': 'block', 'arm': 'arm', 'table': 'table'}
-    objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-
-    print(objects_str)
+    pass

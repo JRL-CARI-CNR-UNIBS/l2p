@@ -1,2 +1,5 @@
-Here is the provided domain to perform your task on:
+## Domain
 {domain_desc}
+
+## Available types:
+{type_hierarchy}

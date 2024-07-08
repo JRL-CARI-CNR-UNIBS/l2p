@@ -38,7 +38,8 @@ class Domain_Builder:
             self, 
             model: LLM_Chat, 
             domain_desc: str, 
-            prompt_template: PromptBuilder
+            prompt_template: PromptBuilder,
+            types: dict[str,str]=None
             ) -> dict[str,str]:
         """
         Extracts types with domain given
@@ -55,16 +56,20 @@ class Domain_Builder:
         model.reset_tokens() # reset tokens
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc) # replace template holders
+
+        if types != None:
+            prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
+        else:
+            prompt_template = prompt_template.replace('{type_hierarchy}', "No types available.")
+
+        # print("TYPE PROMPT:\n", prompt_template)
+
         llm_response = model.get_output(prompt=prompt_template) # prompt model
         
         # print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
 
-        try:
-            types = convert_to_dict(llm_response=llm_response)
-            return types
-        except Exception as e:
-            print(f"An error occurred: {e}\n")
-            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
+        types = convert_to_dict(llm_response=llm_response)
+        return types
     
     def extract_type_hierarchy(
             self, 
@@ -105,7 +110,8 @@ class Domain_Builder:
             model: LLM_Chat,
             domain_desc: str, 
             prompt_template: PromptBuilder, 
-            type_hierarchy: dict[str,str]
+            type_hierarchy: dict[str,str],
+            nl_actions: dict[str,str]=None
             ) -> dict[str,str]:
         
         """
@@ -128,14 +134,15 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
 
+        if nl_actions != None:
+            prompt_template = prompt_template.replace('{actions}', str(nl_actions))
+        else:
+            prompt_template = prompt_template.replace('{actions}', "No actions available.")
+
         llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
 
-        try:
-            nl_actions = convert_to_dict(llm_response=llm_response)
-            return nl_actions
-        except Exception as e:
-            print(f"An error occurred: {e}\n")
-            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
+        nl_actions = convert_to_dict(llm_response=llm_response)
+        return nl_actions
     
     def extract_pddl_action(
             self, 
@@ -181,18 +188,12 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
         llm_response = model.get_output(prompt=prompt_template)
 
-        # print(llm_response)
+        # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
+        action = parse_action(llm_response=llm_response, action_name=action_name)
+        new_predicates = parse_new_predicates(llm_response)
+        new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
-        try: 
-            # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
-            action = parse_action(llm_response=llm_response, action_name=action_name)
-            new_predicates = parse_new_predicates(llm_response)
-            new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
-
-            return action, new_predicates
-        except Exception as e:
-            print(f"An error occurred: {e}\n")
-            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
+        return action, new_predicates
 
     def extract_parameters(
             self, 
@@ -291,7 +292,7 @@ class Domain_Builder:
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
 
-        print("LLM RESPONSE EFFECTS\n", llm_response)
+        # print("LLM RESPONSE EFFECTS\n", llm_response)
 
         effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         new_predicates = parse_new_predicates(llm_output=llm_response)
@@ -307,18 +308,17 @@ class Domain_Builder:
         Args:
         Returns:
         """
-        prompt_template += "\nHere is the provided domain to perform your task on: {domain_desc}"
-        types = self.extract_type(model=model, domain_desc=domain_desc, prompt_template=prompt_template + "\nHere are the original types. Do not change them: \n" + str(self.types))
+        types = self.extract_type(model=model, domain_desc=domain_desc, prompt_template=prompt_template, types=self.types)
         return types
     
     def add_nl_action(self, model: LLM_Chat, domain_desc: str, prompt_template: PromptBuilder, type_hierarchy: dict[str,str]=None) -> dict[str,str]:
-        prompt_template += "\nHere is the provided domain to perform your task on: {domain_desc}"
-        prompt_template += "\nHere is the provided type hierarchy to perform your task on: {domain_desc}"
         nl_actions = self.extract_nl_actions(
             model, 
             domain_desc, 
-            prompt_template + "\nHere are the original actions. Do not change them: \n" + str(self.nl_actions), 
-            type_hierarchy)
+            prompt_template, 
+            type_hierarchy,
+            nl_actions=self.nl_actions
+            )
 
         return nl_actions
 

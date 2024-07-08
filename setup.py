@@ -31,32 +31,34 @@
 
 # - [ ] Implement external planner tool
 
-
     # print("\n\n---------------------------------\n\nAdding new type output:\n")
 
     # user_input = input("Please enter the type you want to add:\n")
-    # prompt = "You are to add a new type into the types already listed. Format it the same way in Python dictionary\n\n" + user_input 
+    # prompt = "\nYou are to add a new type into the types already listed. Format it the same way in Python dictionary\n\n" + user_input 
 
     # new_types = domain_builder.add_type(
     #      model=model,
     #      domain_desc=domain_desc,
-    #      prompt_template=prompt
+    #      prompt_template=type_extraction_prompt.generate_prompt() + prompt
     # )
     # domain_builder.set_types(types=new_types)
     # print("New types: ", format_json_output(domain_builder.get_types()))
 
     # # extract type hierarchy
     # print("\n\n---------------------------------\n\nType hierarchy output:\n")
-    # type_hierarchy = domain_builder.extract_type_hierarchy(
-    #     model=model, 
-    #     domain_desc=domain_desc, 
-    #     prompt_template=type_hierarchy_prompt.get_prompt(), 
-    #     types=domain_builder.get_types(),
-    #     feedback="LLM",
-    #     feedback_template=open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
-    #     )
+    # type_hierarchy = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
     # domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     # print(format_json_output(type_hierarchy))
+
+# user_input = input("\nPlease enter the action(s) in natural language you want to add:\n")
+# prompt = "\nYou are to add a new action into the actions already listed. Format it the same way in Python dictionary\n\n" + user_input 
+# new_nl_actions = domain_builder.add_nl_action(
+#     model, 
+#     domain_desc, 
+#     prompt_template=nl_action_extraction_prompt.generate_prompt() + prompt,
+#     type_hierarchy=type_hierarchy
+#     )
+
 
 from pddl.logic import Predicate, constants, variables
 from pddl.core import Domain, Problem
