@@ -24,8 +24,8 @@ if __name__ == "__main__":
     # THIS IS IMPORTANT TO LOOK INTO
     unsupported_keywords = ['object']
 
-    # model = get_llm("gpt-3.5-turbo-0125")
-    model = get_llm("gpt-4o")
+    model = get_llm("gpt-3.5-turbo-0125")
+    # model = get_llm("gpt-4o")
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
@@ -94,37 +94,29 @@ if __name__ == "__main__":
     
     # extract PDDL formatted actions
     print("\n\n---------------------------------\n\nPDDL action output:\n")
+
+
     # action-by-action method used in Guan et al. (2023): https://arxiv.org/abs/2305.14909
-    max_iters = 1
     predicates = []
-    for i in range(max_iters):
-        actions = []
-        curr_preds = len(predicates)
+    actions = []
 
-        # iterate through each action, dynamically create new predicates
-        for action_name, action_desc in nl_actions.items():
-            action, new_predicates = domain_builder.extract_pddl_action(
-                model=model,
-                prompt_template=pddl_action_extraction_prompt.generate_prompt(),
-                action_name=action_name,
-                action_desc=action_desc,
-                predicates=predicates
-            )
+    # iterate through each action, dynamically create new predicates
+    for action_name, action_desc in nl_actions.items():
+        action, new_predicates = domain_builder.extract_pddl_action(
+            model=model,
+            prompt_template=pddl_action_extraction_prompt.generate_prompt(),
+            action_name=action_name,
+            action_desc=action_desc,
+            predicates=predicates
+        )
 
-            actions.append(action)
-            predicates.extend(new_predicates)
-            predicates = prune_predicates(predicates=predicates, actions=actions)
+        actions.append(action)
+        predicates.extend(new_predicates)
+        predicates = prune_predicates(predicates=predicates, actions=actions)
 
-            print("\n\nACTION:", action['name'])
-            print("CURRENT PREDICATES:")
-            for p in predicates:
-                print(p['name'])
+        print("All actions iterated. Stopping action construction.")
 
-        if len (predicates) == curr_preds:
-            print("No new predicates created. Stopping action construction.")
-            break
-    else: 
-        print("Reached maximum iterations. Stopping action construction.")
+    
 
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
     types = extract_types(type_hierarchy) # retrieve types
@@ -158,6 +150,18 @@ if __name__ == "__main__":
     task_desc = open_file('data/prompt_templates/task_extraction/extract_objects/task.txt')
     object_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
 
+    role_desc = open_file('data/prompt_templates/task_extraction/extract_initial/role.txt')
+    tech_desc = open_file('data/prompt_templates/task_extraction/extract_initial/technique.txt')
+    ex_desc = open_examples('data/prompt_templates/task_extraction/extract_initial/examples/')
+    task_desc = open_file('data/prompt_templates/task_extraction/extract_initial/task.txt')
+    initial_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+
+    role_desc = open_file('data/prompt_templates/task_extraction/extract_goal/role.txt')
+    tech_desc = open_file('data/prompt_templates/task_extraction/extract_goal/technique.txt')
+    ex_desc = open_examples('data/prompt_templates/task_extraction/extract_goal/examples/')
+    task_desc = open_file('data/prompt_templates/task_extraction/extract_goal/task.txt')
+    goal_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+
     problem_desc = open_file("data/problems/blocksworld_p1.txt")
     task_builder = Task_Builder(objects=None, initial=None, goal=None)
 
@@ -169,21 +173,6 @@ if __name__ == "__main__":
         type_hierarchy=pruned_types,
         predicates=predicates
         )
-    
-    print("OBJECTS:")
-    for obj in objects:
-        print(obj)
-
-    
-
-    role_desc = open_file('data/prompt_templates/task_extraction/extract_initial/role.txt')
-    tech_desc = open_file('data/prompt_templates/task_extraction/extract_initial/technique.txt')
-    ex_desc = open_examples('data/prompt_templates/task_extraction/extract_initial/examples/')
-    task_desc = open_file('data/prompt_templates/task_extraction/extract_initial/task.txt')
-    initial_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
-
-    problem_desc = open_file("data/problems/blocksworld_p1.txt")
-    task_builder = Task_Builder(objects=None, initial=None, goal=None)
 
     initial_states = task_builder.extract_initial_state(
         model=model,
@@ -194,18 +183,6 @@ if __name__ == "__main__":
         predicates=predicates,
         objects=objects
         )
-    
-    print("INITIAL STATES:")
-    print(initial_states)
-
-    role_desc = open_file('data/prompt_templates/task_extraction/extract_goal/role.txt')
-    tech_desc = open_file('data/prompt_templates/task_extraction/extract_goal/technique.txt')
-    ex_desc = open_examples('data/prompt_templates/task_extraction/extract_goal/examples/')
-    task_desc = open_file('data/prompt_templates/task_extraction/extract_goal/task.txt')
-    goal_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
-
-    problem_desc = open_file("data/problems/blocksworld_p1.txt")
-    task_builder = Task_Builder(objects=None, initial=None, goal=None)
 
     goal_states = task_builder.extract_goal_state(
         model=model,
@@ -216,15 +193,14 @@ if __name__ == "__main__":
         predicates=predicates,
         objects=objects
         )
-    
-    print("GOAL STATES:")
-    print(goal_states)
 
     objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
     initial_str = "\n".join(initial_states.keys())
 
     pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects_str, initial=initial_str, goal=goal_states)
     print(pddl_problem)
+
+
 
     problem_file = "data/problem.pddl"
 
