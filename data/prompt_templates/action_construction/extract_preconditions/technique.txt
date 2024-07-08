@@ -1,0 +1,7 @@
+Chain of Thought for constructing a PDDL action precondition:
+
+1. Reason with parameters and action description to identify natural language precondition and predicates needed. You may create new predicates if absolutely necessary.
+2. Specify natural language precondition in PDDL format
+3. Specify the created/used predicates from precondition creation in PDDL
+4. Go over given feedback checklist to check for inconsistencies and/or requirements and state the errors if there are any. If there are errors, generate a suggestion response (i.e. deleting, modifying, adding precondition)
+5. Re-iterate preconditions and new predicates line-by-line into string underneath '### Action Preconditions' and '### New Predicates' heading respectively.

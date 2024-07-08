@@ -102,8 +102,17 @@ if __name__ == "__main__":
     task_desc = open_file('data/prompt_templates/action_construction/extract_params/task.txt')
     pddl_param_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
 
-    print(pddl_param_extraction_prompt.generate_prompt())
 
+    role_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/role.txt')
+    tech_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/technique.txt')
+    ex_desc = open_examples('data/prompt_templates/action_construction/extract_preconditions/examples/')
+    task_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/task.txt')
+    pddl_precondition_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+
+
+    print(pddl_precondition_extraction_prompt.generate_prompt())
+
+    predicates = []
     for action_name, action_desc in nl_actions.items():
          params = domain_builder.extract_parameters(
               model=model,
@@ -114,7 +123,21 @@ if __name__ == "__main__":
               types=domain_builder.get_type_hierarchy()
          )
 
-         print("PARAMETERS FOR ACTION:", action_name, "\n", params)
+         preconditions, new_predicates = domain_builder.extract_preconditions(
+              model=model,
+              domain_desc=domain_desc,
+              prompt_template=pddl_precondition_extraction_prompt.generate_prompt(),
+              action_name=action_name,
+              action_desc=action_desc,
+              params=params,
+              predicates=predicates
+         )
+
+         predicates.extend(new_predicates)
+
+         print("\nPARAMETERS FOR ACTION:", action_name, "\n", params)
+         print("\nPRECONDITIONS FOR ACTION:", action_name, "\n", preconditions)
+         print("\nPREDICATES FOR ACTION:", action_name, "\n", predicates)
 
 
     # # action-by-action method used in Guan et al. (2023): https://arxiv.org/abs/2305.14909

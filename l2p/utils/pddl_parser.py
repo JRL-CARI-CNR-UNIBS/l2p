@@ -11,7 +11,7 @@ def combine_blocks(heading_str: str):
     combined = "\n".join(blocks) # Join the blocks together
     return combined.replace("\n\n", "\n").strip() # Remove leading/trailing whitespace and internal empty lines
 
-def parse_params(llm_output, include_internal=False):
+def parse_params(llm_output):
     params_info = OrderedDict()
     params_heading = llm_output.split('Parameters')[1].strip().split('##')[0]
     params_str = combine_blocks(params_heading)
@@ -89,7 +89,7 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
             'params': params,
             'clean': clean,
         })
-    #print(f"Parsed {len(new_predicates)} new predicates: {[p['name'] for p in new_predicates]}", )
+
     return new_predicates
 
 

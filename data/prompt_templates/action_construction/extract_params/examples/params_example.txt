@@ -57,10 +57,10 @@ Then, we need to know where it's travelling to and from. Any type of location (b
 
 Response: no feedback.
 
-4. Re-iterate without parameter description:
+4. Re-iterate:
 
 ## OUTPUT
-?v - vehicle
-?from - location
-?to - location
+?v - vehicle: The vehicle travelling
+?from - location: The location travelling from
+?to - location: The location travelling to
 
