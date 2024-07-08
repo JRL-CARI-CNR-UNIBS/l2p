@@ -34,7 +34,6 @@ class Domain_Builder:
         self.pddl_actions = pddl_actions
 
 
-
     def extract_type(
             self, 
             model: LLM_Chat, 
@@ -375,7 +374,10 @@ class Domain_Builder:
         # DELETE BY NAME, NOT INDEX
         pass
 
-    def delete_action(self):
+    def delete_nl_action(self):
+        pass
+
+    def delete_pddl_action(self):
         pass
 
     def delete_predicates(self):

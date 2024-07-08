@@ -144,6 +144,24 @@ class Task_Builder:
         return objects, initial, goal
 
 
+    def set_objects(self, objects: dict[str,str]):
+        self.set_objects = objects
+
+    def set_initial(self, initial: dict[str,str]):
+        self.set_initial = initial
+
+    def set_goal(self, goal: str):
+        self.goal = goal
+
+    def get_objects(self) -> dict[str,str]:
+        return self.objects
+
+    def get_initial(self) -> dict[str,str]:
+        return self.initial
+    
+    def get_objects(self) -> str:
+        return self.goal
+
     def generate_task(self, domain: str, objects: str, initial: str, goal: str):
         # Write problem file
         desc = "(define\n"
