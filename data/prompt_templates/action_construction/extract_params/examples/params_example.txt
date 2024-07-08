@@ -59,8 +59,11 @@ Response: no feedback.
 
 4. Re-iterate:
 
-## OUTPUT
-?v - vehicle: The vehicle travelling
-?from - location: The location travelling from
-?to - location: The location travelling to
+### Action Parameters
+Okay, so we'll need the same parameters as last time, but we still need to clearly specify them again:
+```
+- ?v - vehicle: The vehicle travelling
+- ?from - location: The location travelling from
+- ?to - location: The location travelling to
+```
 

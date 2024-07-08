@@ -2,7 +2,7 @@
 This file contains collection of functions for PDDL generation purposes
 """
 
-from .utils.pddl_parser import parse_new_predicates, parse_action, convert_to_dict
+from .utils.pddl_parser import parse_params, parse_new_predicates, parse_action, convert_to_dict
 from .utils.pddl_types import Predicate, Action
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
@@ -215,13 +215,15 @@ class Domain_Builder:
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
 
-        # print("PARAMETER LLM OUTPUT", llm_response)
-        
-        parts = llm_response.split('## OUTPUT', 1)
-        if len(parts) > 1:
-            parameter = parts[1].strip().split('\n')
-        else:
-            print("Could not parse output. Here is original LLM response:\n" + llm_response)
+        print("\nPARAMETER LLM OUTPUT\n", llm_response)
+
+        parameter = parse_params(llm_output=llm_response)
+
+        # parts = llm_response.split('## OUTPUT', 1)
+        # if len(parts) > 1:
+        #     parameter = parts[1].strip().split('\n')
+        # else:
+        #     print("Could not parse output. Here is original LLM response:\n" + llm_response)
 
         return parameter
     
@@ -258,8 +260,6 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
-
-        print("PARAMETER LLM OUTPUT", llm_response)
 
         preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         new_predicates = parse_new_predicates(llm_output=llm_response)
