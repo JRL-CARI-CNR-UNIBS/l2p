@@ -1,0 +1,14 @@
+Chain of Thought for constructing a PDDL action effect:
+
+1. Reason through the implications/effects of the action being performed in natural language. Reason through the available predicates listed. If absolutely necessary, you may create new predicates.
+2. Specify natural language effect and new predicates used in PDDL format
+3. Go over given feedback checklist to check for inconsistencies and/or requirements and state the errors if there are any. If there are errors, generate a suggestion response (i.e. deleting, modifying, adding effect)
+4. Re-iterate preconditions and new predicates line-by-line into string underneath '### Action Effects' and '### New Predicates' heading respectively. The strings should be enclosed by ``` [ex: EFFECT] ```.
+
+This is what an example of a new predicate format should look like:
+
+## New Predicates
+```
+- (at ?o - object ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
+- (connected ?l1 - location ?l2 - location): true if a road exists between ?l1 and ?l2 allowing vehicle travel between them.
+``` 

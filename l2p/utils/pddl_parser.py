@@ -38,7 +38,6 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
     except:
         raise Exception("Could not find the 'New Predicates' section in the output. Provide the entire response, including all headings even if some are unchanged.")
     predicate_output = combine_blocks(predicate_heading)
-    #print(f'Parsing new predicates from: \n---\n{predicate_output}\n---\n', )
     for p_line in predicate_output.split('\n'):
         if ('.' not in p_line or not p_line.split('.')[0].strip().isdigit()) and not (p_line.startswith('-') or p_line.startswith('(')):
             if len(p_line.strip()) > 0:

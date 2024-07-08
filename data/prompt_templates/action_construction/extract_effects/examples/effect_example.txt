@@ -1,0 +1,79 @@
+The following is an in-context example following the CoT technique.
+
+Given domain:
+'The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport things.'
+
+Given action: 
+'drive'
+
+Given action description:
+'A vehicle drives from a location to another. Requires that the vehicle is at the starting location and that the two locations are connected. Example: truck1 drives from loc1 to house1.'
+
+Given parameters:
+```
+?v - vehicle: The vehicle travelling
+?from - location: The location travelling from
+?to - location: The location travelling to
+```
+
+Given precondition
+```
+(and
+    (at ?v ?from) ; The vehicle is at the starting location
+    (or (connected ?from ?to) (connected ?to ?from)) ; A road exists between the locations
+)
+```
+
+## Available Predicates:
+```
+- (at ?o - object ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
+- (connected ?l1 - location ?l2 - location): true if a road exists between ?l1 and ?l2 allowing vehicle travel between them.
+``` 
+
+-----------------------------------------------------
+
+1. Reason through the implications/effects of the action being performed in natural language.
+So, what happens when the action is performed?
+ - The vehicle is no longer at ?from.
+ - The vehicle is now at ?to.
+
+This doesn't need any new predicates. 
+
+2. Specify natural language effect and any new predicates introduced in PDDL format:
+```
+(and
+    (not (at ?v ?from)) ; ?v is no longer at ?from
+    (at ?v ?to) ; ?v is now instead at ?to
+)
+```
+
+No new predicates were created. So no new predicates needed to add to list.
+
+Feedback:
+    1: Are any necessary effects forgotten?
+        The effects don't model the fuel usage of the car. This should be done. So: Yes.
+
+    2: Are any non-necessary effects included?
+        The effects are correct. Therefore: No.
+
+    3: Are the used predicates unclear or can be improved?
+        With the exception of the symmetrical use of "connected", which is detailed below, it's clear. So: No.
+
+    4: Should any predicate be used symmetrically and isn't?
+        Since roads are undirected, we need to check if there is a road from ?from to ?to or vice versa. Not doing so creates brittle PDDL. As such: Yes.
+
+Response: no response.
+
+Re-iterate:
+
+### Action Effects
+These are the exact same as above, but they need to be reiterated:
+```
+(and
+    (not (at ?v ?from)) ; ?v is no longer at ?from
+    (at ?v ?to) ; ?v is now instead at ?to
+)
+```
+
+### New Predicates
+No new predicates created.

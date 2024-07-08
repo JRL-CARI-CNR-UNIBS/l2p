@@ -2,6 +2,7 @@
 This file contains collection of functions for PDDL generation purposes
 """
 
+from collections import OrderedDict
 from .utils.pddl_parser import parse_params, parse_new_predicates, parse_action, convert_to_dict
 from .utils.pddl_types import Predicate, Action
 from .llm_builder import LLM_Chat
@@ -201,7 +202,7 @@ class Domain_Builder:
             action_name: str, 
             action_desc: str, 
             types: dict[str,str]
-            ) -> list[str]:
+            ) -> OrderedDict:
         """
         Constructs parameters for singular action.
         Returns: 
@@ -214,20 +215,10 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{action_desc}', action_desc)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
-
-        print("\nPARAMETER LLM OUTPUT\n", llm_response)
-
         parameter = parse_params(llm_output=llm_response)
-
-        # parts = llm_response.split('## OUTPUT', 1)
-        # if len(parts) > 1:
-        #     parameter = parts[1].strip().split('\n')
-        # else:
-        #     print("Could not parse output. Here is original LLM response:\n" + llm_response)
 
         return parameter
     
-
     def extract_preconditions(
             self, 
             model: LLM_Chat, 
@@ -269,12 +260,13 @@ class Domain_Builder:
     def extract_effects(
             self, 
             model: LLM_Chat, 
-            prompt_template: str, 
+            domain_desc: str,
+            prompt_template: PromptBuilder, 
             action_name: str, 
             action_desc: str, 
-            preds: list[Predicate],
-            params: list[str],
-            precond: str
+            params: list[str], 
+            precondition: str,
+            predicates: list[Predicate]
             ) -> tuple[str, list[Predicate]]:
         """
         Constructs effects for singular action.
@@ -282,7 +274,30 @@ class Domain_Builder:
             effects (str): string containing PDDL effects
             preds (list[Predicate]): list of Predicate instances
         """
-        pass
+        model.reset_tokens()
+
+        predicate_str = (
+            "No predicate has been defined yet."
+            if len(predicates) == 0
+            else "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
+        )
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
+        prompt_template = prompt_template.replace('{parameters}', str(params))
+        prompt_template = prompt_template.replace('{precondition}', precondition)
+        prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
+
+        llm_response = model.get_output(prompt=prompt_template) # get LLM response
+
+        print("LLM RESPONSE EFFECTS\n", llm_response)
+
+        effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
+        new_predicates = parse_new_predicates(llm_output=llm_response)
+
+        return effects, new_predicates
+
 
 
     """Add functions"""

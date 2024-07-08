@@ -34,7 +34,7 @@ class Task_Builder:
         if len(parts) > 1:
             objects = convert_to_dict(parts[1].strip())
         else:
-            objects = "Could not parse dictionary. Here is original LLM response:\n" + llm_response
+            objects = {}
 
         return objects
 
@@ -67,7 +67,7 @@ class Task_Builder:
         if len(parts) > 1:
             initial = convert_to_dict(parts[1].strip())
         else:
-            initial = "Could not parse dictionary. Here is original LLM response:\n" + llm_response
+            initial = {}
 
         return initial
         

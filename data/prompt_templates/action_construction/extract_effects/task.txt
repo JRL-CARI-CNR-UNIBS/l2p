@@ -1,0 +1,17 @@
+## Domain
+{domain_desc}
+
+## Action Name
+{action_name}
+
+## Corresponding Action Description
+{action_desc}
+
+## Parameters
+{parameters}
+
+## Precondition
+{precondition}
+
+### Available Predicates
+{predicate_list}
