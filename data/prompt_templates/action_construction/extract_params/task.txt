@@ -1,0 +1,11 @@
+## Domain
+{domain_desc}
+
+## Types 
+{type_hierarchy}
+
+## Action Name
+{action_name}
+
+## Corresponding Action Description
+{action_desc}

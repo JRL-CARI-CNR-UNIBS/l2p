@@ -28,27 +28,7 @@ def parse_params(llm_output, include_internal=False):
             params_info[param_name] = param_type
         except Exception:
             print(f'[WARNING] checking param object types - fail to parse: {line}')
-            continue
-    if include_internal:
-        precondition_heading = llm_output.split('Preconditions')[1].strip().split('##')[0]
-        preconditions_str = combine_blocks(precondition_heading) # Should just be one, but this extracts it easily
-        if "forall" in preconditions_str:
-            forall_matches = re.findall(r'forall\s*\((.*?)\)', preconditions_str)
-            forall_contents = [match.strip() for match in forall_matches]
-            for content in forall_contents:
-                sub_params = re.findall(r'\?[a-zA-Z0-9]+\s*-\s*[a-zA-Z0-9]+', content)
-                for sub_param in sub_params:
-                    param_name, param_type = [e.strip() for e in sub_param.split('-')]
-                    params_info[param_name] = param_type
-        if "exists" in preconditions_str:
-            exists_matches = re.findall(r'exists\s*\((.*?)\)', preconditions_str)
-            exists_contents = [match.strip() for match in exists_matches]
-            for content in exists_contents:
-                sub_params = re.findall(r'\?[a-zA-Z0-9]+\s*-\s*[a-zA-Z0-9]+', content)
-                for sub_param in sub_params:
-                    param_name, param_type = [e.strip() for e in sub_param.split('-')]
-                    params_info[param_name] = param_type
-
+            break
     return params_info
 
 def parse_new_predicates(llm_output) -> list[Predicate]:

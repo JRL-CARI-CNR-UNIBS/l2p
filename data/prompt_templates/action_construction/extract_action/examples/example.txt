@@ -1,7 +1,9 @@
-[GIVEN DOMAIN]
+The following is an in-context example following the CoT technique.
+
+Given domain:
 The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport things.
 
-[GIVEN TYPE HIERARCHY]
+Given type hierarchy:
 {
     "object": "Object is always root, everything is an object",
     "children": [
@@ -22,13 +24,13 @@ The AI agent is here a scheduling system for a house construction company with a
     ]
 }
 
-## Action
-drive
-
-A vehicle drives from a location to another. Requires that the vehicle is at the starting location and that the two locations are connected. Example: truck1 drives from loc1 to house1.
+Given action: description
+drive: A vehicle drives from a location to another. Requires that the vehicle is at the starting location and that the two locations are connected. Example: truck1 drives from loc1 to house1.
 
 ### Available Predicates
 No predicate has been defined yet
+
+-----------------------------------------------------
 
 ### Action Parameters
 Well, first we need to know which vehicle is travelling.

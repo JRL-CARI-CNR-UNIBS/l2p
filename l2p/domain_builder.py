@@ -168,16 +168,15 @@ class Domain_Builder:
 
         model.reset_tokens()
 
-        # replace action name/description and predicates in prompt template
-        prompt_template = prompt_template.replace('{action_name}', action_name)
-        prompt_template = prompt_template.replace('{action_desc}', action_desc)
-
         predicate_str = (
             "No predicate has been defined yet."
             if len(predicates) == 0
             else "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
         )
-        
+
+        # replace action name/description and predicates in prompt template
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
         llm_response = model.get_output(prompt=prompt_template)
 
@@ -189,9 +188,6 @@ class Domain_Builder:
             new_predicates = parse_new_predicates(llm_response)
             new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
-            # print("Action:", action['name'])
-            # print("Predicates:", predicates)
-
             return action, new_predicates
         except Exception as e:
             print(f"An error occurred: {e}\n")
@@ -200,7 +196,8 @@ class Domain_Builder:
     def extract_parameters(
             self, 
             model: LLM_Chat, 
-            prompt_template: str, 
+            domain_desc: str,
+            prompt_template: PromptBuilder, 
             action_name: str, 
             action_desc: str, 
             types: dict[str,str]
@@ -208,9 +205,26 @@ class Domain_Builder:
         """
         Constructs parameters for singular action.
         Returns: 
-            params (list[str]): list of parameter strings
+            params (str): string of parameters
         """
-        pass
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
+
+        llm_response = model.get_output(prompt=prompt_template) # get LLM response
+
+        # print("PARAMETER LLM OUTPUT", llm_response)
+        
+        parts = llm_response.split('## OUTPUT', 1)
+        if len(parts) > 1:
+            params_str = parts[1].strip()
+        else:
+            params_str = "Could not parse output. Here is original LLM response:\n" + llm_response
+
+        return params_str
+    
 
     def extract_preconditions(
             self, 

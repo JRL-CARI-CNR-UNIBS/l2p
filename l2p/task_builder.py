@@ -71,7 +71,6 @@ class Task_Builder:
 
         return initial
         
-
     def extract_goal_state(
             self, 
             model: LLM_Chat, 
@@ -104,7 +103,6 @@ class Task_Builder:
             goal = "Could not parse answer. Here is original LLM response:\n" + llm_response
 
         return goal
-
 
     def extract_task(
             self, 
@@ -154,7 +152,6 @@ class Task_Builder:
         desc = desc.replace("AND","and").replace("OR","or") # The python PDDL package can't handle capital AND and OR
         return desc
     
-
     def format_action(self, actions: list[Action]) -> str:
         desc = ""
         for action in actions:
