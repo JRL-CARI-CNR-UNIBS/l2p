@@ -34,6 +34,7 @@ class Domain_Builder:
         self.pddl_actions = pddl_actions
 
 
+
     def extract_type(
             self, 
             model: LLM_Chat, 
@@ -110,7 +111,7 @@ class Domain_Builder:
             model: LLM_Chat,
             domain_desc: str, 
             prompt_template: PromptBuilder, 
-            type_hierarchy: dict[str,str],
+            type_hierarchy: dict[str,str]=None,
             nl_actions: dict[str,str]=None
             ) -> dict[str,str]:
         
@@ -302,32 +303,71 @@ class Domain_Builder:
 
 
     """Add functions"""
-    def add_type(self, model: LLM_Chat, domain_desc: str, prompt_template: PromptBuilder) -> dict[str,str]:
+    def add_type(
+            self, 
+            model: LLM_Chat, 
+            domain_desc: str, 
+            prompt_template: PromptBuilder, 
+            types: dict[str,str]=None
+            ) -> dict[str,str]:
         """
         User inputs prompt to add a type to the domain, LLM takes current domain info and dynamically modifies file to integrate new type
-        Args:
-        Returns:
         """
-        types = self.extract_type(model=model, domain_desc=domain_desc, prompt_template=prompt_template, types=self.types)
-        return types
+        new_types = self.extract_type(model=model, domain_desc=domain_desc, prompt_template=prompt_template, types=types)
+        return new_types
     
-    def add_nl_action(self, model: LLM_Chat, domain_desc: str, prompt_template: PromptBuilder, type_hierarchy: dict[str,str]=None) -> dict[str,str]:
-        nl_actions = self.extract_nl_actions(
+    def add_nl_action(
+            self, 
+            model: LLM_Chat, 
+            domain_desc: str, 
+            prompt_template: PromptBuilder, 
+            type_hierarchy: dict[str,str]=None, 
+            nl_actions: dict[str,str]=None
+            ) -> dict[str,str]:
+        """
+        User inputs prompt to add action(s) to the domain, LLM takes current domain info and dynamically modifies file to integrate new action
+        """
+        new_nl_actions = self.extract_nl_actions(
             model, 
             domain_desc, 
             prompt_template, 
-            type_hierarchy,
-            nl_actions=self.nl_actions
+            type_hierarchy=type_hierarchy,
+            nl_actions=nl_actions
             )
 
-        return nl_actions
+        return new_nl_actions
 
-    def add_pddl_action(self):
-        # user inputs prompt to add an action to the domain, LLM takes current domain info and dynamically modifies file to integrate new action
-        pass
+    def add_predicates(
+            self, 
+            model: LLM_Chat, 
+            domain_desc: str, 
+            prompt_template: PromptBuilder, 
+            type_hierarchy: dict[str,str]=None,
+            predicates: list[Predicate]=None
+            ) -> list[Predicate]:
+        
+        """
+        User inputs prompt to add predicates(s) to the domain, LLM takes current state info and adds new predicate
+        """
 
-    def add_predicates(self):
-        pass
+        model.reset_tokens()
+
+        predicate_str = (
+            "No predicate has been defined yet."
+            if len(predicates) == 0
+            else "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
+        )
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
+        prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
+
+        llm_response = model.get_output(prompt=prompt_template)
+
+        new_predicates = parse_new_predicates(llm_response)
+        new_predicates += predicates
+
+        return new_predicates
 
 
     """Delete functions"""
@@ -355,6 +395,8 @@ class Domain_Builder:
     def set_pddl_action(self, pddl_action: Action):
         self.pddl_actions.append(pddl_action)
 
+    def set_predicate(self, predicate: Predicate):
+        self.predicates.append(predicate)
 
     """Get functions"""
     def get_types(self):

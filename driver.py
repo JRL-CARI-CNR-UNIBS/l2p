@@ -265,38 +265,55 @@ if __name__ == "__main__":
     domain_builder.set_nl_actions(nl_actions)
     for i in nl_actions: print(i)
     
-    # # extract PDDL formatted actions
-    # print("\n\n---------------------------------\n\nPDDL action output:\n")
+    # extract PDDL formatted actions
+    print("\n\n---------------------------------\n\nPDDL action output:\n")
 
-    # # GRANULAR ACTION EXTRACTION PIPELINE
-    # # actions, predicates = run_granular_action_pipeline(
-    # #     model=model, 
-    # #     domain_desc=domain_desc, 
-    # #     param_prompt=pddl_param_extraction_prompt,
-    # #     precondition_prompt=pddl_precondition_extraction_prompt,
-    # #     effects_prompt=pddl_effects_extraction_prompt,
-    # #     nl_actions=nl_actions
-    # #     )
-    
-    # # COMPACT ACTION EXTRACTION PIPELINE
-    # actions, predicates = run_compact_action_pipeline(
+    # GRANULAR ACTION EXTRACTION PIPELINE
+    # actions, predicates = run_granular_action_pipeline(
     #     model=model, 
-    #     domain_builder=domain_builder, 
-    #     prompt=pddl_action_extraction_prompt,
+    #     domain_desc=domain_desc, 
+    #     param_prompt=pddl_param_extraction_prompt,
+    #     precondition_prompt=pddl_precondition_extraction_prompt,
+    #     effects_prompt=pddl_effects_extraction_prompt,
     #     nl_actions=nl_actions
-    # )
+    #     )
+    
+    # COMPACT ACTION EXTRACTION PIPELINE
+    actions, predicates = run_compact_action_pipeline(
+        model=model, 
+        domain_builder=domain_builder, 
+        prompt=pddl_action_extraction_prompt,
+        nl_actions=nl_actions
+    )
 
-    # predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
-    # types = extract_types(type_hierarchy) # retrieve types
-    # pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
-    # pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words (IMPLEMENT THIS AS A HELPER FUNCTION)
+    predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
+    types = extract_types(type_hierarchy) # retrieve types
+    pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
+    pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words (IMPLEMENT THIS AS A HELPER FUNCTION)
 
-    # predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
-    # types_str = "\n".join(pruned_types)
+    predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
+    types_str = "\n".join(pruned_types)
 
-    # print("[DOMAIN]\n") 
-    # pddl_domain = domain_builder.generate_domain(domain="test_domain", types=types_str, predicates=predicate_str, actions=actions)
-    # print(pddl_domain)
+    print("[DOMAIN]\n") 
+    pddl_domain = domain_builder.generate_domain(domain="test_domain", types=types_str, predicates=predicate_str, actions=actions)
+    print(pddl_domain)
+
+
+    add_predicate_prompt = open_file('data/prompt_templates/add_functions/add_predicates.txt')
+
+    user_input = input("\nPlease enter the predicate(s) in natural language you want to add:\n")
+    prompt = "\nYou are to add a new predicate into the predicates already listed. Format it the same way in Python dictionary\n\n" + user_input 
+
+    new_predicates = domain_builder.add_predicates(
+        model=model, 
+        domain_desc=domain_desc, 
+        prompt_template=add_predicate_prompt + prompt,
+        type_hierarchy=pruned_types,
+        predicates=predicates
+        )
+    
+    print("NEW PREDICATES OUTPUT:\n", new_predicates)
+
 
     # domain_file = "data/domain.pddl"
     # with open(domain_file, "w") as f:
