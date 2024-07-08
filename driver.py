@@ -24,8 +24,8 @@ if __name__ == "__main__":
     # THIS IS IMPORTANT TO LOOK INTO
     unsupported_keywords = ['object']
 
-    model = get_llm("gpt-3.5-turbo-0125")
-    # model = get_llm("gpt-4o")
+    # model = get_llm("gpt-3.5-turbo-0125")
+    model = get_llm("gpt-4o")
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
@@ -173,6 +173,66 @@ if __name__ == "__main__":
     print("OBJECTS:")
     for obj in objects:
         print(obj)
+
+    
+
+    role_desc = open_file('data/prompt_templates/task_extraction/extract_initial/role.txt')
+    tech_desc = open_file('data/prompt_templates/task_extraction/extract_initial/technique.txt')
+    ex_desc = open_examples('data/prompt_templates/task_extraction/extract_initial/examples/')
+    task_desc = open_file('data/prompt_templates/task_extraction/extract_initial/task.txt')
+    initial_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+
+    problem_desc = open_file("data/problems/blocksworld_p1.txt")
+    task_builder = Task_Builder(objects=None, initial=None, goal=None)
+
+    initial_states = task_builder.extract_initial_state(
+        model=model,
+        problem_desc=problem_desc,
+        domain_desc=domain_desc,
+        prompt_template=initial_extraction_prompt.generate_prompt(),
+        type_hierarchy=pruned_types,
+        predicates=predicates,
+        objects=objects
+        )
+    
+    print("INITIAL STATES:")
+    print(initial_states)
+
+    role_desc = open_file('data/prompt_templates/task_extraction/extract_goal/role.txt')
+    tech_desc = open_file('data/prompt_templates/task_extraction/extract_goal/technique.txt')
+    ex_desc = open_examples('data/prompt_templates/task_extraction/extract_goal/examples/')
+    task_desc = open_file('data/prompt_templates/task_extraction/extract_goal/task.txt')
+    goal_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+
+    problem_desc = open_file("data/problems/blocksworld_p1.txt")
+    task_builder = Task_Builder(objects=None, initial=None, goal=None)
+
+    goal_states = task_builder.extract_goal_state(
+        model=model,
+        problem_desc=problem_desc,
+        domain_desc=domain_desc,
+        prompt_template=goal_extraction_prompt.generate_prompt(),
+        type_hierarchy=pruned_types,
+        predicates=predicates,
+        objects=objects
+        )
+    
+    print("GOAL STATES:")
+    print(goal_states)
+
+    objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+    initial_str = "\n".join(initial_states.keys())
+
+    pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects_str, initial=initial_str, goal=goal_states)
+    print(pddl_problem)
+
+    problem_file = "data/problem.pddl"
+
+    # Write PDDL domain string to a file
+    with open(problem_file, "w") as f:
+        f.write(pddl_problem)
+
+    print(f"PDDL domain written to {problem_file}")
 
     # # open and create PDDL action prompt builder class
     # role_desc = open_file('data/prompt_templates/task_extraction/extract_task/role.txt')

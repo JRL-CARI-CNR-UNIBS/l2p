@@ -146,7 +146,6 @@ def parse_action(llm_response: str, action_name: str) -> Action:
     Returns:
         Action: The parsed action.
     """
-    #parameters = llm_response.split("Parameters:")[1].split("```")[1].strip()
     parameters = parse_params(llm_response)
     try:
         preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")

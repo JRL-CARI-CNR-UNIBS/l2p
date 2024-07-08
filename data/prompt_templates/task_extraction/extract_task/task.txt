@@ -2,16 +2,10 @@
 {domain_desc}
 
 ## Types
-```
 {type_hierarchy}
-```
 
 ## Predicates
-```
 {predicates}
-```
 
 ## Problem description
-```
 {problem_desc}
-```

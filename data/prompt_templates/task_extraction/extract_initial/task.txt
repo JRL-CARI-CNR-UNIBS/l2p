@@ -7,5 +7,8 @@
 ## Predicates
 {predicates}
 
+## Object Instances
+{objects}
+
 ## Problem description
 {problem_desc}

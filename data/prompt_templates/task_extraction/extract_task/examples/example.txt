@@ -154,7 +154,7 @@ emma - general_worker: The first worker, Emma
 bob - general_worker: The second worker, Bob
 ```
 
-## State
+## Initial State
 Let's start by specifying where everyone is again. This time, we  make sure to include Bob.
 ```
 (at truck1 chicago_depot): truck1 is at the chicago_depot
@@ -176,7 +176,7 @@ The connections between the locations are the same bi-directional connections as
 (connected chicago_depot house3): chicago_depot is connected to house3
 ```
 
-## Goal
+## Goal State
 For the goal, we remove the "truck1" location predicate, but still check that all the houses are finalised. 
 ```
 (AND ; all the following should be done

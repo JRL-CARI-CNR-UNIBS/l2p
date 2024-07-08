@@ -64,6 +64,7 @@ from pddl.action import Action
 from pddl.formatter import domain_to_string, problem_to_string
 from pddl.requirements import Requirements
 from pddl import parse_domain, parse_problem
+from l2p.utils.pddl_parser import convert_to_dict
 
 domain_file = 'data/domain.pddl'
 problem_file = "data/problem.pddl"
@@ -88,6 +89,3 @@ with open(problem_file, "w") as f:
     f.write(pddl_problem)
 
 print(f"PDDL domain written to {problem_file}")
-
-
-# task_builder = Task_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)

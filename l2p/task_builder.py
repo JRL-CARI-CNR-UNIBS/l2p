@@ -27,18 +27,83 @@ class Task_Builder:
         prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
-        
+
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
-        objects = convert_to_dict(llm_response=llm_response)
+        
+        parts = llm_response.split('## OUTPUT', 1)
+        if len(parts) > 1:
+            objects = convert_to_dict(parts[1].strip())
+        else:
+            objects = "Could not parse dictionary. Here is original LLM response:\n" + llm_response
+
         return objects
-    
 
-    def extract_initial_state(self, model: LLM_Chat, prompt_template: PromptBuilder):
-        llm_response = model.get_response(prompt_template)
-        print(llm_response.strip())
+    def extract_initial_state(
+            self, 
+            model: LLM_Chat, 
+            problem_desc: str,
+            domain_desc: str,
+            prompt_template: PromptBuilder,
+            type_hierarchy: dict[str,str], 
+            predicates: list[Predicate],
+            objects: dict[str,str]
+            ) -> dict[str,str]:
+        
+        model.reset_tokens()
 
-    def extract_goal_state(self, model: LLM_Chat, prompt_template: PromptBuilder):
-        pass
+        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
+        types_str = "\n".join(type_hierarchy)
+        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{objects}', objects_str)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+
+        llm_response = model.get_output(prompt=prompt_template)
+
+        parts = llm_response.split('## OUTPUT', 1)
+        if len(parts) > 1:
+            initial = convert_to_dict(parts[1].strip())
+        else:
+            initial = "Could not parse dictionary. Here is original LLM response:\n" + llm_response
+
+        return initial
+        
+
+    def extract_goal_state(
+            self, 
+            model: LLM_Chat, 
+            problem_desc: str,
+            domain_desc: str,
+            prompt_template: PromptBuilder,
+            type_hierarchy: dict[str,str], 
+            predicates: list[Predicate],
+            objects: dict[str,str]
+            ) -> str:
+        
+        model.reset_tokens()
+
+        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
+        types_str = "\n".join(type_hierarchy)
+        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{objects}', objects_str)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+
+        llm_response = model.get_output(prompt=prompt_template)
+
+        parts = llm_response.split('## OUTPUT', 1)
+        if len(parts) > 1:
+            goal = parts[1].strip()
+        else:
+            goal = "Could not parse answer. Here is original LLM response:\n" + llm_response
+
+        return goal
 
 
     def extract_task(
@@ -102,14 +167,19 @@ class Task_Builder:
         return desc
 
 if __name__ == "__main__":
-    actions_dict = {
-    'pick_up_block': 'The robot arm picks up a block from its current location. Example: robot_arm picks up block_1 from table.',
-    'place_on_table': 'The robot arm places a block on the table. Example: robot_arm places block_2 on table.',
-    'place_on_block': 'The robot arm places a block on top of another block. Example: robot_arm places block_3 on top of block_4.',
-    'move_block': 'The robot arm moves a block from one location to another. Example: robot_arm moves block_5 from table to stack_1.',
-    'move_arm': 'The robot arm moves to a different location. Example: robot_arm moves to table.'
-    }
+    # actions_dict = {
+    # 'pick_up_block': 'The robot arm picks up a block from its current location. Example: robot_arm picks up block_1 from table.',
+    # 'place_on_table': 'The robot arm places a block on the table. Example: robot_arm places block_2 on table.',
+    # 'place_on_block': 'The robot arm places a block on top of another block. Example: robot_arm places block_3 on top of block_4.',
+    # 'move_block': 'The robot arm moves a block from one location to another. Example: robot_arm moves block_5 from table to stack_1.',
+    # 'move_arm': 'The robot arm moves to a different location. Example: robot_arm moves to table.'
+    # }
 
-    action_str = ""
-    for action, description in actions_dict.items(): action_str += f"Action: {action}\n Description: {description}\n\n"
-    print(action_str)
+    # action_str = ""
+    # for action, description in actions_dict.items(): action_str += f"Action: {action}\n Description: {description}\n\n"
+    # print(action_str)s
+
+    objects = {'blue': 'block', 'red': 'block', 'yellow': 'block', 'green': 'block', 'arm': 'arm', 'table': 'table'}
+    objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+
+    print(objects_str)

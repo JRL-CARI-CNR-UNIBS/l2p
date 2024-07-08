@@ -5,4 +5,4 @@ Chain of Thought for extracting PDDL problem file:
 3. Using the given domain description, objects, and implications of the initial states, identify the goal states
 4. Go over given feedback checklist to check for inconsistencies and/or requirements and state the errors if there are any
 5. If there are errors, generate a suggestion response
-6. Re-iterate over the objects, initial, and goal states. Define them under the headers: ## Object Instances, ## State, and ## Goal respectively.
+6. Re-iterate over the objects, initial, and goal states. Define them under the headers: ## Object Instances, ## Initial State, and ## Goal State respectively.
