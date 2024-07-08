@@ -84,7 +84,7 @@ Response: the suggestion to check "connected" both ways is a good idea. Now, we'
 
 5. Re-iterate:
 
-## PRECONDITION
+### Action Preconditions
 ```
 (and
     (at ?v ?from) ; The vehicle is at the starting location
@@ -92,7 +92,7 @@ Response: the suggestion to check "connected" both ways is a good idea. Now, we'
 )
 ```
 
-## New Predicates
+### New Predicates
 ```
 - (at ?o - object ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
 - (connected ?l1 - location ?l2 - location): true if a road exists between ?l1 and ?l2 allowing vehicle travel between them.
