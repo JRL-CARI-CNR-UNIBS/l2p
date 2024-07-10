@@ -1,25 +1,15 @@
 (define (domain test_domain)
     (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
-    (:types arm block table - object)
-    (:predicates (clear ?b - object)  (empty ?o - object)  (holding ?a - arm ?b - block)  (on ?b1 - block ?b2 - block)  (on_table ?b - object ?t - object))
-    (:action pickup
-        :parameters (?arm - object ?block - object ?table - object)
-        :precondition (and (empty ?arm) (clear ?block) (on_table ?block ?table))
-        :effect (and (holding ?arm ?block) (not (on_table ?block ?table)) (not (clear ?block)))
+    (:types city - location location vehicle - object airplane truck - vehicle)
+    (:predicates (at ?o - object ?l - location)  (connected ?l1 - location ?l2 - location))
+    (:action move_airplane
+        :parameters (?a - airplane ?from - city ?to - city)
+        :precondition (and (at ?a ?from) (or (connected ?from ?to) (connected ?to ?from)))
+        :effect (and (not (at ?a ?from)) (at ?a ?to))
     )
-     (:action putdown
-        :parameters (?arm - arm ?block - block ?table - table)
-        :precondition (and (not (empty ?arm)) (clear ?block) (not (on_table ?block ?table)))
-        :effect (and (empty ?arm) (on_table ?block ?table) (clear ?block))
-    )
-     (:action stack
-        :parameters (?arm - arm ?top - block ?bottom - block ?table - table)
-        :precondition (and (not (empty ?arm)) (clear ?bottom))
-        :effect (and (empty ?arm) (on ?top ?bottom) (not (clear ?bottom)))
-    )
-     (:action unstack
-        :parameters (?arm - arm ?top_block - block ?bottom_block - block ?table - table)
-        :precondition (and (empty ?arm) (clear ?top_block) (on ?top_block ?bottom_block))
-        :effect (and (holding ?arm ?top_block) (not (on ?top_block ?bottom_block)) (clear ?bottom_block) (on_table ?top_block ?table))
+     (:action move_truck
+        :parameters (?truck - vehicle ?from - location ?to - location)
+        :precondition (and (at ?truck ?from) (or (connected ?from ?to) (connected ?to ?from)))
+        :effect (and (not (at ?truck ?from)) (at ?truck ?to))
     )
 )

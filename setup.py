@@ -59,6 +59,21 @@
 #     type_hierarchy=type_hierarchy
 #     )
 
+# add_predicate_prompt = open_file('data/prompt_templates/add_functions/add_predicates.txt')
+
+#     user_input = input("\nPlease enter the predicate(s) in natural language you want to add:\n")
+#     prompt = "\nYou are to add a new predicate into the predicates already listed. Format it the same way in Python dictionary\n\n" + user_input 
+
+#     new_predicates = domain_builder.add_predicates(
+#         model=model, 
+#         domain_desc=domain_desc, 
+#         prompt_template=add_predicate_prompt + prompt,
+#         type_hierarchy=pruned_types,
+#         predicates=predicates
+#         )
+    
+#     print("NEW PREDICATES OUTPUT:\n", new_predicates)
+
 
 from pddl.logic import Predicate, constants, variables
 from pddl.core import Domain, Problem
@@ -74,12 +89,12 @@ problem_file = "data/problem.pddl"
 domain = parse_domain(domain_file)
 pddl_domain = domain_to_string(domain)
 
-problem = parse_problem(problem_file)
-pddl_problem = problem_to_string(problem)
+# problem = parse_problem(problem_file)
+# pddl_problem = problem_to_string(problem)
 
 print("PDDL domain:\n", pddl_domain)
 print("--------------")
-print("PDDL problem:\n", pddl_problem)
+# print("PDDL problem:\n", pddl_problem)
 
 # Write PDDL domain string to a file
 with open(domain_file, "w") as f:
@@ -87,7 +102,7 @@ with open(domain_file, "w") as f:
 
 print(f"PDDL domain written to {domain_file}")
 
-with open(problem_file, "w") as f:
-    f.write(pddl_problem)
+# with open(problem_file, "w") as f:
+#     f.write(pddl_problem)
 
-print(f"PDDL domain written to {problem_file}")
+# print(f"PDDL domain written to {problem_file}")

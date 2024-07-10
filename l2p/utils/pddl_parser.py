@@ -316,3 +316,14 @@ def extract_heading(llm_output: str, heading: str):
         raise ValueError(f"Could not find heading {heading} in the LLM output. Likely this is caused by a too long response and limited context length. If so, try to shorten the message and exclude objects which aren't needed for the task.")
     heading_str = llm_output.split(heading)[1].split("\n## ")[0].strip() # Get the text between the heading and the next heading
     return heading_str
+
+
+if __name__ == '__main__':
+    string = """
+    ### Action Parameters\n
+    ```\n
+    - ?v - vehicle: The vehicle travelling\n
+    - ?from - location: The location travelling from\n
+    - ?to - location: The location travelling to
+    ```
+    """

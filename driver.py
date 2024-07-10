@@ -289,30 +289,23 @@ if __name__ == "__main__":
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
     types = extract_types(type_hierarchy) # retrieve types
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
+
     pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words (IMPLEMENT THIS AS A HELPER FUNCTION)
 
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
     types_str = "\n".join(pruned_types)
 
+    requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
     print("[DOMAIN]\n") 
-    pddl_domain = domain_builder.generate_domain(domain="test_domain", types=types_str, predicates=predicate_str, actions=actions)
-    print(pddl_domain)
-
-
-    add_predicate_prompt = open_file('data/prompt_templates/add_functions/add_predicates.txt')
-
-    user_input = input("\nPlease enter the predicate(s) in natural language you want to add:\n")
-    prompt = "\nYou are to add a new predicate into the predicates already listed. Format it the same way in Python dictionary\n\n" + user_input 
-
-    new_predicates = domain_builder.add_predicates(
-        model=model, 
-        domain_desc=domain_desc, 
-        prompt_template=add_predicate_prompt + prompt,
-        type_hierarchy=pruned_types,
-        predicates=predicates
+    pddl_domain = domain_builder.generate_domain(
+        domain="test_domain", 
+        requirements=requirements,
+        types=types_str,
+        predicates=predicate_str,
+        actions=actions
         )
     
-    print("NEW PREDICATES OUTPUT:\n", new_predicates)
+    print(pddl_domain)
 
 
     # domain_file = "data/domain.pddl"

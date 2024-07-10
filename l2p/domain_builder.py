@@ -423,7 +423,14 @@ class Domain_Builder:
         pass
 
 
-    def generate_domain(self, domain: str, types: str, predicates: str, actions: list[Action]) -> str:
+    def generate_domain(
+            self, 
+            domain: str, 
+            types: str, 
+            predicates: str, 
+            actions: list[Action],
+            requirements: list[str],
+            ) -> str:
         # Helper function to format individual action descriptions
         def action_desc(action: Action) -> str:
             param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
@@ -444,7 +451,7 @@ class Domain_Builder:
         # Main function to generate the domain description
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += f"(:requirements\n   :strips :typing :equality :negative-preconditions :disjunctive-preconditions\n   :universal-preconditions :conditional-effects\n)\n"
+        desc += f"(:requirements\n  {" ".join(requirements)}\n)\n"
         desc += f"   (:types \n{types}\n   )\n\n"
         desc += f"   (:predicates \n{predicates}\n   )"
         desc += action_descs(actions)
