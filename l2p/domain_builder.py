@@ -76,7 +76,7 @@ class Domain_Builder:
             model: LLM_Chat, 
             domain_desc: str,
             prompt_template: PromptBuilder, 
-            types: dict[str,str]
+            types: dict[str,str]=None
             ) -> dict[str,str]:
         """
         Extracts type hierarchy from types list and domain given
@@ -147,10 +147,10 @@ class Domain_Builder:
     def extract_pddl_action(
             self, 
             model: LLM_Chat, 
-            prompt_template: str, 
+            prompt_template: PromptBuilder, 
             action_name: str,
             action_desc: str,
-            predicates: list[Predicate]
+            predicates: list[Predicate]=None
             ) -> tuple[Action, list[Predicate]]:
         
         # FIX PROMPT TEMPLATE AND CODE TO ACCOMODATE MORE UNIVERSAL PROMPT INPUTS
@@ -188,6 +188,8 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
         llm_response = model.get_output(prompt=prompt_template)
 
+        # print(llm_response)
+
         # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
         action = parse_action(llm_response=llm_response, action_name=action_name)
         new_predicates = parse_new_predicates(llm_response)
@@ -202,7 +204,7 @@ class Domain_Builder:
             prompt_template: PromptBuilder, 
             action_name: str, 
             action_desc: str, 
-            types: dict[str,str]
+            types: dict[str,str]=None
             ) -> OrderedDict:
         """
         Constructs parameters for singular action.

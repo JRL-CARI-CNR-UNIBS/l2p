@@ -1,15 +1,25 @@
 (define (domain test_domain)
     (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
-    (:types city - location location vehicle - object airplane truck - vehicle)
-    (:predicates (at ?o - object ?l - location)  (connected ?l1 - location ?l2 - location))
-    (:action move_airplane
-        :parameters (?a - airplane ?from - city ?to - city)
-        :precondition (and (at ?a ?from) (or (connected ?from ?to) (connected ?to ?from)))
-        :effect (and (not (at ?a ?from)) (at ?a ?to))
+    (:types arm block table - object)
+    (:predicates (arm_empty ?a - arm)  (clear ?b - block)  (holding ?a - arm ?b - block)  (on ?top - block ?bottom - block)  (on_table ?b - block ?t - table))
+    (:action pickup
+        :parameters (?a - arm ?b - block ?t - table)
+        :precondition (and (on_table ?b ?t) (clear ?b) (arm_empty ?a))
+        :effect (and (holding ?a ?b) (not (on_table ?b ?t)) (not (clear ?b)) (not (arm_empty ?a)))
     )
-     (:action move_truck
-        :parameters (?truck - vehicle ?from - location ?to - location)
-        :precondition (and (at ?truck ?from) (or (connected ?from ?to) (connected ?to ?from)))
-        :effect (and (not (at ?truck ?from)) (at ?truck ?to))
+     (:action putdown
+        :parameters (?a - arm ?b - block ?t - table)
+        :precondition (holding ?a ?b)
+        :effect (and (not (holding ?a ?b)) (arm_empty ?a) (on_table ?b ?t) (clear ?b))
+    )
+     (:action stack
+        :parameters (?a - arm ?top - block ?bottom - block)
+        :precondition (and (holding ?a ?top) (clear ?bottom) (not (arm_empty ?a)) (not (= ?top ?bottom)))
+        :effect (and (not (holding ?a ?top)) (arm_empty ?a) (on ?top ?bottom) (not (clear ?bottom)) (clear ?top))
+    )
+     (:action unstack
+        :parameters (?a - arm ?top - block ?bottom - block)
+        :precondition (and (arm_empty ?a) (clear ?top) (on ?top ?bottom))
+        :effect (and (holding ?a ?top) (not (on ?top ?bottom)) (clear ?bottom) (not (arm_empty ?a)))
     )
 )

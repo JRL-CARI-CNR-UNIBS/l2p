@@ -135,7 +135,7 @@ class Task_Builder:
 
         llm_response = model.get_output(prompt=prompt_template)
 
-        # print("LLM RESPONSE TASK BUILDER:\n", llm_response)
+        print("LLM RESPONSE TASK BUILDER:\n", llm_response)
 
         objects = parse_objects(llm_response)
         initial = parse_initial(llm_response)

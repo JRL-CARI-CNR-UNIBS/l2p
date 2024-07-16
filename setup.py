@@ -82,27 +82,68 @@ from pddl.formatter import domain_to_string, problem_to_string
 from pddl.requirements import Requirements
 from pddl import parse_domain, parse_problem
 from l2p.utils.pddl_parser import convert_to_dict
+import sys
 
-domain_file = 'data/domain.pddl'
-problem_file = "data/problem.pddl"
+# domain_file = 'data/domain.pddl'
+# problem_file = "data/problem.pddl"
 
-domain = parse_domain(domain_file)
-pddl_domain = domain_to_string(domain)
+# domain = parse_domain(domain_file)
+# pddl_domain = domain_to_string(domain)
 
-# problem = parse_problem(problem_file)
-# pddl_problem = problem_to_string(problem)
+# # problem = parse_problem(problem_file)
+# # pddl_problem = problem_to_string(problem)
 
-print("PDDL domain:\n", pddl_domain)
-print("--------------")
-# print("PDDL problem:\n", pddl_problem)
+# print("PDDL domain:\n", pddl_domain)
+# print("--------------")
+# # print("PDDL problem:\n", pddl_problem)
 
-# Write PDDL domain string to a file
-with open(domain_file, "w") as f:
-    f.write(pddl_domain)
+# # Write PDDL domain string to a file
+# with open(domain_file, "w") as f:
+#     f.write(pddl_domain)
 
-print(f"PDDL domain written to {domain_file}")
+# print(f"PDDL domain written to {domain_file}")
 
 # with open(problem_file, "w") as f:
 #     f.write(pddl_problem)
 
 # print(f"PDDL domain written to {problem_file}")
+
+
+def check_parse_domain(file_path):
+    try:
+        domain = parse_domain(file_path)
+        pddl_domain = domain_to_string(domain)
+        return pddl_domain
+    except Exception as e:
+        print("------------------")
+        print(f"Error parsing domain: {e}", file=sys.stderr)
+        print("------------------")
+        sys.exit(1)
+
+def check_parse_problem(file_path):
+    try:
+        problem = parse_problem(file_path)
+        pddl_problem = problem_to_string(problem)
+        return pddl_problem
+    except Exception as e:
+        print("------------------")
+        print(f"Error parsing domain: {e}", file=sys.stderr)
+        print("------------------")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    domain_file_path = 'data/domain.pddl'
+    pddl_domain = check_parse_domain(domain_file_path)
+    print("PDDL domain:\n", pddl_domain)
+
+    print("------------------")
+
+    problem_file_path = 'data/problem.pddl'
+    pddl_problem = check_parse_problem(problem_file_path)
+    print("PDDL domain:\n", pddl_problem)
+
+    with open(domain_file_path, "w") as f:
+        f.write(pddl_domain)
+
+    with open(problem_file_path, "w") as f:
+        f.write(pddl_problem)

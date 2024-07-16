@@ -170,7 +170,7 @@ if __name__ == "__main__":
     # model = get_llm("gpt-4o")
 
     # instantiate domain builder class
-    domain_desc = open_file('data/domains/logistics.txt')
+    domain_desc = open_file('data/domains/blocksworld.txt')
     domain_builder = Domain_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
     problem_desc = open_file("data/problems/blocksworld_p1.txt")
@@ -269,22 +269,22 @@ if __name__ == "__main__":
     print("\n\n---------------------------------\n\nPDDL action output:\n")
 
     # GRANULAR ACTION EXTRACTION PIPELINE
-    # actions, predicates = run_granular_action_pipeline(
-    #     model=model, 
-    #     domain_desc=domain_desc, 
-    #     param_prompt=pddl_param_extraction_prompt,
-    #     precondition_prompt=pddl_precondition_extraction_prompt,
-    #     effects_prompt=pddl_effects_extraction_prompt,
-    #     nl_actions=nl_actions
-    #     )
+    actions, predicates = run_granular_action_pipeline(
+        model=model, 
+        domain_desc=domain_desc, 
+        param_prompt=pddl_param_extraction_prompt,
+        precondition_prompt=pddl_precondition_extraction_prompt,
+        effects_prompt=pddl_effects_extraction_prompt,
+        nl_actions=nl_actions
+        )
     
     # COMPACT ACTION EXTRACTION PIPELINE
-    actions, predicates = run_compact_action_pipeline(
-        model=model, 
-        domain_builder=domain_builder, 
-        prompt=pddl_action_extraction_prompt,
-        nl_actions=nl_actions
-    )
+    # actions, predicates = run_compact_action_pipeline(
+    #     model=model, 
+    #     domain_builder=domain_builder, 
+    #     prompt=pddl_action_extraction_prompt,
+    #     nl_actions=nl_actions
+    # )
 
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
     types = extract_types(type_hierarchy) # retrieve types
@@ -307,27 +307,26 @@ if __name__ == "__main__":
     
     print(pddl_domain)
 
+    domain_file = "data/domain.pddl"
+    with open(domain_file, "w") as f:
+        f.write(pddl_domain)
+    print(f"PDDL domain written to {domain_file}")
 
-    # domain_file = "data/domain.pddl"
-    # with open(domain_file, "w") as f:
-    #     f.write(pddl_domain)
-    # print(f"PDDL domain written to {domain_file}")
+    print("\n\n---------------------------------\n\nPDDL task extraction:\n")
 
-    # print("\n\n---------------------------------\n\nPDDL task extraction:\n")
+    # GRANULAR TASK PIPELINE
+    objects, initial_states, goal_states = run_granular_task_pipeline(
+         model=model, 
+         problem_desc=problem_desc, 
+         domain_desc=domain_desc, 
+         object_extraction_prompt=object_extraction_prompt,
+         initial_extraction_prompt=initial_extraction_prompt,
+         goal_extraction_prompt=goal_extraction_prompt,
+         types=pruned_types,
+         predicates=predicates
+    )
 
-    # # GRANULAR TASK PIPELINE
-    # # objects, initial_states, goal_states = run_granular_task_pipeline(
-    # #      model=model, 
-    # #      problem_desc=problem_desc, 
-    # #      domain_desc=domain_desc, 
-    # #      object_extraction_prompt=object_extraction_prompt,
-    # #      initial_extraction_prompt=initial_extraction_prompt,
-    # #      goal_extraction_prompt=goal_extraction_prompt,
-    # #      types=pruned_types,
-    # #      predicates=predicates
-    # # )
-
-    # # COMPACT TASK PIPELINE
+    # COMPACT TASK PIPELINE
     # objects, initial_states, goal_states = run_compact_task_pipeline(
     #      model=model, 
     #      problem_desc=problem_desc, 
@@ -338,11 +337,11 @@ if __name__ == "__main__":
     #      actions=actions
     # )
 
-    # print("[TASK]\n") 
-    # pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
-    # print(pddl_problem)
+    print("[TASK]\n") 
+    pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
+    print(pddl_problem)
 
-    # problem_file = "data/problem.pddl"
-    # with open(problem_file, "w") as f:
-    #     f.write(pddl_problem)
-    # print(f"PDDL domain written to {problem_file}")
+    problem_file = "data/problem.pddl"
+    with open(problem_file, "w") as f:
+        f.write(pddl_problem)
+    print(f"PDDL domain written to {problem_file}")
