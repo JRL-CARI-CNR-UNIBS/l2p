@@ -54,6 +54,7 @@ class GPT_Chat(LLM_Chat):
             "gpt-4": 8192, # ~8k tokens
             "gpt-4-32k": 32768, # ~32k tokens
             "gpt-4o": 32768, # ~32k tokens
+            "gpt-4o-mini": 32768,
         }[engine]
         self.max_tokens = max_tokens if max_tokens is not None else self.context_length
         self.tok = tiktoken.get_encoding("cl100k_base") # For GPT3.5+

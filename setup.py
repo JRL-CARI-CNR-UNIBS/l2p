@@ -75,38 +75,9 @@
 #     print("NEW PREDICATES OUTPUT:\n", new_predicates)
 
 
-from pddl.logic import Predicate, constants, variables
-from pddl.core import Domain, Problem
-from pddl.action import Action
 from pddl.formatter import domain_to_string, problem_to_string
-from pddl.requirements import Requirements
 from pddl import parse_domain, parse_problem
-from l2p.utils.pddl_parser import convert_to_dict
 import sys
-
-# domain_file = 'data/domain.pddl'
-# problem_file = "data/problem.pddl"
-
-# domain = parse_domain(domain_file)
-# pddl_domain = domain_to_string(domain)
-
-# # problem = parse_problem(problem_file)
-# # pddl_problem = problem_to_string(problem)
-
-# print("PDDL domain:\n", pddl_domain)
-# print("--------------")
-# # print("PDDL problem:\n", pddl_problem)
-
-# # Write PDDL domain string to a file
-# with open(domain_file, "w") as f:
-#     f.write(pddl_domain)
-
-# print(f"PDDL domain written to {domain_file}")
-
-# with open(problem_file, "w") as f:
-#     f.write(pddl_problem)
-
-# print(f"PDDL domain written to {problem_file}")
 
 
 def check_parse_domain(file_path):
@@ -140,7 +111,7 @@ if __name__ == "__main__":
 
     problem_file_path = 'data/problem.pddl'
     pddl_problem = check_parse_problem(problem_file_path)
-    print("PDDL domain:\n", pddl_problem)
+    print("PDDL Problem:\n", pddl_problem)
 
     with open(domain_file_path, "w") as f:
         f.write(pddl_domain)

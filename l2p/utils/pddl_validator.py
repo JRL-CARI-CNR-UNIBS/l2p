@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from pddl_types import Predicate
+from .pddl_types import Predicate
 
 class Syntax_Validator:
 

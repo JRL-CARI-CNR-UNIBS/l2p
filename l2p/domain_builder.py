@@ -56,11 +56,7 @@ class Domain_Builder:
         model.reset_tokens() # reset tokens
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc) # replace template holders
-
-        if types != None:
-            prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
-        else:
-            prompt_template = prompt_template.replace('{type_hierarchy}', "No types available.")
+        prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
 
         # print("TYPE PROMPT:\n", prompt_template)
 

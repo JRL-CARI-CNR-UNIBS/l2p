@@ -4,6 +4,7 @@ from l2p.task_builder import Task_Builder
 from l2p.llm_builder import LLM_Chat, get_llm
 from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
 from l2p.utils.pddl_types import Action, Predicate
+from l2p.utils.pddl_validator import Syntax_Validator
 import os, json
 
 # micro-functions
@@ -166,8 +167,9 @@ if __name__ == "__main__":
     # THIS IS IMPORTANT TO LOOK INTO
     unsupported_keywords = ['object']
 
-    model = get_llm("gpt-3.5-turbo-0125")
+    # model = get_llm("gpt-3.5-turbo-0125")
     # model = get_llm("gpt-4o")
+    model = get_llm("gpt-4o-mini")
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
@@ -290,7 +292,7 @@ if __name__ == "__main__":
     types = extract_types(type_hierarchy) # retrieve types
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
 
-    pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words (IMPLEMENT THIS AS A HELPER FUNCTION)
+    pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
 
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
     types_str = "\n".join(pruned_types)
