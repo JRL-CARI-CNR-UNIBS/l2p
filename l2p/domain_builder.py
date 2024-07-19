@@ -40,7 +40,7 @@ class Domain_Builder:
             domain_desc: str, 
             prompt_template: PromptBuilder,
             types: dict[str,str]=None
-            ) -> dict[str,str]:
+            ) -> tuple[dict[str,str], str]:
         """
         Extracts types with domain given
 
@@ -58,14 +58,10 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc) # replace template holders
         prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
 
-        # print("TYPE PROMPT:\n", prompt_template)
-
         llm_response = model.get_output(prompt=prompt_template) # prompt model
-        
-        # print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
 
         types = convert_to_dict(llm_response=llm_response)
-        return types
+        return types, llm_response
     
     def extract_type_hierarchy(
             self, 
@@ -73,7 +69,7 @@ class Domain_Builder:
             domain_desc: str,
             prompt_template: PromptBuilder, 
             types: dict[str,str]=None
-            ) -> dict[str,str]:
+            ) -> tuple[dict[str,str], str]:
         """
         Extracts type hierarchy from types list and domain given
 
@@ -94,12 +90,8 @@ class Domain_Builder:
 
         llm_response = model.get_output(prompt=prompt_template)
 
-        try:
-            type_hierarchy = convert_to_dict(llm_response=llm_response)
-            return type_hierarchy
-        except Exception as e:
-            print(f"An error occurred: {e}\n")
-            print("RAW LLM RESPONSE FOR PDDL ACTION GENERATION:\n", llm_response)
+        type_hierarchy = convert_to_dict(llm_response=llm_response)
+        return type_hierarchy, llm_response
 
     def extract_nl_actions(
             self, 
@@ -108,7 +100,7 @@ class Domain_Builder:
             prompt_template: PromptBuilder, 
             type_hierarchy: dict[str,str]=None,
             nl_actions: dict[str,str]=None
-            ) -> dict[str,str]:
+            ) -> tuple[dict[str,str], str]:
         
         """
         Extract actions in natural language given domain description using LLM.
@@ -129,16 +121,12 @@ class Domain_Builder:
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
-
-        if nl_actions != None:
-            prompt_template = prompt_template.replace('{actions}', str(nl_actions))
-        else:
-            prompt_template = prompt_template.replace('{actions}', "No actions available.")
+        prompt_template = prompt_template.replace('{actions}', str(nl_actions))
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
 
         nl_actions = convert_to_dict(llm_response=llm_response)
-        return nl_actions
+        return nl_actions, llm_response
     
     def extract_pddl_action(
             self, 
@@ -147,7 +135,7 @@ class Domain_Builder:
             action_name: str,
             action_desc: str,
             predicates: list[Predicate]=None
-            ) -> tuple[Action, list[Predicate]]:
+            ) -> tuple[Action, list[Predicate], str]:
         
         # FIX PROMPT TEMPLATE AND CODE TO ACCOMODATE MORE UNIVERSAL PROMPT INPUTS
 
@@ -184,14 +172,12 @@ class Domain_Builder:
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
         llm_response = model.get_output(prompt=prompt_template)
 
-        # print(llm_response)
-
         # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
         action = parse_action(llm_response=llm_response, action_name=action_name)
         new_predicates = parse_new_predicates(llm_response)
         new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
-        return action, new_predicates
+        return action, new_predicates, llm_response
 
     def extract_parameters(
             self, 
@@ -201,7 +187,7 @@ class Domain_Builder:
             action_name: str, 
             action_desc: str, 
             types: dict[str,str]=None
-            ) -> OrderedDict:
+            ) -> tuple[OrderedDict, str]:
         """
         Constructs parameters for singular action.
         Returns: 
@@ -216,7 +202,7 @@ class Domain_Builder:
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
         parameter = parse_params(llm_output=llm_response)
 
-        return parameter
+        return parameter, llm_response
     
     def extract_preconditions(
             self, 
@@ -227,7 +213,7 @@ class Domain_Builder:
             action_desc: str, 
             params: list[str], 
             predicates: list[Predicate]
-            ) -> tuple[str, list[Predicate]]:
+            ) -> tuple[str, list[Predicate], str]:
         """
         Constructs preconditions for singular action.
         Returns: 
@@ -254,7 +240,7 @@ class Domain_Builder:
         preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         new_predicates = parse_new_predicates(llm_output=llm_response)
 
-        return preconditions, new_predicates
+        return preconditions, new_predicates, llm_response
 
     def extract_effects(
             self, 
@@ -266,7 +252,7 @@ class Domain_Builder:
             params: list[str], 
             precondition: str,
             predicates: list[Predicate]
-            ) -> tuple[str, list[Predicate]]:
+            ) -> tuple[str, list[Predicate], str]:
         """
         Constructs effects for singular action.
         Returns: 
@@ -290,12 +276,10 @@ class Domain_Builder:
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
 
-        # print("LLM RESPONSE EFFECTS\n", llm_response)
-
         effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         new_predicates = parse_new_predicates(llm_output=llm_response)
 
-        return effects, new_predicates
+        return effects, new_predicates, llm_response
 
 
 

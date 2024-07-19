@@ -1,4 +1,5 @@
 from l2p.prompt_builder import PromptBuilder
+from l2p.feedback_builder import Feedback_Builder
 from l2p.domain_builder import Domain_Builder
 from l2p.task_builder import Task_Builder
 from l2p.llm_builder import LLM_Chat, get_llm
@@ -172,7 +173,7 @@ if __name__ == "__main__":
     model = get_llm("gpt-4o-mini")
 
     # instantiate domain builder class
-    domain_desc = open_file('data/domains/blocksworld.txt')
+    domain_desc = open_file('data/domains/household.txt')
     domain_builder = Domain_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
     problem_desc = open_file("data/problems/blocksworld_p1.txt")
@@ -251,99 +252,106 @@ if __name__ == "__main__":
 
     # extract types
     print("Extracted types output:\n")
-    types = domain_builder.extract_type(model, domain_desc, type_extraction_prompt.generate_prompt())
+    types, response = domain_builder.extract_type(model, domain_desc, type_extraction_prompt.generate_prompt())
     domain_builder.set_types(types=types)
     print("Types: ", format_json_output(domain_builder.get_types()))
-    
-    # extract type hierarchy
-    print("\n\n---------------------------------\n\nType hierarchy output:\n")
-    type_hierarchy = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
-    domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
-    print(format_json_output(type_hierarchy))
 
-    # extract NL action descriptions
-    print("\n\n---------------------------------\n\nNatural language action output:\n")
-    nl_actions = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), type_hierarchy)
-    domain_builder.set_nl_actions(nl_actions)
-    for i in nl_actions: print(i)
-    
-    # extract PDDL formatted actions
-    print("\n\n---------------------------------\n\nPDDL action output:\n")
 
-    # GRANULAR ACTION EXTRACTION PIPELINE
-    actions, predicates = run_granular_action_pipeline(
-        model=model, 
-        domain_desc=domain_desc, 
-        param_prompt=pddl_param_extraction_prompt,
-        precondition_prompt=pddl_precondition_extraction_prompt,
-        effects_prompt=pddl_effects_extraction_prompt,
-        nl_actions=nl_actions
-        )
+    feedback_template = open_file('data/prompt_templates/type_extraction/feedback.txt')
+    feedback_builder = Feedback_Builder()
     
-    # COMPACT ACTION EXTRACTION PIPELINE
-    # actions, predicates = run_compact_action_pipeline(
+    feedback = feedback_builder.type_feedback(model, domain_desc, feedback_template, types, response)
+    print("FEEDBACK:\n", feedback)
+    
+    # # extract type hierarchy
+    # print("\n\n---------------------------------\n\nType hierarchy output:\n")
+    # type_hierarchy = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
+    # domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
+    # print(format_json_output(type_hierarchy))
+
+    # # extract NL action descriptions
+    # print("\n\n---------------------------------\n\nNatural language action output:\n")
+    # nl_actions = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), type_hierarchy)
+    # domain_builder.set_nl_actions(nl_actions)
+    # for i in nl_actions: print(i)
+    
+    # # extract PDDL formatted actions
+    # print("\n\n---------------------------------\n\nPDDL action output:\n")
+
+    # # GRANULAR ACTION EXTRACTION PIPELINE
+    # actions, predicates = run_granular_action_pipeline(
     #     model=model, 
-    #     domain_builder=domain_builder, 
-    #     prompt=pddl_action_extraction_prompt,
+    #     domain_desc=domain_desc, 
+    #     param_prompt=pddl_param_extraction_prompt,
+    #     precondition_prompt=pddl_precondition_extraction_prompt,
+    #     effects_prompt=pddl_effects_extraction_prompt,
     #     nl_actions=nl_actions
-    # )
-
-    predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
-    types = extract_types(type_hierarchy) # retrieve types
-    pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
-
-    pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
-
-    predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
-    types_str = "\n".join(pruned_types)
-
-    requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
-    print("[DOMAIN]\n") 
-    pddl_domain = domain_builder.generate_domain(
-        domain="test_domain", 
-        requirements=requirements,
-        types=types_str,
-        predicates=predicate_str,
-        actions=actions
-        )
+    #     )
     
-    print(pddl_domain)
+    # # COMPACT ACTION EXTRACTION PIPELINE
+    # # actions, predicates = run_compact_action_pipeline(
+    # #     model=model, 
+    # #     domain_builder=domain_builder, 
+    # #     prompt=pddl_action_extraction_prompt,
+    # #     nl_actions=nl_actions
+    # # )
 
-    domain_file = "data/domain.pddl"
-    with open(domain_file, "w") as f:
-        f.write(pddl_domain)
-    print(f"PDDL domain written to {domain_file}")
+    # predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
+    # types = extract_types(type_hierarchy) # retrieve types
+    # pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
 
-    print("\n\n---------------------------------\n\nPDDL task extraction:\n")
+    # pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
 
-    # GRANULAR TASK PIPELINE
-    objects, initial_states, goal_states = run_granular_task_pipeline(
-         model=model, 
-         problem_desc=problem_desc, 
-         domain_desc=domain_desc, 
-         object_extraction_prompt=object_extraction_prompt,
-         initial_extraction_prompt=initial_extraction_prompt,
-         goal_extraction_prompt=goal_extraction_prompt,
-         types=pruned_types,
-         predicates=predicates
-    )
+    # predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
+    # types_str = "\n".join(pruned_types)
 
-    # COMPACT TASK PIPELINE
-    # objects, initial_states, goal_states = run_compact_task_pipeline(
+    # requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
+    # print("[DOMAIN]\n") 
+    # pddl_domain = domain_builder.generate_domain(
+    #     domain="test_domain", 
+    #     requirements=requirements,
+    #     types=types_str,
+    #     predicates=predicate_str,
+    #     actions=actions
+    #     )
+    
+    # print(pddl_domain)
+
+    # domain_file = "data/domain.pddl"
+    # with open(domain_file, "w") as f:
+    #     f.write(pddl_domain)
+    # print(f"PDDL domain written to {domain_file}")
+
+    # print("\n\n---------------------------------\n\nPDDL task extraction:\n")
+
+    # # GRANULAR TASK PIPELINE
+    # objects, initial_states, goal_states = run_granular_task_pipeline(
     #      model=model, 
     #      problem_desc=problem_desc, 
     #      domain_desc=domain_desc, 
-    #      task_extraction_prompt=task_extraction_prompt,
+    #      object_extraction_prompt=object_extraction_prompt,
+    #      initial_extraction_prompt=initial_extraction_prompt,
+    #      goal_extraction_prompt=goal_extraction_prompt,
     #      types=pruned_types,
-    #      predicates=predicates,
-    #      actions=actions
+    #      predicates=predicates
     # )
 
-    print("[TASK]\n") 
-    pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
-    print(pddl_problem)
+    # # COMPACT TASK PIPELINE
+    # # objects, initial_states, goal_states = run_compact_task_pipeline(
+    # #      model=model, 
+    # #      problem_desc=problem_desc, 
+    # #      domain_desc=domain_desc, 
+    # #      task_extraction_prompt=task_extraction_prompt,
+    # #      types=pruned_types,
+    # #      predicates=predicates,
+    # #      actions=actions
+    # # )
 
-    problem_file = "data/problem.pddl"
-    with open(problem_file, "w") as f:
-        f.write(pddl_problem)
-    print(f"PDDL domain written to {problem_file}")
+    # print("[TASK]\n") 
+    # pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
+    # print(pddl_problem)
+
+    # problem_file = "data/problem.pddl"
+    # with open(problem_file, "w") as f:
+    #     f.write(pddl_problem)
+    # print(f"PDDL domain written to {problem_file}")

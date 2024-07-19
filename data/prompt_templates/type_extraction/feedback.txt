@@ -1,6 +1,3 @@
-# Role
-Your are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain. If it is, respond with "no feedback". If it isn't, provide your thoughts on how to correct the types. Don't model the available actions, but just the types of objects to be used. 
-
 Go through the following checklist:
 1: Are there additional types which are needed to model the domain?
 2: Are additional types needed for organising the type hierarchy? For example, if both "carbonara" and "sushi" are both included, a "food" meta-type should likely be included as well.
@@ -149,12 +146,3 @@ I've got a building with five floors and two elevators, and I want you to plan t
     The starting and goal states will be positions, and these aren't in any way included. Hence: No. 
 
 As such: No feedback.
-
-# Task
-## Domain
-{domain_desc}
-
-## Types
-{type_list}
-
-## Feedback

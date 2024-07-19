@@ -69,6 +69,7 @@ class PromptBuilder:
 
             prompt += "------------------------------------------------\n"
 
+        # REMOVE TASK AND PUT IT APPEND IT TO PROMPT IN DOMAIN_BUILDER FUNCTIONS
         if self.task:
             prompt += f"[TASK]: {self.task}\n\n"
 
