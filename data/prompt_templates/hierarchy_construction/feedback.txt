@@ -1,6 +1,3 @@
-# Role
-Your task is to evaluate if a type hierarchy is defined in the best way. You can suggest changing of the structure or adding types. If the hierarchy is optimal, respond with "No feedback". Note that everything is always supposed to be a subtype of the "object" class. You shouldn't suggest any new types except those needed for organisation of the provided types.
-
 Go through the following checklist:
 1: Is any child not a subtype of its parent? For example, "house" is defined as a subtype of "city". Often this is due to the child being physically inside the parent. 
 2: Is any subtype not a child of its parent type? For example, "fish" is not defined as a child of "animal". Often this is due to the subtype itself having further subtypes.
@@ -82,12 +79,3 @@ The AI agent is here a scheduling system for a house construction company.
 
 My advice is that you perform the following concrete change:
     - Move the "house" type away from the "city" type. "house" should not be a subtype of "city". 
-
-# Task
-## Domain
-{domain_desc}
-
-## Types
-{type_hierarchy}
-
-## Feedback

@@ -263,11 +263,15 @@ if __name__ == "__main__":
     feedback = feedback_builder.type_feedback(model, domain_desc, feedback_template, types, response)
     print("FEEDBACK:\n", feedback)
     
-    # # extract type hierarchy
-    # print("\n\n---------------------------------\n\nType hierarchy output:\n")
-    # type_hierarchy = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
-    # domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
-    # print(format_json_output(type_hierarchy))
+    # extract type hierarchy
+    print("\n\n---------------------------------\n\nType hierarchy output:\n")
+    type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
+    domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
+    print(format_json_output(type_hierarchy))
+
+    feedback_template = open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
+    feedback = feedback_builder.type_hierarchy_feedback(model, domain_desc, feedback_template, type_hierarchy, response)
+    print("FEEDBACK:\n", feedback)
 
     # # extract NL action descriptions
     # print("\n\n---------------------------------\n\nNatural language action output:\n")
