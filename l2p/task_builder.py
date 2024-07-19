@@ -117,7 +117,7 @@ class Task_Builder:
             types: dict[str,str], 
             predicates: list[Predicate],
             actions: list[Action]
-            ) -> tuple[str,str,str]:
+            ) -> tuple[str,str,str,str]:
         """
         Extracts objects, initial, and goal states from LLM output given domain description, types, and predicates
         Returns -> tuple[str,str,str]
@@ -141,7 +141,7 @@ class Task_Builder:
         initial = parse_initial(llm_response)
         goal = parse_goal(llm_response)
 
-        return objects, initial, goal
+        return objects, initial, goal, llm_response
 
 
     def set_objects(self, objects: dict[str,str]):

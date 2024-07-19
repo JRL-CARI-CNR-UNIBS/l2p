@@ -255,7 +255,7 @@ def parse_objects(llm_response: str) -> dict[str, str]:
 
 def parse_initial(llm_response: str) -> str:
     """Extracts state (PDDL-init) from LLM response and returns it as a string"""
-    state_head = extract_heading(llm_response, "State")
+    state_head = extract_heading(llm_response, "Initial")
     state_raw = combine_blocks(state_head)
     state_clean = clear_comments(state_raw)
 
