@@ -12,3 +12,5 @@ Use the following checklist:
 6. Ensure parameters are used correctly in logical expressions, avoiding undefined or unused parameters. Example: Avoid using ?obj if it is not defined in the parameters list.
 
 7. Ensure the parameters section adheres to PDDL syntax and standards. Example: Confirm the use of :parameters and not another keyword
+
+8. All predicates should not have the keyword 'not' in them.

@@ -1,25 +1,35 @@
-(define (domain test_domain)
-    (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
-    (:types table - location arm block - manipulatable_object)
-    (:predicates (clear ?b - block)  (empty ?a - arm)  (holding ?a - arm ?b - block)  (on_table ?b - block))
-    (:action pickup
-        :parameters (?arm - arm ?block - block ?table - table)
-        :precondition (and (empty ?arm) (clear ?block) (on_table ?block ?table))
-        :effect (and (holding ?arm ?block) (not (empty ?arm)) (not (clear ?block)) (not (on_table ?block ?table)))
+(define (domain logistics)
+    (:requirements :existential-preconditions :strips :typing)
+    (:types city location package vehicle - object plane truck - vehicle)
+    (:predicates (at ?v - vehicle ?l - location)  (at_airport ?v - vehicle ?c - city)  (at_location ?p - package ?l - location)  (in ?p - package ?v - vehicle)  (in_city ?l - location ?c - city)  (plane ?p - plane)  (truck ?t - truck))
+    (:action drive-truck
+        :parameters (?t - truck ?from - location ?to - location)
+        :precondition (and (at ?t ?from) (exists (?c - city) (and (in_city ?from ?c) (in_city ?to ?c))))
+        :effect (and (at ?t ?to) (not (at ?t ?from)))
     )
-     (:action putdown
-        :parameters (?arm - arm ?block - block ?table - table)
-        :precondition (and (holding ?arm ?block) (on_table ?block ?table) (clear ?block))
-        :effect (and (empty ?arm) (on_table ?block ?table) (clear ?block) (not (holding ?arm ?block)))
+     (:action fly-plane
+        :parameters (?pl - plane ?from - city ?to - city)
+        :precondition (at_airport ?pl ?from)
+        :effect (and (at_airport ?pl ?to) (not (at_airport ?pl ?from)))
     )
-     (:action stack
-        :parameters (?top - block ?bottom - block)
-        :precondition (and (holding ?top) (clear ?bottom))
-        :effect (and (not (holding ?top)) (not (clear ?bottom)) (on_table ?top))
+     (:action load-plane
+        :parameters (?p - package ?pl - plane ?a - location ?c - city)
+        :precondition (and (at_airport ?pl ?c) (at_location ?p ?a) (in_city ?a ?c))
+        :effect (and (in ?p ?pl) (not (at_location ?p ?a)))
     )
-     (:action unstack
-        :parameters (?arm - arm ?top_block - block ?bottom_block - block)
-        :precondition (and (empty ?arm) (clear ?top_block))
-        :effect (and (holding ?arm ?top_block) (not (clear ?top_block)) (not (holding ?arm ?bottom_block)) (clear ?bottom_block))
+     (:action load-truck
+        :parameters (?p - package ?t - truck ?l - location)
+        :precondition (and (at ?t ?l) (at_location ?p ?l))
+        :effect (and (in ?p ?t) (not (at_location ?p ?l)))
+    )
+     (:action unload-plane
+        :parameters (?p - package ?pl - plane ?a - location ?c - city)
+        :precondition (and (at_airport ?pl ?c) (in ?p ?pl) (in_city ?a ?c))
+        :effect (and (at_location ?p ?a) (not (in ?p ?pl)))
+    )
+     (:action unload-truck
+        :parameters (?p - package ?t - truck ?l - location)
+        :precondition (and (at ?t ?l) (in ?p ?t))
+        :effect (and (at_location ?p ?l) (not (in ?p ?t)))
     )
 )

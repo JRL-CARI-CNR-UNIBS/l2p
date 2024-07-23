@@ -10,3 +10,5 @@ Use the following checklist:
 5: Can the used predicates be improved? For example, instead of checking "share_location(A,B)" it might be better to check if "at_location(A, L)" and "at_location(B, L)" are both true.
 
 6: Should any predicate be used in a symmetrical manner? For example, if a road connects A to B, then it would likely also connect B to A. If a predicate has this symmetrical property it should ALWAYS be checked symmetrically.
+
+7. All predicates should not have the keyword 'not' in them.

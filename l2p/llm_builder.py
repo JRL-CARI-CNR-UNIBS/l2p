@@ -61,7 +61,7 @@ class GPT_Chat(LLM_Chat):
         self.tok = tiktoken.get_encoding("cl100k_base") # For GPT3.5+
         self.in_tokens = 0
         self.out_tokens = 0
-        print(f"Seed is not used for OpenAI models. Discarding seed {seed}")
+        # print(f"Seed is not used for OpenAI models. Discarding seed {seed}")
 
     def get_output(self, prompt=None, messages=None, end_when_error=False, max_retry=5, est_margin = 200):
         if prompt is None and messages is None:

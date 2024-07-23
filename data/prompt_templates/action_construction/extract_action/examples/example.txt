@@ -32,7 +32,7 @@ No predicate has been defined yet
 
 -----------------------------------------------------
 
-### Action Parameters
+Get predicates:
 Well, first we need to know which vehicle is travelling.
 ```
 - ?v - vehicle: The vehicle travelling
@@ -44,7 +44,7 @@ Then, we need to know where it's travelling to and from. Any type of location (b
 - ?to - location: The location travelling to
 ```
 
-### Action Preconditions
+Get preconditions:
 To be able to drive from ?from to ?to it's specified that:
     1: The truck has to be at the starting location.
     2: The two locations have to be connected.
@@ -67,7 +67,7 @@ Let's specify this in PDDL:
 )
 ```
 
-### Action Effects
+Get effects:
 So, what happens when the action is performed?
  - The vehicle is no longer at ?from.
  - The vehicle is now at ?to.
@@ -82,7 +82,7 @@ Let's write the PDDL:
 )
 ```
 
-### New Predicates
+State new predicates:
 We used several new predicates. Those have to be specified formally here.
 
 The first predicate we created is "at" which shows where something is. To make it compatible for both vehicles and workers, we use the general object type.

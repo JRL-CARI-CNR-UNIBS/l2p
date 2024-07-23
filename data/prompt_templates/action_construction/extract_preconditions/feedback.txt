@@ -16,3 +16,5 @@ Use the following checklist:
 8. Is there a clear logical flow in the preconditions? Example: Preconditions should follow a logical order, making it easy to understand the required state before the action.
 
 9. Do preconditions align with the overall domain definition? Example: Ensure they make sense within the context of the domain, like checking (at ?robot ?from) for a movement action in a navigation domain.
+
+10. All predicates should not have the keyword 'not' in them.

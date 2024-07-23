@@ -23,7 +23,17 @@ class Feedback_Builder:
         feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
         feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
         feedback_template += "\n\nORIGINAL TYPES (to be analysed):\n" + format_json_output(types)
-        prompt = "ROLE:\nYou are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain. If it is, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else. If it isn't, provide your thoughts on how to correct the types. Don't model the available actions, but just the types of objects to be used.'\n\n"
+        
+        example = """START OF EXAMPLE:
+## OUTPUT
+{
+    "location": "Locations can be visited and travelled between.",
+    "house": "Constructed by the company. Are a type of location.",
+}
+END OF EXAMPLE
+"""
+        
+        prompt = "ROLE:\nYou are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain. If it is, respond with 'no feedback'. Only respond with 'no feedback', no where else. If it isn't, provide your thoughts on how to correct the types. Don't model the available actions, but just the types of objects to be used.'\n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -41,9 +51,9 @@ class Feedback_Builder:
         print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
-            return None, None, feedback_msg
+            return None, feedback_msg
         else:
-            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the types. End your final answer starting with '## OUTPUT'."
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the types. Your end response must format in a Python dictionary under header '## OUTPUT' as so:\n\n" + example
             feedback_msg += "\n\n## Response\n"
         
         messages = [
@@ -69,8 +79,18 @@ class Feedback_Builder:
 
         feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
         feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
+        
+        example = """START OF EXAMPLE:
+## OUTPUT
+{
+    "location": "Locations can be visited and travelled between.",
+    "house": "Constructed by the company. Are a type of location.",
+}
+END OF EXAMPLE
+"""
+        
         feedback_template += "\n\nORIGINAL TYPE HIERARCHY (to be analysed):\n" + format_json_output(type_hierarchy)
-        prompt = "ROLE:\nYour task is to evaluate if a type hierarchy is defined in the best way. You can suggest changing of the structure or adding types. Note that everything is always supposed to be a subtype of the 'object' class. You shouldn't suggest any new types except those needed for organisation of the provided types. If the hierarchy is optimal, respond with 'No feedback'. Only respond with 'no feedback' at the end, no where else.\n\n"
+        prompt = "ROLE:\nYour task is to evaluate if a type hierarchy is defined in the best way. You can suggest changing of the structure or adding types. Note that everything is always supposed to be a subtype of the 'object' class. You shouldn't suggest any new types except those needed for organisation of the provided types. If the hierarchy is optimal, respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
         prompt += feedback_template
         
         if feedback_type.lower() == "human":
@@ -88,9 +108,9 @@ class Feedback_Builder:
         print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
-            return None, None, feedback_msg
+            return None, feedback_msg
         else:
-            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the type hierarchy. End your final answer starting with '## OUTPUT'."
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the type hierarchy. Your end response must format in a Python dictionary under header '## OUTPUT' as so:\n\n" + example
             feedback_msg += "\n\n## Response\n"
         
         messages = [
@@ -107,7 +127,8 @@ class Feedback_Builder:
             self, 
             model: LLM_Chat, 
             domain_desc: str, 
-            feedback_template: str, 
+            feedback_template: str,
+            feedback_type: str,
             nl_actions: dict[str,str], 
             llm_response: str=""
             ) -> tuple[dict[str,str], str]:
@@ -116,19 +137,37 @@ class Feedback_Builder:
         feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
         feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
         feedback_template += "\n\nORIGINAL NATURAL LANGUAGE ACTIONS (to be analysed):\n" + format_json_output(nl_actions)
-        prompt = "ROLE:\nYou will be given a set of which are used for a PDDL domain. You should evaluate if they make up all the actions necessary for the given domain, or if any new actions have to be created or existing actions removed. Describe your thought process and comments your suggestions. Focus only on the actions currently, predicates will be specified at a later date. Be careful not to over complicate any domains, adding actions simply for complexity/completeness when they're not needed for the domain should be avoided, we're making a simplified model. Any actions involving 'checking' should not be considered an action, because that is a predicate in PDDL. Only suggest actions that cannot be described by a predicate. Keep the essentials. If the actions are well defined, simply respond with 'No feedback'. Only respond with 'no feedback' at the end, no where else.\n\n"
+        
+        example = """START OF EXAMPLE:
+## OUTPUT
+{
+    'build_floor: 'A worker performs an order to build a floor. Requires the worker to be there and for a build_floor_order for the house to exist. Example: worker_1 builds a floor at house_1 given that a build_floor_order for it exists.'
+}   
+"""
+        
+        prompt = "ROLE:\nYou will be given a set of which are used for a PDDL domain. You should evaluate if they make up all the actions necessary for the given domain, or if any new actions have to be created or existing actions removed. Describe your thought process and comments your suggestions. Focus only on the actions currently, predicates will be specified at a later date. Be careful not to over complicate any domains, adding actions simply for complexity/completeness when they're not needed for the domain should be avoided, we're making a simplified model. Any actions involving 'checking' should not be considered an action, because that is a predicate in PDDL. Only suggest actions that cannot be described by a predicate. Keep the essentials. If the actions are well defined, simply respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
         prompt += feedback_template
 
-        # print("PROMPT FEEDBACK:\n", prompt)
+        if feedback_type.lower() == "human":
+            feedback_msg = self.human_feedback(llm_response)
+        elif feedback_type.lower() == "llm":
+            feedback_msg = model.get_output(prompt=prompt)
+        elif feedback_type.lower() == "hybrid":
+            feedback_msg = model.get_output(prompt=prompt)
+            response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
+            feedback_msg.replace("no feedback".lower(), "")
+            feedback_msg += self.human_feedback(response)
+        else:
+            raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
+        
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
         
         llm_feedback = model.get_output(prompt=prompt)
-
-        # print("LLM FEEDBACK:\n", llm_feedback)
 
         if 'no feedback' in llm_feedback.lower() or len(llm_feedback.strip()) == 0:
             return None, llm_feedback
         else:
-            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the natural language actions. Make sure it is not a nested dictionary. End your final answer starting with '## OUTPUT'."
+            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the natural language actions. Your end response must format in a Python dictionary under header '## OUTPUT' as so:\n\n" + example
             llm_feedback += "\n\n## Response\n"
         
         messages = [
@@ -138,11 +177,10 @@ class Feedback_Builder:
 
         llm_feedback_response = model.get_output(messages=messages)
 
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         new_nl_actions = convert_to_dict(llm_response=llm_feedback_response)
         return new_nl_actions, llm_feedback_response
-
 
 
     def pddl_action_feedback(
@@ -197,7 +235,7 @@ class Feedback_Builder:
 END OF EXAMPLE
         """
     
-        prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. If the action is well defined, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else.\n\n"
+        prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. If the action is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -235,7 +273,6 @@ END OF EXAMPLE
 
         return action, new_predicates, llm_feedback_response
 
-
     def parameter_feedback(
             self, 
             model: LLM_Chat, 
@@ -269,7 +306,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given parameters. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only define the action parameters. If the parameter is well defined, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else."
+        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given parameters. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only define the action parameters. If the parameter is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist."
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -302,7 +339,6 @@ END OF EXAMPLE
 
         parameter = parse_params(llm_output=llm_feedback_response)
         return parameter, llm_feedback_response
-
 
     def precondition_feedback(
             self, 
@@ -351,7 +387,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given preconditions. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the action preconditions. If the precondition is well defined, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else."
+        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given preconditions. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the action preconditions. If the precondition is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -386,7 +422,6 @@ END OF EXAMPLE
         new_predicates = parse_new_predicates(llm_output=llm_feedback_response)
         
         return preconditions, new_predicates, llm_response
-
 
     def effects_feedback(
             self, 
@@ -437,7 +472,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given effects. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the action effects. If the effects are well defined, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else."
+        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given effects. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the action effects. If the effects are well defined, respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -472,8 +507,6 @@ END OF EXAMPLE
         new_predicates = parse_new_predicates(llm_output=llm_feedback_response)
         
         return effects, new_predicates, llm_feedback_response
-
-
 
 
     def task_feedback(
@@ -522,7 +555,7 @@ For the goal, we remove the "truck1" location predicate, but still check that al
 END OF EXAMPLE
         """
 
-        prompt = "You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. Think through your feedback step by step. If the action is well defined, respond with 'No feedback'. Only respond with 'no feedback' at the end, no where else.\n\n"
+        prompt = "You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. Think through your feedback step by step. If the action is well defined (no suggestions made), respond with 'No feedback'. Only respond with 'no feedback', no where else.\n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -556,7 +589,6 @@ END OF EXAMPLE
         goal = parse_goal(llm_feedback_response)
 
         return objects, initial, goal, llm_feedback_response
-
 
     def objects_feedback(
         self, 
@@ -592,7 +624,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given object instances. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the object instances. If the objects are well defined, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else."
+        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given object instances. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the object instances. If the objects are well defined, respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -631,7 +663,6 @@ END OF EXAMPLE
 
         return objects, llm_feedback_response
 
-
     def initial_state_feedback(
         self, 
         model: LLM_Chat, 
@@ -667,7 +698,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given initial state. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the initial state. If the initial state is well defined, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else."
+        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given initial state. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the initial state. If the initial state is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -708,7 +739,6 @@ END OF EXAMPLE
 
         return initial, llm_feedback_response
 
-
     def goal_state_feedback(
         self, 
         model: LLM_Chat, 
@@ -747,7 +777,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given goal state. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the goal state. If the goal state is well defined, respond with 'no feedback'. Only respond with 'no feedback' at the end, no where else."
+        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given goal state. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the goal state. If the goal state is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
         prompt += feedback_template
 
         if feedback_type.lower() == "human":

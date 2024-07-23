@@ -20,3 +20,5 @@ Use the following checklist:
 10. Do effects align with the overall domain and problem definition? Example: Ensure they make sense within the context of the domain, like updating location predicates for a navigation domain.
 
 11. Are any concurrent effects considered and properly handled? Example: If an action can have multiple effects occurring simultaneously, ensure they are all listed and logically consistent.
+
+12. All predicates should not have the keyword 'not' in them.
