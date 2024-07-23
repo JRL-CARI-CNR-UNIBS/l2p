@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     print("------------------")
 
-    problem_file_path = 'data/problem.pddl'
+    problem_file_path = 'data/problem_3.pddl'
     pddl_problem = check_parse_problem(problem_file_path)
     print("PDDL Problem:\n", pddl_problem)
 

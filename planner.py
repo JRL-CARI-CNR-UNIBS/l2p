@@ -40,5 +40,5 @@ def extract_plan_steps(output):
 
 if __name__ == "__main__":
     domain_file_path = "data/domain.pddl"
-    problem_file_path = "data/problem.pddl"
+    problem_file_path = "data/problem_3.pddl"
     run_fast_downward(domain_file_path, problem_file_path)

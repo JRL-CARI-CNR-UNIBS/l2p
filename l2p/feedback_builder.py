@@ -268,7 +268,7 @@ END OF EXAMPLE
         feedback_template += "\n\nPDDL GOAL STATE:\n" + goal
 
         example = """START OF EXAMPLE:    
-## Object Instances
+## OBJECTS
 The feedback suggested to use more trucks, but this would be wrong since the domain only specifies "A couple". So, we stick with the two trucks.
 ```
 truck1 - the first truck at the Chicago depot
@@ -282,7 +282,7 @@ emma - general_worker: The first worker, Emma
 bob - general_worker: The second worker, Bob
 ```
 
-## Initial
+## INITIAL
 Let's start by specifying where everyone is again. This time, we  make sure to include Bob.
 ```
 (at truck1 chicago_depot): truck1 is at the chicago_depot
@@ -298,7 +298,7 @@ Let's start by specifying where everyone is again. This time, we  make sure to i
 (connected chicago_depot house3): chicago_depot is connected to house3
 ```
 
-## Goal
+## GOAL
 For the goal, we remove the "truck1" location predicate, but still check that all the houses are finalised. 
 ```
 (AND ; all the following should be done
@@ -322,7 +322,7 @@ END OF EXAMPLE
         if 'no feedback' in llm_feedback.lower() or len(llm_feedback.strip()) == 0:
             return None, None, None, llm_feedback
         else:
-            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the PDDL task. End your response underneath the headers '## Object Instances', '## Initial', and '## Goal' as so:\n\n" + example
+            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the PDDL task. End your response underneath the capitalized headers '## OBJECTS', '## INITIAL', and '## GOAL' as so:\n\n" + example
             llm_feedback += "\n\n## Response\n"
         
         messages = [

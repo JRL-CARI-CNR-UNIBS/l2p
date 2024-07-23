@@ -111,7 +111,7 @@ def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builde
 
 def run_granular_task_pipeline(
         model: LLM_Chat,
-        problem_desc: str,
+        problem_desc_1: str,
         domain_desc: str,
         object_extraction_prompt: PromptBuilder,
         initial_extraction_prompt: PromptBuilder,
@@ -122,7 +122,7 @@ def run_granular_task_pipeline(
     
     objects = task_builder.extract_objects(
         model=model,
-        problem_desc=problem_desc,
+        problem_desc_1=problem_desc_1,
         domain_desc=domain_desc,
         prompt_template=object_extraction_prompt.generate_prompt(),
         type_hierarchy=types,
@@ -131,7 +131,7 @@ def run_granular_task_pipeline(
 
     initial = task_builder.extract_initial_state(
         model=model,
-        problem_desc=problem_desc,
+        problem_desc_1=problem_desc_1,
         domain_desc=domain_desc,
         prompt_template=initial_extraction_prompt.generate_prompt(),
         type_hierarchy=types,
@@ -141,7 +141,7 @@ def run_granular_task_pipeline(
 
     goal = task_builder.extract_goal_state(
         model=model,
-        problem_desc=problem_desc,
+        problem_desc_1=problem_desc_1,
         domain_desc=domain_desc,
         prompt_template=goal_extraction_prompt.generate_prompt(),
         type_hierarchy=types,
@@ -211,7 +211,11 @@ if __name__ == "__main__":
     domain_desc = open_file('data/domains/blocksworld.txt')
     domain_builder = Domain_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
 
-    problem_desc = open_file("data/problems/blocksworld_p1.txt")
+    problem_list = []
+    problem_list.append(open_file("data/problems/blocksworld_p1.txt"))
+    problem_list.append(open_file("data/problems/blocksworld_p2.txt"))
+    problem_list.append(open_file("data/problems/blocksworld_p3.txt"))
+
     task_builder = Task_Builder(objects=None, initial=None, goal=None)
 
     feedback_builder = Feedback_Builder()
@@ -388,7 +392,7 @@ if __name__ == "__main__":
     # GRANULAR TASK PIPELINE
     # objects, initial_states, goal_states = run_granular_task_pipeline(
     #      model=model, 
-    #      problem_desc=problem_desc, 
+    #      problem_desc_1=problem_desc_1, 
     #      domain_desc=domain_desc, 
     #      object_extraction_prompt=object_extraction_prompt,
     #      initial_extraction_prompt=initial_extraction_prompt,
@@ -399,26 +403,31 @@ if __name__ == "__main__":
 
     feedback_template = open_file('data/prompt_templates/task_extraction/extract_task/feedback.txt')
 
-    # # COMPACT TASK PIPELINE
-    objects, initial_states, goal_states = run_compact_task_pipeline(
-        model=model, 
-        problem_desc=problem_desc, 
-        domain_desc=domain_desc, 
-        task_extraction_prompt=task_extraction_prompt,
-        types=pruned_types,
-        predicates=predicates,
-        actions=actions,
-        feedback_builder=feedback_builder,
-        feedback_template=feedback_template
-    )
+    for i, problem in enumerate(problem_list, start=1):
+        # COMPACT TASK PIPELINE
+        objects, initial_states, goal_states = run_compact_task_pipeline(
+            model=model, 
+            problem_desc=problem, 
+            domain_desc=domain_desc, 
+            task_extraction_prompt=task_extraction_prompt,
+            types=pruned_types,
+            predicates=predicates,
+            actions=actions,
+            feedback_builder=feedback_builder,
+            feedback_template=feedback_template
+        )
 
-    objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+        objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
 
-    print("[TASK]\n") 
-    pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
-    print(pddl_problem)
+        print("[TASK]\n") 
 
-    problem_file = "data/problem.pddl"
-    with open(problem_file, "w") as f:
-        f.write(pddl_problem)
-    print(f"PDDL problem written to {problem_file}")
+        # Iteratively create new test domain names
+        test_domain_name = f"test_domain_{i}"
+        pddl_problem = task_builder.generate_task(domain=test_domain_name, objects=objects, initial=initial_states, goal=goal_states)
+        print(pddl_problem)
+
+        # Iteratively create new file names
+        problem_file = f"data/problem_{i}.pddl"
+        with open(problem_file, "w") as f:
+            f.write(pddl_problem)
+        print(f"PDDL problem written to {problem_file}")

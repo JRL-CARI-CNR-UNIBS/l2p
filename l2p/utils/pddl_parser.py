@@ -242,7 +242,7 @@ def parse_objects(llm_response: str) -> dict[str, str]:
         - dict[str,str]: objects
     """
     
-    objects_head = extract_heading(llm_response, "Object Instances")
+    objects_head = extract_heading(llm_response, "OBJECTS")
     objects_raw = combine_blocks(objects_head)
     objects_clean = clear_comments(objects_raw, comments=[':','//','#',';','(']) # Remove comments
     objects = {obj.split(" - ")[0].strip(" `"): obj.split(" - ")[1].strip(" `").lower() for obj in objects_clean.split("\n") if obj.strip()}
@@ -255,7 +255,7 @@ def parse_objects(llm_response: str) -> dict[str, str]:
 
 def parse_initial(llm_response: str) -> str:
     """Extracts state (PDDL-init) from LLM response and returns it as a string"""
-    state_head = extract_heading(llm_response, "Initial")
+    state_head = extract_heading(llm_response, "INITIAL")
     state_raw = combine_blocks(state_head)
     state_clean = clear_comments(state_raw)
 
@@ -282,7 +282,7 @@ def parse_initial(llm_response: str) -> str:
 
 def parse_goal(llm_response: str) -> str:
     """Extracts goal (PDDL-goal) from LLM response and returns it as a string"""
-    goal_head = extract_heading(llm_response, "Goal")
+    goal_head = extract_heading(llm_response, "GOAL")
 
     print("GOAL HEAD:\n", goal_head)
 

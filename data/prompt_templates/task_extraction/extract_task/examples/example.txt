@@ -132,7 +132,7 @@ Finally, the "connected" predicate states that two locations are connected if th
 
 6. Now I'll reiterate the corrected initialization with the following headers.
 
-## Object Instances
+## OBJECTS
 The feedback suggested to use more trucks, but this would be wrong since the domain only specifies "A couple". So, we stick with the two trucks.
 ```
 truck1 - the first truck at the Chicago depot
@@ -154,7 +154,7 @@ emma - general_worker: The first worker, Emma
 bob - general_worker: The second worker, Bob
 ```
 
-## Initial
+## INITIAL
 Let's start by specifying where everyone is again. This time, we  make sure to include Bob.
 ```
 (at truck1 chicago_depot): truck1 is at the chicago_depot
@@ -176,7 +176,7 @@ The connections between the locations are the same bi-directional connections as
 (connected chicago_depot house3): chicago_depot is connected to house3
 ```
 
-## Goal
+## GOAL
 For the goal, we remove the "truck1" location predicate, but still check that all the houses are finalised. 
 ```
 (AND ; all the following should be done

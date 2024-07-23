@@ -6,9 +6,10 @@ Also it is crucial you follow these checks:
     - objects types should be found in types list
     - objects name should not be the same as a type name
     - object name should not be the same as a predicate name
+    - objects should have names that are close to their types to read easily
 
 Do not, under any circumstance, output the answers in PDDL format. Final answer must be in the following format at the end:
-## Object Instances
+## OBJECTS
 ```
 truck1 - the first truck at the Chicago depot
 truck2 - the second truck at the Chicago depot
@@ -21,7 +22,7 @@ emma - general_worker: The first worker, Emma
 bob - general_worker: The second worker, Bob
 ```
 
-## Initial
+## INITIAL
 ```
 (at truck1 chicago_depot): truck1 is at the chicago_depot
 (at truck2 chicago_depot): truck2 is at the chicago_depot
@@ -36,7 +37,7 @@ bob - general_worker: The second worker, Bob
 (connected chicago_depot house3): chicago_depot is connected to house3
 ```
 
-## Goal
+## GOAL
 ```
 (AND ; all the following should be done
    (finalised house1) ; house 1 is done

@@ -1,35 +1,6 @@
-(define
-   (problem test_domain_problem)
-   (:domain test_domain)
-
-   (:objects 
-blue - block
-red - block
-yellow - block
-green - block
-arm - arm
-table - table
-   )
-
-   (:init
-(on blue red)
-(on red yellow)
-(on yellow table)
-(on green table)
-(empty )
-(clear blue)
-(clear red)
-(clear yellow)
-(clear green)
-(on-table blue)
-(on-table red)
-(on-table green)
-   )
-
-   (:goal
-(and 
-   (on red green) 
-)
-   )
-
+(define (problem test_domain_problem)
+    (:domain test_domain)
+    (:objects arm1 - arm blue green red yellow - block table1 - table)
+    (:init (arm_empty arm1) (clear blue) (clear green) (clear table1) (on blue red) (on red yellow) (on_table green table1) (on_table yellow table1))
+    (:goal (and (on red green) (clear red)))
 )
