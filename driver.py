@@ -75,37 +75,48 @@ def run_granular_action_pipeline(
 
 def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builder: Domain_Builder, prompt: PromptBuilder, nl_actions: dict[str,str], types: dict[str,str], feedback_builder: Feedback_Builder, feedback_template: str):
     # action-by-action method used in Guan et al. (2023): https://arxiv.org/abs/2305.14909
-    predicates = []
-    actions = []
     # iterate through each action, dynamically create new predicates
-    for action_name, action_desc in nl_actions.items():
 
-        action, new_predicates, llm_response = domain_builder.extract_pddl_action(
-            model=model,
-            prompt_template=prompt.generate_prompt(),
-            action_name=action_name,
-            action_desc=action_desc,
-            predicates=predicates
-        )
+    predicates = []
+    max_iters = 2
+    for _ in range(max_iters):
 
-        # RUN FEEDBACK
-        # feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
-        #     model=model, 
-        #     domain_desc=domain_desc, 
-        #     feedback_template=feedback_template, 
-        #     action=action, 
-        #     predicates=predicates, 
-        #     types=types, 
-        #     llm_response=llm_response
-        #     )
-        
-        # if feedback_action != None:
-        #     action=feedback_action
-        #     new_predicates=feedback_predicates
+        actions = []
+        current_preds = len(predicates)
 
-        actions.append(action)
-        predicates.extend(new_predicates)
-        predicates = prune_predicates(predicates=predicates, actions=actions)
+        for action_name, action_desc in nl_actions.items():
+
+            action, new_predicates, llm_response = domain_builder.extract_pddl_action(
+                model=model,
+                prompt_template=prompt.generate_prompt(),
+                action_name=action_name,
+                action_desc=action_desc,
+                predicates=predicates
+            )
+
+            # RUN FEEDBACK
+            feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
+                model=model, 
+                domain_desc=domain_desc, 
+                feedback_template=feedback_template, 
+                feedback_type="llm",
+                action=action, 
+                predicates=predicates, 
+                types=types, 
+                llm_response=llm_response
+                )
+            
+            if feedback_action != None:
+                action=feedback_action
+                new_predicates=feedback_predicates
+
+            actions.append(action)
+            predicates.extend(new_predicates)
+            predicates = prune_predicates(predicates=predicates, actions=actions)
+
+        if len(predicates) == current_preds:
+            print("No new predicates created. Stopping action construction.")
+            break
 
     return actions, predicates
 
@@ -174,22 +185,26 @@ def run_compact_task_pipeline(
         actions=actions
         )
     
-    feedback_objects, feedback_initial, feedback_goal, llm_feedback_response = feedback_builder.task_feedback(
-        model=model, 
-        problem_desc=problem_desc, 
-        feedback_template=feedback_template,
-        predicates=predicates,
-        types=types,
-        objects=objects,
-        initial=initial,
-        goal=goal,
-        llm_response=llm_response
-        )
+    for _ in range(2):
+        feedback_objects, feedback_initial, feedback_goal, llm_feedback_response = feedback_builder.task_feedback(
+            model=model, 
+            problem_desc=problem_desc, 
+            feedback_template=feedback_template,
+            feedback_type="llm",
+            predicates=predicates,
+            types=types,
+            objects=objects,
+            initial=initial,
+            goal=goal,
+            llm_response=llm_response
+            )
     
-    if feedback_objects != None:
-            objects=feedback_objects
-            initial=feedback_initial
-            goal=feedback_goal
+        if feedback_objects != None:
+                objects=feedback_objects
+                initial=feedback_initial
+                goal=feedback_goal
+        else:
+            break
 
     return objects, initial, goal
 
@@ -204,8 +219,8 @@ if __name__ == "__main__":
     unsupported_keywords = ['object', 'pddl']
 
     # model = get_llm("gpt-3.5-turbo-0125")
-    model = get_llm("gpt-4o")
-    # model = get_llm("gpt-4o-mini")
+    # model = get_llm("gpt-4o")
+    model = get_llm("gpt-4o-mini")
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
@@ -213,8 +228,8 @@ if __name__ == "__main__":
 
     problem_list = []
     problem_list.append(open_file("data/problems/blocksworld_p1.txt"))
-    problem_list.append(open_file("data/problems/blocksworld_p2.txt"))
-    problem_list.append(open_file("data/problems/blocksworld_p3.txt"))
+    # problem_list.append(open_file("data/problems/blocksworld_p2.txt"))
+    # problem_list.append(open_file("data/problems/blocksworld_p3.txt"))
 
     task_builder = Task_Builder(objects=None, initial=None, goal=None)
 
@@ -422,7 +437,7 @@ if __name__ == "__main__":
         print("[TASK]\n") 
 
         # Iteratively create new test domain names
-        test_domain_name = f"test_domain_{i}"
+        test_domain_name = f"test_domain"
         pddl_problem = task_builder.generate_task(domain=test_domain_name, objects=objects, initial=initial_states, goal=goal_states)
         print(pddl_problem)
 

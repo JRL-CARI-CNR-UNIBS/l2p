@@ -13,6 +13,7 @@ class Feedback_Builder:
             model: LLM_Chat, 
             domain_desc: str,
             feedback_template: str, 
+            feedback_type: str,
             types: dict[str,str], 
             llm_response: str=""
             ) -> tuple[dict[str,str], str]:
@@ -24,26 +25,32 @@ class Feedback_Builder:
         prompt = "ROLE:\nYou are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain. If it is, respond with 'no feedback'. If it isn't, provide your thoughts on how to correct the types. Don't model the available actions, but just the types of objects to be used.'\n\n"
         prompt += feedback_template
 
-        # print("PROMPT FEEDBACK:\n", prompt)
-
-        llm_feedback = model.get_output(prompt=prompt)
-
-        print("LLM FEEDBACK:\n", llm_feedback)
-
-        if 'no feedback' in llm_feedback.lower() or len(llm_feedback.strip()) == 0:
-            return None, llm_feedback
+        if feedback_type.lower() == "human":
+            feedback_msg = self.human_feedback(llm_response)
+        elif feedback_type.lower() == "llm":
+            feedback_msg = model.get_output(prompt=prompt)
+        elif feedback_type.lower() == "hybrid":
+            feedback_msg = model.get_output(prompt=prompt)
+            response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
+            feedback_msg.replace("no feedback".lower(), "")
+            feedback_msg += self.human_feedback(response)
         else:
-            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the types. End your final answer starting with '## OUTPUT'."
-            llm_feedback += "\n\n## Response\n"
+            raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
+        
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
+
+        if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
+            return None, None, feedback_msg
+        else:
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the types. End your final answer starting with '## OUTPUT'."
+            feedback_msg += "\n\n## Response\n"
         
         messages = [
             {'role': 'assistant', 'content': llm_response},
-            {'role': 'user', 'content': llm_feedback}
+            {'role': 'user', 'content': feedback_msg}
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
         
         new_types = convert_to_dict(llm_response=llm_feedback_response)
         return new_types, llm_feedback_response
@@ -53,6 +60,7 @@ class Feedback_Builder:
             model: LLM_Chat, 
             domain_desc: str,
             feedback_template: str, 
+            feedback_type: str,
             type_hierarchy: dict[str,str], 
             llm_response: str=""
             ) -> tuple[dict[str,str], str]:
@@ -63,27 +71,33 @@ class Feedback_Builder:
         feedback_template += "\n\nORIGINAL TYPE HIERARCHY:\n" + format_json_output(type_hierarchy)
         prompt = "ROLE:\nYour task is to evaluate if a type hierarchy is defined in the best way. You can suggest changing of the structure or adding types. Note that everything is always supposed to be a subtype of the 'object' class. You shouldn't suggest any new types except those needed for organisation of the provided types. If the hierarchy is optimal, respond with 'No feedback'.\n\n"
         prompt += feedback_template
-
-        # print("PROMPT FEEDBACK:\n", prompt)
         
-        llm_feedback = model.get_output(prompt=prompt)
-
-        # print("LLM FEEDBACK:\n", llm_feedback)
-
-        if 'no feedback' in llm_feedback.lower() or len(llm_feedback.strip()) == 0:
-            return None, llm_feedback
+        if feedback_type.lower() == "human":
+            feedback_msg = self.human_feedback(llm_response)
+        elif feedback_type.lower() == "llm":
+            feedback_msg = model.get_output(prompt=prompt)
+        elif feedback_type.lower() == "hybrid":
+            feedback_msg = model.get_output(prompt=prompt)
+            response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
+            feedback_msg.replace("no feedback".lower(), "")
+            feedback_msg += self.human_feedback(response)
         else:
-            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the type hierarchy. End your final answer starting with '## OUTPUT'."
-            llm_feedback += "\n\n## Response\n"
+            raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
+        
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
+
+        if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
+            return None, None, feedback_msg
+        else:
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the type hierarchy. End your final answer starting with '## OUTPUT'."
+            feedback_msg += "\n\n## Response\n"
         
         messages = [
             {'role': 'assistant', 'content': llm_response},
-            {'role': 'user', 'content': llm_feedback}
+            {'role': 'user', 'content': feedback_msg}
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
         
         type_hierarchy = convert_to_dict(llm_response=llm_feedback_response)
         return type_hierarchy, llm_feedback_response
@@ -135,6 +149,7 @@ class Feedback_Builder:
             model: LLM_Chat, 
             domain_desc: str, 
             feedback_template: str, 
+            feedback_type: str,
             action: Action, 
             predicates: list[Predicate], 
             types: dict[str,str], 
@@ -156,36 +171,27 @@ class Feedback_Builder:
 
         example = """START OF EXAMPLE:
 ### Action Parameters
-Okay, so we'll need the same parameters as last time, but we still need to clearly specify them again:
 ```
 - ?v - vehicle: The vehicle travelling
-- ?from - location: The location travelling from
-- ?to - location: The location travelling to
 ```
 
 ### Action Preconditions
-Now, we'll make the change to check both directions of the "connected" predicate as to create more robust PDDL.
 ```
 (and
     (at ?v ?from) ; The vehicle is at the starting location
-    (or (connected ?from ?to) (connected ?to ?from)) ; A road exists between the locations
 )
 ```
 
 ### Action Effects
-These are the exact same as above, but they need to be reiterated:
 ```
 (and
     (not (at ?v ?from)) ; ?v is no longer at ?from
-    (at ?v ?to) ; ?v is now instead at ?to
 )
 ```
 
 ### New Predicates
-These are the same as before:
 ```
 - (at ?o - object ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
-- (connected ?l1 - location ?l2 - location): true if a road exists between ?l1 and ?l2 allowing vehicle travel between them.
 ``` 
 END OF EXAMPLE
         """
@@ -193,21 +199,29 @@ END OF EXAMPLE
         prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. If the action is well defined, respond with 'no feedback'.\n\n"
         prompt += feedback_template
 
-        #  print("PROMPT:\n", prompt)
-
-        llm_feedback = model.get_output(prompt=prompt)
-
-        #  print("LLM FEEDBACK:\n", llm_feedback)
-
-        if 'no feedback' in llm_feedback.lower() or len(llm_feedback.strip()) == 0:
-            return None, None, llm_feedback
+        if feedback_type.lower() == "human":
+            feedback_msg = self.human_feedback(llm_response)
+        elif feedback_type.lower() == "llm":
+            feedback_msg = model.get_output(prompt=prompt)
+        elif feedback_type.lower() == "hybrid":
+            feedback_msg = model.get_output(prompt=prompt)
+            response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
+            feedback_msg.replace("no feedback".lower(), "")
+            feedback_msg += self.human_feedback(response)
         else:
-            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the PDDL action. Your end response must format the Action Parameters, Preconditions, and Effects, and New Predicates with ''' ''' comment blocks in PDDL as so:\n\n" + example
-            llm_feedback += "\n\n## Response\n"
+            raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
+        
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
+
+        if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
+            return None, None, feedback_msg
+        else:
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL action. Your end response must format the Action Parameters, Preconditions, and Effects, and New Predicates with ''' ''' comment blocks in PDDL as so:\n\n" + example
+            feedback_msg += "\n\n## Response\n"
         
         messages = [
             {'role': 'assistant', 'content': llm_response},
-            {'role': 'user', 'content': llm_feedback}
+            {'role': 'user', 'content': feedback_msg}
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
@@ -221,8 +235,10 @@ END OF EXAMPLE
         return action, new_predicates, llm_feedback_response
 
 
-    def predicate_feedback(self, model: LLM_Chat, domain_desc: str, feedback_template: str, llm_response: str):
+    def predicate_feedback(self, model: LLM_Chat, domain_desc: str, feedback_template: str, feedback_type: str, predicates: list[Predicate], llm_response: str=""):
         """Makes LLM call using feedback prompt, then parses it into predicate format"""
+
+
         pass
 
 
@@ -248,6 +264,7 @@ END OF EXAMPLE
             model: LLM_Chat, 
             problem_desc: str, 
             feedback_template: str, 
+            feedback_type: str,
             predicates: list[Predicate], 
             types: dict[str,str], 
             objects: dict[str,str], 
@@ -269,33 +286,13 @@ END OF EXAMPLE
 
         example = """START OF EXAMPLE:    
 ## OBJECTS
-The feedback suggested to use more trucks, but this would be wrong since the domain only specifies "A couple". So, we stick with the two trucks.
 ```
 truck1 - the first truck at the Chicago depot
-truck2 - the second truck at the Chicago depot
-chicago_depot - location: The Chicago depot
-house1 - The first house to build
-house2 - The second house to build
-house3 - The third house to build
-jamie - administrator: The administrator Jamie
-emma - general_worker: The first worker, Emma
-bob - general_worker: The second worker, Bob
 ```
 
 ## INITIAL
-Let's start by specifying where everyone is again. This time, we  make sure to include Bob.
 ```
 (at truck1 chicago_depot): truck1 is at the chicago_depot
-(at truck2 chicago_depot): truck2 is at the chicago_depot
-(at jamie chicago_depot): Jamie is at the depot
-(at emma chicago_depot): Emma is at the depot
-(at bob chicago_depot): Bob is at the depot
-(connected house1 chicago_depot): house1 is connected to the chicago_depot
-(connected house2 chicago_depot): house2 is connected to the chicago_depot
-(connected house3 chicago_depot): house3 is connected to the chicago_depot
-(connected chicago_depot house1): chicago_depot is connected to house1
-(connected chicago_depot house2): chicago_depot is connected to house2
-(connected chicago_depot house3): chicago_depot is connected to house3
 ```
 
 ## GOAL
@@ -303,8 +300,6 @@ For the goal, we remove the "truck1" location predicate, but still check that al
 ```
 (AND ; all the following should be done
    (finalised house1) ; house 1 is done
-   (finalised house2) ; house 2 is done
-   (finalised house3) ; house 3 is done
 )
 ```
 END OF EXAMPLE
@@ -313,21 +308,26 @@ END OF EXAMPLE
         prompt = "You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. Think through your feedback step by step. If the action is well defined, respond with 'No feedback'.\n\n"
         prompt += feedback_template
 
-        #  print("PROMPT:\n", prompt)
-
-        llm_feedback = model.get_output(prompt=prompt)
-
-        #  print("LLM FEEDBACK:\n", llm_feedback)
-
-        if 'no feedback' in llm_feedback.lower() or len(llm_feedback.strip()) == 0:
-            return None, None, None, llm_feedback
+        if feedback_type.lower() == "human":
+            feedback_msg = self.human_feedback(llm_response)
+        elif feedback_type.lower() == "llm":
+            feedback_msg = model.get_output(prompt=prompt)
+        elif feedback_type.lower() == "hybrid":
+            feedback_msg = model.get_output(prompt=prompt)
+            response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
+            feedback_msg += self.human_feedback(response)
         else:
-            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the PDDL task. End your response underneath the capitalized headers '## OBJECTS', '## INITIAL', and '## GOAL' as so:\n\n" + example
-            llm_feedback += "\n\n## Response\n"
+            raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
+
+        if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
+            return None, None, None, feedback_msg
+        else:
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL task. End your response underneath the capitalized headers '## OBJECTS', '## INITIAL', and '## GOAL' as so:\n\n" + example
+            feedback_msg += "\n\n## Response\n"
         
         messages = [
             {'role': 'assistant', 'content': llm_response},
-            {'role': 'user', 'content': llm_feedback}
+            {'role': 'user', 'content': feedback_msg}
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
@@ -356,12 +356,12 @@ END OF EXAMPLE
         pass
 
 
-
-
     def human_feedback(self, info: str):
-        print(info)
+
+        print("START OF INFO\n", info)
+        print("\nEND OF INFO\n\n")
         contents = []
-        print("Provide feedback (or 'None'). End with ctrl+d.\n")
+        print("Provide feedback (or 'no feedback'). End with ctrl+d.\n")
         while True:
             try:
                 line = input()
@@ -370,8 +370,8 @@ END OF EXAMPLE
             contents.append(line)
         resp = "\n".join(contents)
 
-        if resp.strip().lower() == "none":
-            return None # No feedback
-
+        if resp.strip().lower() == "no feedback":
+            return "no feedback" # No feedback
+        
         return resp
 
