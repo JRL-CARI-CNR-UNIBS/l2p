@@ -1,0 +1,22 @@
+Use the following checklist:
+1. Are all necessary object instances defined in the problem file? Example: Ensure that all objects required for the problem are listed, such as (robot1 robot2) and (location1 location2) for a robot navigation problem.
+
+2. Are object instances properly categorized according to their types? Example: Ensure objects are assigned to their correct types as defined in the domain file, such as :objects (robot1 robot2 - robot) and (location1 location2 - location).
+
+3. Are any unnecessary or redundant objects included? Example: Avoid including objects that are not used in the problem definition, such as extra robots if only one is needed.
+
+4. Is the syntax for object instance definitions correct? Example: Instances should be listed correctly under :objects and follow the format, e.g., :objects (robot1 robot2 - robot).
+
+5. Are object instances named consistently with the domain file definitions? Example: Ensure consistency in naming conventions and types, such as using robot1 and robot2 if these are the defined names in the domain.
+
+6. Do all object instances have clear and descriptive names? Example: Use meaningful names for objects, like main_hall instead of hall1, to avoid confusion.
+
+7. Are object instances correctly referenced in initial state and goal conditions? Example: Ensure that objects are properly used in predicates, e.g., (at robot1 location1) in the initial state and (at robot1 location2) in the goal.
+
+8. Is there a clear logical consistency between object instances and their properties? Example: Ensure that object instances used in predicates align with their definitions, such as a robot being placed in a location that it can physically occupy.
+
+9. Are object instances compatible with the problem’s constraints and requirements? Example: Verify that object instances fit within the constraints, such as a robot that should be able to move between specified locations.
+
+10. Are object instances defined in a way that supports the problem’s complexity and scope? Example: Include enough objects to represent the problem’s complexity, but avoid over-complicating with unnecessary instances.
+
+11. Is the list of object instances complete and well-organized? Example: Group instances logically and ensure they are all included in the :objects section, avoiding any missing or misplaced entries.

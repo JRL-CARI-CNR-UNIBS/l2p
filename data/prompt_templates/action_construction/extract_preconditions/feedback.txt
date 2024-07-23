@@ -1,0 +1,18 @@
+Use the following checklist:
+1. Are all necessary preconditions defined for that action? Example: For an action move, preconditions should include conditions like (at ?robot ?from).
+
+2. Are there any unnecessary preconditions? Example: Avoid adding redundant checks like verifying ?robot is in a certain city when it’s already confirmed at a specific location.
+
+3. Is the syntax for preconditions correct? Example: Preconditions should be enclosed in parentheses and use logical operators like and, or, and not, such as :precondition (and (at ?robot ?from) (clear ?to)).
+
+4. Are the preconditons logically consistent and feasible? Example: Ensure there are no conflicting conditions, such as (and (at ?robot ?from) (at ?robot ?to)) which is impossible.
+
+5. Do preconditions reference only defined parameters? Example: Preconditions should only use parameters listed in the action’s :parameters section, like (at ?robot ?from).
+
+6. Are the used predicates valid and properly defined in the domain? Example: Ensure predicates like at and clear are defined in the domain's :predicates section.
+
+7. Are preconditions minimal yet sufficient to achieve the action? Example: Avoid over-specifying conditions; include only what’s necessary, such as (at ?robot ?from) without adding irrelevant checks.
+
+8. Is there a clear logical flow in the preconditions? Example: Preconditions should follow a logical order, making it easy to understand the required state before the action.
+
+9. Do preconditions align with the overall domain definition? Example: Ensure they make sense within the context of the domain, like checking (at ?robot ?from) for a movement action in a navigation domain.

@@ -16,7 +16,7 @@ class Task_Builder:
             prompt_template: PromptBuilder,
             type_hierarchy: dict[str,str], 
             predicates: list[Predicate]
-            ) -> dict[str,str]:
+            ) -> tuple[dict[str,str], str]:
         
         model.reset_tokens()
 
@@ -36,7 +36,7 @@ class Task_Builder:
         else:
             objects = {}
 
-        return objects
+        return objects, llm_response
 
     def extract_initial_state(
             self, 
@@ -47,7 +47,7 @@ class Task_Builder:
             type_hierarchy: dict[str,str], 
             predicates: list[Predicate],
             objects: dict[str,str]
-            ) -> str:
+            ) -> tuple[str, str]:
         
         model.reset_tokens()
 
@@ -73,7 +73,7 @@ class Task_Builder:
 
         initial = "\n".join(initial.keys())
 
-        return initial
+        return initial, llm_response
         
     def extract_goal_state(
             self, 
@@ -84,7 +84,7 @@ class Task_Builder:
             type_hierarchy: dict[str,str], 
             predicates: list[Predicate],
             objects: dict[str,str]
-            ) -> str:
+            ) -> tuple[str, str]:
         
         model.reset_tokens()
 
@@ -106,7 +106,7 @@ class Task_Builder:
         else:
             goal = "Could not parse answer. Here is original LLM response:\n" + llm_response
 
-        return goal
+        return goal, llm_response
 
     def extract_task(
             self, 

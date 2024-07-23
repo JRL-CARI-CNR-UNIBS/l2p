@@ -1,0 +1,22 @@
+Use the following checklist:
+1. Are all necessary initial conditions defined for the problem? Example: Ensure that all required initial states are specified, such as (at robot1 location1) if the initial position of robot1 is at location1.
+
+2. Are the initial conditions correctly formatted in the PDDL syntax? Example: Initial states should be enclosed in parentheses and correctly use logical operators, e.g., :init (at robot1 location1).
+
+3. Are all object instances referenced in the initial state properly defined? Example: Ensure that all objects used in initial conditions, like robot1 and location1, are listed in the :objects section.
+
+4. Is there logical consistency between the initial conditions and the problem’s requirements? Example: Ensure that initial states match the problem’s constraints, such as a robot being at a location it is allowed to occupy.
+
+5. Are any necessary initial conditions missing? Example: Verify that all required initial states for the problem’s scenarios are included, such as (holding robot1 box1) if robot1 starts with box1.
+
+6. Are any unnecessary initial conditions included? Example: Remove redundant or irrelevant conditions that do not contribute to the problem definition, such as (in_box robot1 location1) if it does not affect the problem.
+
+7. Are initial conditions logically feasible and consistent? Example: Ensure that initial conditions do not contradict each other, such as having (at robot1 location1) and (at robot1 location2) simultaneously.
+
+8. Is the initial state comprehensive yet concise? Example: Include all relevant conditions but avoid over-specifying, such as listing all items and their locations without adding extra, unnecessary details.
+
+9. Are predicates used in initial conditions valid and defined in the domain? Example: Ensure that predicates like at, holding, and clear are properly defined in the domain’s :predicates section.
+
+10. Is the initial state defined in a way that supports the problem’s complexity and scope? Example: Ensure the initial conditions reflect the complexity of the problem, including all interactions and states that need to be considered.
+
+11. Are initial conditions aligned with the goal state requirements? Example: Ensure that the initial state provides a logical foundation for achieving the goal state, such as (at robot1 location1) being a feasible starting point for reaching (at robot1 location2).

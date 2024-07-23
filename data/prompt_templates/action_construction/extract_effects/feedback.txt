@@ -1,0 +1,22 @@
+Use the following checklist:
+1. Are all necessary effects defined for each action? Example: For an action move, effects should include changes like (not (at ?robot ?from)) and (at ?robot ?to).
+
+2. Are there any unnecessary effects? Example: Avoid adding irrelevant changes, such as modifying unrelated predicates like (clear ?location) when it’s not affected by the action.
+
+3. Is the syntax for effects correct? Example: Effects should be enclosed in parentheses and use logical operators like and, or, and not, such as :effect (and (not (at ?robot ?from)) (at ?robot ?to)).
+
+4. Do the effects logically follow from the action? Example: Ensure the effects represent a feasible outcome, such as (holding ?robot ?object) following a pick_up action.
+
+5. Do effects reference only defined parameters? Example: Effects should only use parameters listed in the action’s :parameters section, like (at ?robot ?to).
+
+6. Are the used predicates valid and properly defined in the domain? Example: Ensure predicates like at and holding are defined in the domain's :predicates section.
+
+7. Are the effects minimal yet sufficient to represent the action’s outcome? Example: Include only necessary changes, such as (at ?robot ?to) without adding redundant effects.
+
+8. Do the effects cover all relevant changes caused by the action? Example: For an action drop, ensure conditions like (not (holding ?robot ?object)) and (on ?object ?surface) are included.
+
+9. Is there a clear logical flow in the effects? Example: Effects should follow a logical order, making it easy to understand the resulting state after the action.
+
+10. Do effects align with the overall domain and problem definition? Example: Ensure they make sense within the context of the domain, like updating location predicates for a navigation domain.
+
+11. Are any concurrent effects considered and properly handled? Example: If an action can have multiple effects occurring simultaneously, ensure they are all listed and logically consistent.
