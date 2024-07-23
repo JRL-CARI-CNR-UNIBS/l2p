@@ -117,7 +117,7 @@ class Task_Builder:
             types: dict[str,str], 
             predicates: list[Predicate],
             actions: list[Action]
-            ) -> tuple[str,str,str,str]:
+            ) -> tuple[dict[str,str],str,str,str]:
         """
         Extracts objects, initial, and goal states from LLM output given domain description, types, and predicates
         Returns -> tuple[str,str,str]

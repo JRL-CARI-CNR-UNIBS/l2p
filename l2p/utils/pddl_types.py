@@ -13,7 +13,6 @@ class Predicate(TypedDict):
 
 class Action(TypedDict):
     name: str
-    desc: str
     raw: str
     parameters: ParameterList
     preconditions: str

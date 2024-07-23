@@ -4,6 +4,7 @@ This file contains code for calling LLMs and saving raw model outputs
 
 import os
 import tiktoken
+import requests
 from retry import retry
 from openai import OpenAI
 
@@ -116,51 +117,67 @@ class GPT_Chat(LLM_Chat):
         self.in_tokens = 0
         self.out_tokens = 0
 
-def get_llm(engine, **kwargs) -> LLM_Chat:
+class HF_Chat(LLM_Chat):
+    def __init__(self, model_name, api_key, max_tokens=4069, temperature=0.2):
+        self.model_name = model_name
+        self.api_key = api_key
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.API_URL = f"https://api-inference.huggingface.co/models/{self.model_name}"
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        self.in_tokens = 0
+        self.out_tokens = 0
+
+    def get_output(self, prompt=None, messages=None):
+        if prompt is None and messages is None:
+            raise ValueError("prompt and messages cannot both be None")
+        if messages is not None:
+            prompt = ' '.join([m['content'] for m in messages])
+        
+        data = {
+            "inputs": prompt,
+            "parameters": {
+                "max_length": self.max_tokens,
+                "temperature": self.temperature
+            }
+        }
+
+        response = requests.post(self.API_URL, headers=self.headers, json=data)
+        if response.status_code == 200:
+            generated_text = response.json()[0]['generated_text']
+            filtered_text = generated_text.replace(prompt, "").strip()
+            # filtered_text = filtered_text.split('\n')[0]
+            # self.out_tokens += len(self.tokenizer(filtered_text)['input_ids'])
+            # self.in_tokens += len(self.tokenizer(prompt)['input_ids'])
+            return filtered_text
+        else:
+            raise Exception(f"Failed to generate text: {response.status_code} {response.text}")
+
+    def get_tokens(self) -> tuple[int, int]:
+        return self.in_tokens, self.out_tokens
+    
+    # def reset_tokens(self):
+    #     self.in_tokens = 0
+    #     self.out_tokens = 0
+
+
+def get_llm(engine, api_key=None, **kwargs) -> LLM_Chat:
     if "gpt-" in engine:
         return GPT_Chat(engine, **kwargs)
+    else:
+        return HF_Chat(engine, api_key, **kwargs)
 
 if __name__ == '__main__':
-    model = get_llm("gpt-3.5-turbo-0125")
-    print(model.get_output("Hello world!"))
-
-    # # for any models in Huggingface API inference
-    # model_name = "openai-community/gpt2"
-    # HF_api_key = "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"
-    # API_URL = f"https://api-inference.huggingface.co/models/{model_name}"
-
-    # headers = {"Authorization": f"Bearer {HF_api_key}",
-    #            "Content-Type": "application/json"}
-
-    # def HF_query(prompt, max_length=50, temperature=0.7):
-    #     data = {
-    #         "inputs": prompt,
-    #         "parameters": {
-    #             "max_length": max_length,
-    #             "temperature": temperature
-    #         }
-    #     }
-
-    #     response = requests.post(API_URL, headers=headers, json=data)
-    #     if response.status_code == 200:
-    #         generated_text = response.json()[0]['generated_text']
-            
-    # 		# removing the input prompt from the generated text
-    #         filtered_text = generated_text.replace(prompt, "").strip()
-    #         return filtered_text
-    #     else:
-    #         raise Exception(f"Failed to generate text: {response.status_code} {response.text}")
+    # model = get_llm("gpt-3.5-turbo-0125")
+    # llm_response = model.get_output("Hello world!")
 
 
-    # # for OpenAI LLM inference
-    # client = OpenAI()
-    # def GPT_query(prompt):
-    #     completion = client.chat.completions.create(
-    #         model="gpt-3.5-turbo",
-    #         messages=[
-    #             {"role": "system", "content": "You are an assistant skilled in generating PDDL components."},
-    #             {"role": "user", "content": prompt}
-    #         ],
-    #     )
-    #     # extract the generated text
-    #     return completion.choices[0].message.content
+
+    # model = get_llm(engine="openai-community/gpt2", api_key="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")
+
+    model = get_llm(engine="mistralai/Mistral-7B-Instruct-v0.3", api_key="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")
+    llm_response = model.get_output(prompt="Any TV show recommendations?")
+    print(llm_response)

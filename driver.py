@@ -73,7 +73,7 @@ def run_granular_action_pipeline(
 
     return actions, predicates
 
-def run_compact_action_pipeline(model: LLM_Chat, domain_builder: Domain_Builder, prompt: PromptBuilder, nl_actions: dict[str,str]):
+def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builder: Domain_Builder, prompt: PromptBuilder, nl_actions: dict[str,str], types: dict[str,str], feedback_builder: Feedback_Builder, feedback_template: str):
     # action-by-action method used in Guan et al. (2023): https://arxiv.org/abs/2305.14909
     predicates = []
     actions = []
@@ -87,6 +87,22 @@ def run_compact_action_pipeline(model: LLM_Chat, domain_builder: Domain_Builder,
             action_desc=action_desc,
             predicates=predicates
         )
+
+        # RUN FEEDBACK
+        # feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
+        #     model=model, 
+        #     domain_desc=domain_desc, 
+        #     feedback_template=feedback_template, 
+        #     action=action, 
+        #     predicates=predicates, 
+        #     types=types, 
+        #     llm_response=llm_response
+        #     )
+        
+        # if feedback_action != None:
+        #     action=feedback_action
+        #     new_predicates=feedback_predicates
+
         actions.append(action)
         predicates.extend(new_predicates)
         predicates = prune_predicates(predicates=predicates, actions=actions)
@@ -143,8 +159,10 @@ def run_compact_task_pipeline(
         task_extraction_prompt: PromptBuilder, 
         types: dict[str,str], 
         predicates: list[Predicate],
-        actions: list[Action]
-        ) -> tuple[str,str,str]:
+        actions: list[Action],
+        feedback_builder: Feedback_Builder,
+        feedback_template: str
+        ) -> tuple[dict[str,str],str,str]:
 
     objects, initial, goal, llm_response = task_builder.extract_task(
         model=model,
@@ -155,8 +173,24 @@ def run_compact_task_pipeline(
         predicates=predicates,
         actions=actions
         )
+    
+    feedback_objects, feedback_initial, feedback_goal, llm_feedback_response = feedback_builder.task_feedback(
+        model=model, 
+        problem_desc=problem_desc, 
+        feedback_template=feedback_template,
+        predicates=predicates,
+        types=types,
+        objects=objects,
+        initial=initial,
+        goal=goal,
+        llm_response=llm_response
+        )
+    
+    if feedback_objects != None:
+            objects=feedback_objects
+            initial=feedback_initial
+            goal=feedback_goal
 
-    objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
     return objects, initial, goal
 
 def open_examples(examples_dir):
@@ -167,11 +201,11 @@ def open_examples(examples_dir):
 if __name__ == "__main__":
 
     # THIS IS IMPORTANT TO LOOK INTO
-    unsupported_keywords = ['object']
+    unsupported_keywords = ['object', 'pddl']
 
     # model = get_llm("gpt-3.5-turbo-0125")
-    # model = get_llm("gpt-4o")
-    model = get_llm("gpt-4o-mini")
+    model = get_llm("gpt-4o")
+    # model = get_llm("gpt-4o-mini")
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
@@ -259,14 +293,14 @@ if __name__ == "__main__":
     domain_builder.set_types(types=types)
     print("Types: ", format_json_output(domain_builder.get_types()))
     
-    feedback_template = open_file('data/prompt_templates/type_extraction/feedback.txt')
-    new_types, feedback_response = feedback_builder.type_feedback(model, domain_desc, feedback_template, types, response)
-    # print("FEEDBACK:\n", feedback_response)
-    print("\nNEW TYPES:\n", format_json_output(new_types))
+    # feedback_template = open_file('data/prompt_templates/type_extraction/feedback.txt')
+    # new_types, feedback_response = feedback_builder.type_feedback(model, domain_desc, feedback_template, types, response)
+    # # print("FEEDBACK:\n", feedback_response)
+    # print("\nNEW TYPES:\n", format_json_output(new_types))
 
-    if new_types != None:
-        print("CHANGED TYPES")
-        domain_builder.set_types(types=new_types)
+    # if new_types != None:
+    #     print("CHANGED TYPES")
+    #     domain_builder.set_types(types=new_types)
     
     # extract type hierarchy
     print("\n\n---------------------------------\n\nType hierarchy output:\n")
@@ -274,14 +308,14 @@ if __name__ == "__main__":
     domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     print(format_json_output(type_hierarchy))
 
-    feedback_template = open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
-    new_type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(model, domain_desc, feedback_template, type_hierarchy, response)
-    print("\nFEEDBACK:\n", feedback_response)
-    print("\nNEW TYPE HIERARCHY:\n", format_json_output(type_hierarchy))
+    # feedback_template = open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
+    # new_type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(model, domain_desc, feedback_template, type_hierarchy, response)
+    # print("\nFEEDBACK:\n", feedback_response)
+    # print("\nNEW TYPE HIERARCHY:\n", format_json_output(type_hierarchy))
 
-    if new_type_hierarchy != None:
-        print("CHANGED type hierarchy")
-        domain_builder.set_type_hierarchy(new_type_hierarchy)
+    # if new_type_hierarchy != None:
+    #     print("CHANGED type hierarchy")
+    #     domain_builder.set_type_hierarchy(new_type_hierarchy)
 
     # extract NL action descriptions
     print("\n\n---------------------------------\n\nNatural language action output:\n")
@@ -289,35 +323,41 @@ if __name__ == "__main__":
     domain_builder.set_nl_actions(nl_actions)
     for i in nl_actions: print(i)
 
-    feedback_template = open_file('data/prompt_templates/action_extraction/feedback.txt')
-    new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model, domain_desc, feedback_template, nl_actions, response)
-    print("\nFEEDBACK:\n", feedback_response)
-    print("\nNEW NL ACTIONS:\n", format_json_output(new_nl_actions))
+    # feedback_template = open_file('data/prompt_templates/action_extraction/feedback.txt')
+    # new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model, domain_desc, feedback_template, nl_actions, response)
+    # print("\nFEEDBACK:\n", feedback_response)
+    # print("\nNEW NL ACTIONS:\n", format_json_output(new_nl_actions))
 
-    if new_nl_actions != None:
-        print("CHANGED NL ACTION")
-        domain_builder.set_nl_actions(new_nl_actions)
+    # if new_nl_actions != None:
+    #     print("CHANGED NL ACTION")
+    #     domain_builder.set_nl_actions(new_nl_actions)
     
     # extract PDDL formatted actions
     print("\n\n---------------------------------\n\nPDDL action output:\n")
 
     # GRANULAR ACTION EXTRACTION PIPELINE
-    actions, predicates = run_granular_action_pipeline(
-        model=model, 
-        domain_desc=domain_desc, 
-        param_prompt=pddl_param_extraction_prompt,
-        precondition_prompt=pddl_precondition_extraction_prompt,
-        effects_prompt=pddl_effects_extraction_prompt,
-        nl_actions=nl_actions
-        )
+    # actions, predicates = run_granular_action_pipeline(
+    #     model=model, 
+    #     domain_desc=domain_desc, 
+    #     param_prompt=pddl_param_extraction_prompt,
+    #     precondition_prompt=pddl_precondition_extraction_prompt,
+    #     effects_prompt=pddl_effects_extraction_prompt,
+    #     nl_actions=nl_actions
+    #     )
+
+    feedback_template = open_file('data/prompt_templates/action_construction/extract_action/feedback.txt')
     
     # COMPACT ACTION EXTRACTION PIPELINE
-    # actions, predicates = run_compact_action_pipeline(
-    #     model=model, 
-    #     domain_builder=domain_builder, 
-    #     prompt=pddl_action_extraction_prompt,
-    #     nl_actions=domain_builder.get_nl_actions()
-    # )
+    actions, predicates = run_compact_action_pipeline(
+        model=model, 
+        domain_desc=domain_desc,
+        domain_builder=domain_builder, 
+        prompt=pddl_action_extraction_prompt,
+        nl_actions=domain_builder.get_nl_actions(),
+        types=domain_builder.get_type_hierarchy(),
+        feedback_builder=feedback_builder,
+        feedback_template=feedback_template
+    )
 
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
     types = extract_types(type_hierarchy) # retrieve types
@@ -337,8 +377,6 @@ if __name__ == "__main__":
         predicates=predicate_str,
         actions=actions
         )
-    
-    print(pddl_domain)
 
     domain_file = "data/domain.pddl"
     with open(domain_file, "w") as f:
@@ -348,27 +386,33 @@ if __name__ == "__main__":
     print("\n\n---------------------------------\n\nPDDL task extraction:\n")
 
     # GRANULAR TASK PIPELINE
-    objects, initial_states, goal_states = run_granular_task_pipeline(
-         model=model, 
-         problem_desc=problem_desc, 
-         domain_desc=domain_desc, 
-         object_extraction_prompt=object_extraction_prompt,
-         initial_extraction_prompt=initial_extraction_prompt,
-         goal_extraction_prompt=goal_extraction_prompt,
-         types=pruned_types,
-         predicates=predicates
-    )
-
-    # # COMPACT TASK PIPELINE
-    # objects, initial_states, goal_states = run_compact_task_pipeline(
+    # objects, initial_states, goal_states = run_granular_task_pipeline(
     #      model=model, 
     #      problem_desc=problem_desc, 
     #      domain_desc=domain_desc, 
-    #      task_extraction_prompt=task_extraction_prompt,
+    #      object_extraction_prompt=object_extraction_prompt,
+    #      initial_extraction_prompt=initial_extraction_prompt,
+    #      goal_extraction_prompt=goal_extraction_prompt,
     #      types=pruned_types,
-    #      predicates=predicates,
-    #      actions=actions
+    #      predicates=predicates
     # )
+
+    feedback_template = open_file('data/prompt_templates/task_extraction/extract_task/feedback.txt')
+
+    # # COMPACT TASK PIPELINE
+    objects, initial_states, goal_states = run_compact_task_pipeline(
+        model=model, 
+        problem_desc=problem_desc, 
+        domain_desc=domain_desc, 
+        task_extraction_prompt=task_extraction_prompt,
+        types=pruned_types,
+        predicates=predicates,
+        actions=actions,
+        feedback_builder=feedback_builder,
+        feedback_template=feedback_template
+    )
+
+    objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
 
     print("[TASK]\n") 
     pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
@@ -377,4 +421,4 @@ if __name__ == "__main__":
     problem_file = "data/problem.pddl"
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
-    print(f"PDDL domain written to {problem_file}")
+    print(f"PDDL problem written to {problem_file}")
