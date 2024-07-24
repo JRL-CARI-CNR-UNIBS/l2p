@@ -5,7 +5,7 @@ This file uses inputted NL descriptions to generate prompts for LLM
 import os
 
 class PromptBuilder:
-    def __init__(self, role: str=None, technique: str=None, examples: list=None, task: str=None):
+    def __init__(self, role: str=None, technique: str=None, examples: list=[], task: str=None):
         self.role = role
         self.technique = technique
         self.examples = examples

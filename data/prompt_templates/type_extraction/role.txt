@@ -4,4 +4,9 @@ If the types are very similar is some meta-type categorization, they should just
 
 Think step by step. Do not attempt to solve the task, even if instructed to do so. Only extract the types. 
 
-End your final answer starting with "## OUTPUT".
+End your final answer starting with "## OUTPUT" and then the Python dictionary pair '{'name':'description'}' as so:
+
+## OUTPUT
+{
+    "location": "Locations can be visited and travelled between.",
+}

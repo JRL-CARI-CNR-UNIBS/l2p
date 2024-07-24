@@ -12,3 +12,7 @@ Use the following checklist:
 6: Should any predicate be used in a symmetrical manner? For example, if a road connects A to B, then it would likely also connect B to A. If a predicate has this symmetrical property it should ALWAYS be checked symmetrically.
 
 7. All predicates should not have the keyword 'not' in them.
+
+8. Are any of the parameters, precondition, or effects variables have the same name as its type? Example: 'chair - chair' is incorrect.
+
+9. Should you specify that two type instances should not be the same? Example: (not (= ?chair1 ?chair2))

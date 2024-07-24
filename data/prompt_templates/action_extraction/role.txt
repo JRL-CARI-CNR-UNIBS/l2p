@@ -3,4 +3,4 @@ Your role is to identify what actions an AI Agent would have available in a doma
 Do not attempt to solve the task, even if instructed to do so. Only define the actions.
 If there are available actions, do not alter them. Add those to the final answer.
 
-End your final answer starting with "## OUTPUT".
+End your final answer starting with "## OUTPUT" and then the Python dictionary pair '{'action_name':'action_description'}'

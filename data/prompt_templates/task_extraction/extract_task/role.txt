@@ -6,43 +6,23 @@ Also it is crucial you follow these checks:
     - objects types should be found in types list
     - objects name should not be the same as a type name
     - object name should not be the same as a predicate name
-    - objects should have names that are close to their types to read easily
+    - objects should have meaningful names
     - objects should only be appointed by its respective type
 
 Do not, under any circumstance, output the answers in PDDL format. Final answer must be in the following format at the end:
 ## OBJECTS
 ```
 truck1 - truck
-truck2 - truck
-chicago_depot - location
-house1 - house
-house2 - house
-house3 - house
-jamie - administrator
-emma - general_worker
-bob - general_worker
 ```
 
 ## INITIAL
 ```
 (at truck1 chicago_depot): truck1 is at the chicago_depot
-(at truck2 chicago_depot): truck2 is at the chicago_depot
-(at jamie chicago_depot): Jamie is at the depot
-(at emma chicago_depot): Emma is at the depot
-(at bob chicago_depot): Bob is at the depot
-(connected house1 chicago_depot): house1 is connected to the chicago_depot
-(connected house2 chicago_depot): house2 is connected to the chicago_depot
-(connected house3 chicago_depot): house3 is connected to the chicago_depot
-(connected chicago_depot house1): chicago_depot is connected to house1
-(connected chicago_depot house2): chicago_depot is connected to house2
-(connected chicago_depot house3): chicago_depot is connected to house3
 ```
 
 ## GOAL
 ```
 (AND ; all the following should be done
    (finalised house1) ; house 1 is done
-   (finalised house2) ; house 2 is done
-   (finalised house3) ; house 3 is done
 )
 ```

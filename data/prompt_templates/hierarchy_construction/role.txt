@@ -4,4 +4,18 @@ Think through the types and their relationships. If you see a relationship that 
 
 It is extremely crucial that an action term is not considered a type, so it should not be considered in the type hierarchy.
 
-End your final answer starting with "## OUTPUT".
+End your final answer starting with "## OUTPUT" and then the Python dictionary pair '{'name':'description'}' as so:
+
+## OUTPUT
+{
+    "object": "Object is always root, everything is an object",
+    "children": [
+        {
+            "worker": "A type of object consisting of humans who do things.",
+            "children": [
+                {"administrator": "A type of worker.", "children": []},
+                {"general_worker": "A type of worker.", "children": []}
+            ]
+        }
+    ]
+}

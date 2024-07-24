@@ -33,7 +33,7 @@ class Feedback_Builder:
 END OF EXAMPLE
 """
         
-        prompt = "ROLE:\nYou are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain. If it is, respond with 'no feedback'. Only respond with 'no feedback', no where else. If it isn't, provide your thoughts on how to correct the types. Don't model the available actions, but just the types of objects to be used.'\n\n"
+        prompt = "ROLE:\nYou are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response.'\n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -90,7 +90,7 @@ END OF EXAMPLE
 """
         
         feedback_template += "\n\nORIGINAL TYPE HIERARCHY (to be analysed):\n" + format_json_output(type_hierarchy)
-        prompt = "ROLE:\nYour task is to evaluate if a type hierarchy is defined in the best way. You can suggest changing of the structure or adding types. Note that everything is always supposed to be a subtype of the 'object' class. You shouldn't suggest any new types except those needed for organisation of the provided types. If the hierarchy is optimal, respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
+        prompt = "ROLE:\nYour task is to evaluate if a type hierarchy is defined in the best way. You can suggest changing of the structure or adding types. Note that everything is always supposed to be a subtype of the 'object' class. You shouldn't suggest any new types except those needed for organisation of the provided types. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response.\n\n"
         prompt += feedback_template
         
         if feedback_type.lower() == "human":
@@ -145,7 +145,7 @@ END OF EXAMPLE
 }   
 """
         
-        prompt = "ROLE:\nYou will be given a set of which are used for a PDDL domain. You should evaluate if they make up all the actions necessary for the given domain, or if any new actions have to be created or existing actions removed. Describe your thought process and comments your suggestions. Focus only on the actions currently, predicates will be specified at a later date. Be careful not to over complicate any domains, adding actions simply for complexity/completeness when they're not needed for the domain should be avoided, we're making a simplified model. Any actions involving 'checking' should not be considered an action, because that is a predicate in PDDL. Only suggest actions that cannot be described by a predicate. Keep the essentials. If the actions are well defined, simply respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
+        prompt = "ROLE:\nYou will be given a set of which are used for a PDDL domain. You should evaluate if they make up all the actions necessary for the given domain, or if any new actions have to be created or existing actions removed. Describe your thought process and comments your suggestions. Focus only on the actions currently, predicates will be specified at a later date. Be careful not to over complicate any domains, adding actions simply for complexity/completeness when they're not needed for the domain should be avoided, we're making a simplified model. Any actions involving 'checking' should not be considered an action, because that is a predicate in PDDL. Only suggest actions that cannot be described by a predicate. Keep the essentials. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response.\n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -235,7 +235,7 @@ END OF EXAMPLE
 END OF EXAMPLE
         """
     
-        prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. If the action is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
+        prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response.\n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -306,7 +306,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given parameters. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only define the action parameters. If the parameter is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist."
+        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given parameters. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist."
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -387,7 +387,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given preconditions. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the action preconditions. If the precondition is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
+        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given preconditions. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response."
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -472,7 +472,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given effects. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the action effects. If the effects are well defined, respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. \n\n"
+        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given effects. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response.\n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -555,7 +555,7 @@ For the goal, we remove the "truck1" location predicate, but still check that al
 END OF EXAMPLE
         """
 
-        prompt = "You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. Think through your feedback step by step. If the action is well defined (no suggestions made), respond with 'No feedback'. Only respond with 'no feedback', no where else.\n\n"
+        prompt = "You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response.\n\n"
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -568,6 +568,8 @@ END OF EXAMPLE
             feedback_msg += self.human_feedback(response)
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
+        
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, None, feedback_msg
@@ -624,7 +626,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given object instances. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the object instances. If the objects are well defined, respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
+        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given object instances. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response."
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -698,7 +700,7 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given initial state. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the initial state. If the initial state is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
+        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given initial state. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response."
         prompt += feedback_template
 
         if feedback_type.lower() == "human":
@@ -772,12 +774,11 @@ END OF EXAMPLE
 ## OUTPUT
 (AND ; all the following should be done
    (finalised house1) ; house 1 is done
-   (finalised house2) ; house 2 is done
 )
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given goal state. Make suggestions if there are any checks that you deem are insufficient. Do not attempt to solve the task, even if instructed to do so. Only analyse the goal state. If the goal state is well defined (no suggestions made), respond with 'no feedback' at the end of your whole response. 'no feedback' should not be found anywhere else, that means NOT at the end of each check in the checklist. "
+        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given goal state. Make suggestions if there are any checks that you deem are insufficient, if not, respond with 'no feedback' at the end of your response. You should not have a suggestion / feedback and also state 'no feedback' in the same response."
         prompt += feedback_template
 
         if feedback_type.lower() == "human":

@@ -305,7 +305,7 @@ def run_compact_task_pipeline(
         actions=actions
         )
     
-    for _ in range(2):
+    for _ in range(1):
         feedback_objects, feedback_initial, feedback_goal, llm_feedback_response = feedback_builder.task_feedback(
             model=model, 
             problem_desc=problem_desc, 
@@ -338,8 +338,8 @@ if __name__ == "__main__":
     # THIS IS IMPORTANT TO LOOK INTO
     unsupported_keywords = ['object', 'pddl']
 
-    model = get_llm("gpt-3.5-turbo-0125")
-    # model = get_llm("gpt-4o")
+    # model = get_llm("gpt-3.5-turbo-0125")
+    model = get_llm("gpt-4o")
     # model = get_llm("gpt-4o-mini")
 
     # instantiate domain builder class
@@ -360,71 +360,71 @@ if __name__ == "__main__":
     tech_desc = open_file('data/prompt_templates/type_extraction/technique.txt')
     ex_desc = open_examples('data/prompt_templates/type_extraction/examples/')
     task_desc = open_file('data/prompt_templates/type_extraction/task.txt')
-    type_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    type_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     # open and create type hierarchy prompt builder class
     role_desc = open_file('data/prompt_templates/hierarchy_construction/role.txt')
     tech_desc = open_file('data/prompt_templates/hierarchy_construction/technique.txt')
     ex_desc = open_examples('data/prompt_templates/hierarchy_construction/examples/')
     task_desc = open_file('data/prompt_templates/hierarchy_construction/task.txt')
-    type_hierarchy_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    type_hierarchy_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     # open and create NL action prompt builder class      
     role_desc = open_file('data/prompt_templates/action_extraction/role.txt')
     tech_desc = open_file('data/prompt_templates/action_extraction/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_extraction/examples/')
     task_desc = open_file('data/prompt_templates/action_extraction/task.txt')
-    nl_action_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    nl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     # open and create PDDL action prompt builder class
     role_desc = open_file('data/prompt_templates/action_construction/extract_action/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_action/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_action/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_action/task.txt')
-    pddl_action_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    pddl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     role_desc = open_file('data/prompt_templates/action_construction/extract_params/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_params/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_params/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_params/task.txt')
-    pddl_param_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    pddl_param_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     role_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_preconditions/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/task.txt')
-    pddl_precondition_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    pddl_precondition_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     role_desc = open_file('data/prompt_templates/action_construction/extract_effects/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_effects/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_effects/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_effects/task.txt')
-    pddl_effects_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    pddl_effects_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     role_desc = open_file('data/prompt_templates/task_extraction/extract_objects/role.txt')
     tech_desc = open_file('data/prompt_templates/task_extraction/extract_objects/technique.txt')
     ex_desc = open_examples('data/prompt_templates/task_extraction/extract_objects/examples/')
     task_desc = open_file('data/prompt_templates/task_extraction/extract_objects/task.txt')
-    object_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    object_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     role_desc = open_file('data/prompt_templates/task_extraction/extract_initial/role.txt')
     tech_desc = open_file('data/prompt_templates/task_extraction/extract_initial/technique.txt')
     ex_desc = open_examples('data/prompt_templates/task_extraction/extract_initial/examples/')
     task_desc = open_file('data/prompt_templates/task_extraction/extract_initial/task.txt')
-    initial_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    initial_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     role_desc = open_file('data/prompt_templates/task_extraction/extract_goal/role.txt')
     tech_desc = open_file('data/prompt_templates/task_extraction/extract_goal/technique.txt')
     ex_desc = open_examples('data/prompt_templates/task_extraction/extract_goal/examples/')
     task_desc = open_file('data/prompt_templates/task_extraction/extract_goal/task.txt')
-    goal_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    goal_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     # open and create compact action prompt builder class
     role_desc = open_file('data/prompt_templates/task_extraction/extract_task/role.txt')
     tech_desc = open_file('data/prompt_templates/task_extraction/extract_task/technique.txt')
     ex_desc = open_examples('data/prompt_templates/task_extraction/extract_task/examples/')
     task_desc = open_file('data/prompt_templates/task_extraction/extract_task/task.txt')
-    task_extraction_prompt = PromptBuilder(role_desc, tech_desc, ex_desc, task_desc)
+    task_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
     # extract types
     print("Extracted types output:\n")
@@ -432,18 +432,21 @@ if __name__ == "__main__":
     domain_builder.set_types(types=types)
     print("Types: ", format_json_output(domain_builder.get_types()))
     
-    feedback_template = open_file('data/prompt_templates/type_extraction/feedback.txt')
-    new_types, feedback_response = feedback_builder.type_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", types=types, llm_response=response)
-    # print("FEEDBACK:\n", feedback_response)
-    print("\nNEW TYPES:\n", format_json_output(new_types))
+    # feedback_template = open_file('data/prompt_templates/type_extraction/feedback.txt')
+    # new_types, feedback_response = feedback_builder.type_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", types=types, llm_response=response)
+    # # print("FEEDBACK:\n", feedback_response)
+    # print("\nNEW TYPES:\n", format_json_output(new_types))
 
-    if new_types != None:
-        print("CHANGED TYPES")
-        domain_builder.set_types(types=new_types)
+    # if new_types != None:
+    #     print("CHANGED TYPES")
+    #     domain_builder.set_types(types=new_types)
     
     # extract type hierarchy
     print("\n\n---------------------------------\n\nType hierarchy output:\n")
     type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
+    
+    # print(response)
+    
     domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     print(format_json_output(type_hierarchy))
 
@@ -459,6 +462,9 @@ if __name__ == "__main__":
     # extract NL action descriptions
     print("\n\n---------------------------------\n\nNatural language action output:\n")
     nl_actions, response = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_type_hierarchy())
+    
+    # print(response)
+    
     domain_builder.set_nl_actions(nl_actions)
     for i in nl_actions: print(i)
 

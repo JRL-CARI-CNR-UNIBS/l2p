@@ -284,8 +284,6 @@ def parse_goal(llm_response: str) -> str:
     """Extracts goal (PDDL-goal) from LLM response and returns it as a string"""
     goal_head = extract_heading(llm_response, "GOAL")
 
-    print("GOAL HEAD:\n", goal_head)
-
     if goal_head.count("```") != 2:
         raise ValueError("Could not find exactly one block in the goal section of the LLM output. The goal has to be specified in a single block and as valid PDDL using the `and` and `not` operators. Likely this is caused by a too long response and limited context length. If so, try to shorten the message and exclude objects which aren't needed for the task.")
     goal_raw = goal_head.split("```")[1].strip() # Only a single block in the goal
