@@ -1,3 +1,7 @@
+"""
+This file contains classes of PDDL types
+"""
+
 from typing import TypedDict, NewType
 from collections import OrderedDict
 

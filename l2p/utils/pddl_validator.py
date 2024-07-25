@@ -1,3 +1,7 @@
+"""
+This file contains collection of functions PDDL syntax validations
+"""
+
 from collections import OrderedDict
 from .pddl_types import Predicate
 

@@ -26,18 +26,34 @@ def check_parse_problem(file_path):
         sys.exit(1)
 
 if __name__ == "__main__":
+    
     domain_file_path = 'data/domain.pddl'
     pddl_domain = check_parse_domain(domain_file_path)
     print("PDDL domain:\n", pddl_domain)
-
-    print("------------------")
-
-    problem_file_path = 'data/problem_1.pddl'
-    pddl_problem = check_parse_problem(problem_file_path)
-    print("PDDL Problem:\n", pddl_problem)
-
+    
     with open(domain_file_path, "w") as f:
         f.write(pddl_domain)
 
-    with open(problem_file_path, "w") as f:
+    print("------------------")
+
+    problem_file_path_1 = 'data/problem_1.pddl'
+    problem_file_path_2 = 'data/problem_2.pddl'
+    problem_file_path_3 = 'data/problem_3.pddl'
+    
+    pddl_problem = check_parse_problem(problem_file_path_1)
+    print("PDDL Problem:\n", pddl_problem)
+
+    with open(problem_file_path_1, "w") as f:
+        f.write(pddl_problem)
+        
+    pddl_problem = check_parse_problem(problem_file_path_2)
+    print("PDDL Problem:\n", pddl_problem)
+
+    with open(problem_file_path_2, "w") as f:
+        f.write(pddl_problem)
+        
+    pddl_problem = check_parse_problem(problem_file_path_3)
+    print("PDDL Problem:\n", pddl_problem)
+
+    with open(problem_file_path_3, "w") as f:
         f.write(pddl_problem)

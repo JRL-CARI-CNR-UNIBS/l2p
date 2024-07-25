@@ -1,5 +1,5 @@
 """
-This file contains collection of functions for PDDL generation purposes
+This file contains collection of functions for PDDL domain generation purposes
 """
 
 from collections import OrderedDict
@@ -394,16 +394,6 @@ class Domain_Builder:
 
     def get_pddl_actions(self):
         return self.pddl_actions
-
-    def get_type_checklist():
-        pass
-
-    def get_hierarchy_checklist():
-        pass
-
-    def get_action_checklist():
-        pass
-
 
     def generate_domain(
             self, 

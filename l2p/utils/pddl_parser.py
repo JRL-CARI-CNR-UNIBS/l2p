@@ -1,15 +1,11 @@
+"""
+This file contains collection of functions for extracting/parsing information from LLM output
+"""
+
+from .pddl_types import Action, Predicate
 from collections import OrderedDict
 from copy import deepcopy
-from .pddl_types import Action, Predicate
 import re, ast
-
-def combine_blocks(heading_str: str):
-    """Combine the inside of blocks from the heading string into a single string."""
-
-    possible_blocks = heading_str.split("```")
-    blocks = [possible_blocks[i] for i in range(1, len(possible_blocks), 2)] # Get the text between the ```s, every other one
-    combined = "\n".join(blocks) # Join the blocks together
-    return combined.replace("\n\n", "\n").strip() # Remove leading/trailing whitespace and internal empty lines
 
 def parse_params(llm_output):
     params_info = OrderedDict()
@@ -91,7 +87,6 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
 
     return new_predicates
 
-
 def parse_predicates(all_predicates):
     """
     This function assumes the predicate definitions adhere to PDDL grammar
@@ -135,6 +130,74 @@ def parse_action(llm_response: str, action_name: str) -> Action:
     except:
         raise Exception("Could not find the 'Effects' section in the output. Provide the entire response, including all headings even if some are unchanged.")
     return {"name": action_name, "parameters": parameters, "preconditions": preconditions, "effects": effects}
+    
+def parse_objects(llm_response: str) -> dict[str, str]:
+    """
+    Extract objects from LLM response and returns dictionary string pairs object(name, type)
+    Args:
+        - llm_response (str):
+        - types (dict[str,str]): WILL BE USED FOR CHECK ERROR RAISES
+        - predicates (list[Predicate]): WILL BE USED FOR CHECK ERROR RAISES
+    Returns:
+        - dict[str,str]: objects
+    """
+    
+    objects_head = extract_heading(llm_response, "OBJECTS")
+    objects_raw = combine_blocks(objects_head)
+    objects_clean = clear_comments(objects_raw, comments=[':','//','#',';','(']) # Remove comments
+    objects = {obj.split(" - ")[0].strip(" `"): obj.split(" - ")[1].strip(" `").lower() for obj in objects_clean.split("\n") if obj.strip()}
+
+    # IMPLEMENT CHECKS (if objects are/are not in types/predicates)
+    # objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+
+    return objects
+
+def parse_initial(llm_response: str) -> str:
+    """Extracts state (PDDL-init) from LLM response and returns it as a string"""
+    state_head = extract_heading(llm_response, "INITIAL")
+    state_raw = combine_blocks(state_head)
+    state_clean = clear_comments(state_raw)
+
+    states = []
+    for line in state_clean.split("\n"):
+        line = line.strip("- `()")
+        if not line: # Skip empty lines
+            continue
+        name = line.split(" ")[0]
+        if name == "not":
+            neg = True
+            name = line.split(" ")[1].strip("()") # Remove the `not` and the parentheses
+            params = line.split(" ")[2:]
+        else:
+            neg = False
+            params = line.split(" ")[1:] if len(line.split(" ")) > 1 else []
+        states.append({"name": name, "params": params, "neg": neg})
+
+    inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in states] # The main part of each predicate
+    full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(states, inner_str)] # Add the `not` if needed
+    state_str = "\n".join(full_str) # Combine the states into a single string
+    return state_str
+
+def parse_goal(llm_response: str) -> str:
+    """Extracts goal (PDDL-goal) from LLM response and returns it as a string"""
+    goal_head = extract_heading(llm_response, "GOAL")
+
+    if goal_head.count("```") != 2:
+        raise ValueError("Could not find exactly one block in the goal section of the LLM output. The goal has to be specified in a single block and as valid PDDL using the `and` and `not` operators. Likely this is caused by a too long response and limited context length. If so, try to shorten the message and exclude objects which aren't needed for the task.")
+    goal_raw = goal_head.split("```")[1].strip() # Only a single block in the goal
+    goal_clean = clear_comments(goal_raw)
+
+    goal_pure = goal_clean.replace("and", "").replace("AND", "").replace("not", "").replace("NOT", "")
+    goals = []
+    for line in goal_pure.split("\n"):
+        line = line.strip(" ()")
+        if not line: # Skip empty lines
+            continue
+        name = line.split(" ")[0]
+        params = line.split(" ")[1:] if len(line.split(" ")) > 1 else []
+        goals.append({"name": name, "params": params})
+
+    return goal_clean # Since the goal uses `and` and `not` recombining it is difficult 
 
 
 def prune_types(types: dict[str,str], predicates: list[Predicate], actions: list[Action]) -> dict[str,str]:
@@ -194,6 +257,16 @@ def prune_predicates(predicates: list[Predicate], actions: list[Action]) -> list
     return used_predicates
 
 
+def extract_heading(llm_output: str, heading: str):
+    """Extract the text between the heading and the next second level heading in the LLM output."""
+    if heading not in llm_output:
+        print("#"*10, "LLM Output", "#"*10)
+        print(llm_output)
+        print("#"*30)
+        raise ValueError(f"Could not find heading {heading} in the LLM output. Likely this is caused by a too long response and limited context length. If so, try to shorten the message and exclude objects which aren't needed for the task.")
+    heading_str = llm_output.split(heading)[1].split("\n## ")[0].strip() # Get the text between the heading and the next heading
+    return heading_str
+
 def extract_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
     def process_node(node, parent_type=None):
         current_type = list(node.keys())[0]
@@ -212,6 +285,7 @@ def extract_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
     process_node(type_hierarchy)
     return result
 
+
 def convert_to_dict(llm_response: str) -> dict[str,str]:
     
     dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
@@ -229,78 +303,6 @@ def convert_to_dict(llm_response: str) -> dict[str,str]:
     else:
         print("No dictionary found in the llm_response.")
         return None
-    
-
-def parse_objects(llm_response: str) -> dict[str, str]:
-    """
-    Extract objects from LLM response and returns dictionary string pairs object(name, type)
-    Args:
-        - llm_response (str):
-        - types (dict[str,str]): WILL BE USED FOR CHECK ERROR RAISES
-        - predicates (list[Predicate]): WILL BE USED FOR CHECK ERROR RAISES
-    Returns:
-        - dict[str,str]: objects
-    """
-    
-    objects_head = extract_heading(llm_response, "OBJECTS")
-    objects_raw = combine_blocks(objects_head)
-    objects_clean = clear_comments(objects_raw, comments=[':','//','#',';','(']) # Remove comments
-    objects = {obj.split(" - ")[0].strip(" `"): obj.split(" - ")[1].strip(" `").lower() for obj in objects_clean.split("\n") if obj.strip()}
-
-    # IMPLEMENT CHECKS (if objects are/are not in types/predicates)
-    # objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-
-    return objects
-
-
-def parse_initial(llm_response: str) -> str:
-    """Extracts state (PDDL-init) from LLM response and returns it as a string"""
-    state_head = extract_heading(llm_response, "INITIAL")
-    state_raw = combine_blocks(state_head)
-    state_clean = clear_comments(state_raw)
-
-    states = []
-    for line in state_clean.split("\n"):
-        line = line.strip("- `()")
-        if not line: # Skip empty lines
-            continue
-        name = line.split(" ")[0]
-        if name == "not":
-            neg = True
-            name = line.split(" ")[1].strip("()") # Remove the `not` and the parentheses
-            params = line.split(" ")[2:]
-        else:
-            neg = False
-            params = line.split(" ")[1:] if len(line.split(" ")) > 1 else []
-        states.append({"name": name, "params": params, "neg": neg})
-
-    inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in states] # The main part of each predicate
-    full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(states, inner_str)] # Add the `not` if needed
-    state_str = "\n".join(full_str) # Combine the states into a single string
-    return state_str
-
-
-def parse_goal(llm_response: str) -> str:
-    """Extracts goal (PDDL-goal) from LLM response and returns it as a string"""
-    goal_head = extract_heading(llm_response, "GOAL")
-
-    if goal_head.count("```") != 2:
-        raise ValueError("Could not find exactly one block in the goal section of the LLM output. The goal has to be specified in a single block and as valid PDDL using the `and` and `not` operators. Likely this is caused by a too long response and limited context length. If so, try to shorten the message and exclude objects which aren't needed for the task.")
-    goal_raw = goal_head.split("```")[1].strip() # Only a single block in the goal
-    goal_clean = clear_comments(goal_raw)
-
-    goal_pure = goal_clean.replace("and", "").replace("AND", "").replace("not", "").replace("NOT", "")
-    goals = []
-    for line in goal_pure.split("\n"):
-        line = line.strip(" ()")
-        if not line: # Skip empty lines
-            continue
-        name = line.split(" ")[0]
-        params = line.split(" ")[1:] if len(line.split(" ")) > 1 else []
-        goals.append({"name": name, "params": params})
-
-    return goal_clean # Since the goal uses `and` and `not` recombining it is difficult 
-
 
 def clear_comments(text: str, comments = [':','//','#',';']) -> str:
     """Remove comments from the text."""
@@ -308,15 +310,13 @@ def clear_comments(text: str, comments = [':','//','#',';']) -> str:
         text = "\n".join([line.split(comment)[0] for line in text.split("\n")])
     return text
 
-def extract_heading(llm_output: str, heading: str):
-    """Extract the text between the heading and the next second level heading in the LLM output."""
-    if heading not in llm_output:
-        print("#"*10, "LLM Output", "#"*10)
-        print(llm_output)
-        print("#"*30)
-        raise ValueError(f"Could not find heading {heading} in the LLM output. Likely this is caused by a too long response and limited context length. If so, try to shorten the message and exclude objects which aren't needed for the task.")
-    heading_str = llm_output.split(heading)[1].split("\n## ")[0].strip() # Get the text between the heading and the next heading
-    return heading_str
+def combine_blocks(heading_str: str):
+    """Combine the inside of blocks from the heading string into a single string."""
+
+    possible_blocks = heading_str.split("```")
+    blocks = [possible_blocks[i] for i in range(1, len(possible_blocks), 2)] # Get the text between the ```s, every other one
+    combined = "\n".join(blocks) # Join the blocks together
+    return combined.replace("\n\n", "\n").strip() # Remove leading/trailing whitespace and internal empty lines
 
 
 if __name__ == '__main__':

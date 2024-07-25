@@ -1,3 +1,7 @@
+"""
+This file contains collection of functions for PDDL task generation purposes
+"""
+
 from .utils.pddl_types import Predicate, Action
 from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, convert_to_dict
 from .llm_builder import LLM_Chat

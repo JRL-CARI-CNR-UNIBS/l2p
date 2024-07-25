@@ -1,3 +1,7 @@
+"""
+This file contains run code for test purposes
+"""
+
 from l2p.prompt_builder import PromptBuilder
 from l2p.feedback_builder import Feedback_Builder
 from l2p.domain_builder import Domain_Builder
@@ -8,7 +12,6 @@ from l2p.utils.pddl_types import Action, Predicate
 from l2p.utils.pddl_validator import Syntax_Validator
 import os, json
 
-# micro-functions
 def format_json_output(data):
         return json.dumps(data, indent=4)
 
@@ -16,6 +19,8 @@ def open_file(file_path):
     with open(file_path, 'r') as file:
         file = file.read().strip()
     return file
+
+
 
 def run_granular_action_pipeline(
         model: LLM_Chat,
@@ -335,9 +340,9 @@ def open_examples(examples_dir):
 
 if __name__ == "__main__":
 
-    # THIS IS IMPORTANT TO LOOK INTO
-    unsupported_keywords = ['object', 'pddl']
+    unsupported_keywords = ['object', 'pddl', 'lisp']
 
+    # MODELS: 
     # model = get_llm("gpt-3.5-turbo-0125")
     model = get_llm("gpt-4o")
     # model = get_llm("gpt-4o-mini")
@@ -345,14 +350,15 @@ if __name__ == "__main__":
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
     domain_builder = Domain_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
-
+    
+    # instantiate task builder class
     problem_list = []
     problem_list.append(open_file("data/problems/blocksworld_p1.txt"))
     problem_list.append(open_file("data/problems/blocksworld_p2.txt"))
     problem_list.append(open_file("data/problems/blocksworld_p3.txt"))
-
     task_builder = Task_Builder(objects=None, initial=None, goal=None)
 
+    # instantiate feedback builder class
     feedback_builder = Feedback_Builder()
 
     # open and create type extraction prompt builder class
@@ -445,8 +451,6 @@ if __name__ == "__main__":
     print("\n\n---------------------------------\n\nType hierarchy output:\n")
     type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
     
-    # print(response)
-    
     domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     print(format_json_output(type_hierarchy))
 
@@ -462,8 +466,6 @@ if __name__ == "__main__":
     # extract NL action descriptions
     print("\n\n---------------------------------\n\nNatural language action output:\n")
     nl_actions, response = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_type_hierarchy())
-    
-    # print(response)
     
     domain_builder.set_nl_actions(nl_actions)
     for i in nl_actions: print(i)

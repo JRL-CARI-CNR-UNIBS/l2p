@@ -25,7 +25,6 @@ def connect_openai(engine, messages, temperature, max_tokens,
     )
 
 class LLM_Chat:
-    # Simple abstract class for the LLM chat
     def __init__(self, *args, **kwargs):
         pass
 
@@ -55,29 +54,28 @@ class GPT_Chat(LLM_Chat):
             "gpt-4": 8192, # ~8k tokens
             "gpt-4-32k": 32768, # ~32k tokens
             "gpt-4o": 32768, # ~32k tokens
-            "gpt-4o-mini": 32768,
+            "gpt-4o-mini": 32768, # ~32k tokens
         }[engine]
         self.max_tokens = max_tokens if max_tokens is not None else self.context_length
         self.tok = tiktoken.get_encoding("cl100k_base") # For GPT3.5+
         self.in_tokens = 0
         self.out_tokens = 0
-        # print(f"Seed is not used for OpenAI models. Discarding seed {seed}")
 
     def get_output(self, prompt=None, messages=None, end_when_error=False, max_retry=5, est_margin = 200):
         if prompt is None and messages is None:
-            raise ValueError("prompt and messages cannot both be None")
+            raise ValueError("Prompt and messages cannot both be None")
         if messages is not None:
             messages = messages
         else:
             messages = [{'role': 'user', 'content': prompt}]
 
-        # Calculate the number of tokens to request. At most self.max_tokens, and prompt + request < self.context_length
-        current_tokens = int(sum([len(self.tok.encode(m['content'])) for m in messages])) # Estimate current usage
-        requested_tokens = int(min(self.max_tokens, self.context_length - current_tokens - est_margin)) # Request with safety margin
+        # calculate # of tokens to request. At most self.max_tokens, and prompt + request < self.context_length
+        current_tokens = int(sum([len(self.tok.encode(m['content'])) for m in messages])) # estimate current usage
+        requested_tokens = int(min(self.max_tokens, self.context_length - current_tokens - est_margin)) # request with safety margin
         print(f"Requesting {requested_tokens} tokens from {self.engine} (estimated {current_tokens - est_margin} prompt tokens with a safety margin of {est_margin} tokens)")
         self.in_tokens += current_tokens
 
-        # Request the response
+        # request response
         n_retry = 0
         conn_success = False
         while not conn_success:
@@ -173,9 +171,6 @@ def get_llm(engine, api_key=None, **kwargs) -> LLM_Chat:
 if __name__ == '__main__':
     # model = get_llm("gpt-3.5-turbo-0125")
     # llm_response = model.get_output("Hello world!")
-
-
-
     # model = get_llm(engine="openai-community/gpt2", api_key="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")
 
     model = get_llm(engine="mistralai/Mistral-7B-Instruct-v0.3", api_key="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")

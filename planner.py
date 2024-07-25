@@ -158,5 +158,10 @@ def generate_portfolio_exitcode(exitcodes):
 
 if __name__ == "__main__":
     domain_file_path = "data/domain.pddl"
-    problem_file_path = "data/problem_1.pddl"
-    run_fast_downward(domain_file_path, problem_file_path)
+    problem_file_path_1 = "data/problem_1.pddl"
+    problem_file_path_2 = "data/problem_2.pddl"
+    problem_file_path_3 = "data/problem_3.pddl"
+    
+    run_fast_downward(domain_file_path, problem_file_path_1)
+    run_fast_downward(domain_file_path, problem_file_path_2)
+    run_fast_downward(domain_file_path, problem_file_path_3)
