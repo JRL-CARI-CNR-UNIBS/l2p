@@ -3,6 +3,8 @@
 This library is a collection of tools for PDDL model generation extracted from natural language driven by large language models.
 
 ## Usage
+
+This is the general setup:
 ```python
 import os
 from openai import OpenAI
@@ -47,8 +49,44 @@ pddl_domain = domain_builder.generate_domain(
     actions=actions
     )
 
-print(f"PDDL domain written to {pddl_domain}")
+print(f"PDDL domain: {pddl_domain}")
 ```
+
+Here is how you would setup a PDDL problem:
+```python
+
+problem_description = """Your task is to rearrange the blocks..."""
+
+objects, initial, goal, llm_response = task.extract_task(
+    model=model,
+    problem_desc=problem_description,
+    domain_desc=domain_description,
+    prompt_template=prompt.generate_prompt(),
+    types=types,
+    predicates=predicates,
+    actions=actions
+    )
+
+pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
+
+print(f"PDDL domain: {pddl_problem}")
+```
+
+Here is how you would setup a feedback Mechanism:
+```python
+feedback_template = """Here is the checklist I want you to perform..."""
+
+new_types, feedback_response = feedback.type_feedback(
+    model=model, 
+    domain_desc=domain_description, 
+    feedback_template=feedback_template, 
+    feedback_type="llm", 
+    types=types, 
+    llm_response=response)
+
+print("FEEDBACK:\n", feedback_response)
+```
+
 
 ## Installation and Setup
 
