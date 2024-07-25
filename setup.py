@@ -27,7 +27,7 @@ def check_parse_problem(file_path):
 
 if __name__ == "__main__":
     
-    domain_file_path = 'data/domain.pddl'
+    domain_file_path = 'tests/domain.pddl'
     pddl_domain = check_parse_domain(domain_file_path)
     print("PDDL domain:\n", pddl_domain)
     
@@ -36,9 +36,9 @@ if __name__ == "__main__":
 
     print("------------------")
 
-    problem_file_path_1 = 'data/problem_1.pddl'
-    problem_file_path_2 = 'data/problem_2.pddl'
-    problem_file_path_3 = 'data/problem_3.pddl'
+    problem_file_path_1 = 'tests/problem_1.pddl'
+    problem_file_path_2 = 'tests/problem_2.pddl'
+    problem_file_path_3 = 'tests/problem_3.pddl'
     
     pddl_problem = check_parse_problem(problem_file_path_1)
     print("PDDL Problem:\n", pddl_problem)
