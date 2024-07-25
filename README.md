@@ -32,16 +32,17 @@ feedback = FeedbackBuilder()
 types, response = domain.extract_type(model, domain_description, prompt.generate_prompt())
 domain.set_types(types=types)
 
-type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, prompt.generate_prompt(), domain.get_types())    
+type_hierarchy, response = domain.extract_type_hierarchy(model, domain_desc, prompt.generate_prompt(), domain.get_types())    
 domain.set_type_hierarchy(type_hierarchy=type_hierarchy)
 
 .
 .
 .
 
+# generate domain
 requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
 
-pddl_domain = domain_builder.generate_domain(
+pddl_domain = domain.generate_domain(
     domain="test_domain", 
     requirements=requirements,
     types=types_str,
@@ -67,7 +68,7 @@ objects, initial, goal, llm_response = task.extract_task(
     actions=actions
     )
 
-pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
+pddl_problem = task.generate_task(domain="test_domain", objects=objects, initial=initial_states, goal=goal_states)
 
 print(f"PDDL domain: {pddl_problem}")
 ```
