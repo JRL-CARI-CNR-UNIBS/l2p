@@ -8,22 +8,6 @@ import requests
 from retry import retry
 from openai import OpenAI
 
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-
-@retry(tries=2, delay=60)
-def connect_openai(engine, messages, temperature, max_tokens,
-                   top_p, frequency_penalty, presence_penalty, stop):
-    return client.chat.completions.create(
-        model=engine,
-        messages=messages,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        top_p=top_p,
-        frequency_penalty=frequency_penalty,
-        presence_penalty=presence_penalty,
-        stop=stop
-    )
-
 class LLM_Chat:
     def __init__(self, *args, **kwargs):
         pass
@@ -38,8 +22,9 @@ class LLM_Chat:
         raise NotImplementedError
 
 class GPT_Chat(LLM_Chat):
-    def __init__(self, engine, stop=None, max_tokens=4e3, temperature=0, top_p=1,
+    def __init__(self, client, engine, stop=None, max_tokens=4e3, temperature=0, top_p=1,
                  frequency_penalty=0.0, presence_penalty=0.0, seed=0):
+        self.client = client
         self.engine = engine
         self.temperature = temperature
         self.top_p = top_p
@@ -60,6 +45,20 @@ class GPT_Chat(LLM_Chat):
         self.tok = tiktoken.get_encoding("cl100k_base") # For GPT3.5+
         self.in_tokens = 0
         self.out_tokens = 0
+        
+    @retry(tries=2, delay=60)
+    def connect_openai(self, client, engine, messages, temperature, max_tokens,
+                    top_p, frequency_penalty, presence_penalty, stop):
+        return client.chat.completions.create(
+            model=engine,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            top_p=top_p,
+            frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
+            stop=stop
+        )
 
     def get_output(self, prompt=None, messages=None, end_when_error=False, max_retry=5, est_margin = 200):
         if prompt is None and messages is None:
@@ -84,7 +83,8 @@ class GPT_Chat(LLM_Chat):
                 break
             try:
                 print(f'[INFO] connecting to the LLM ({requested_tokens} tokens)...')
-                response = connect_openai(
+                response = self.connect_openai(
+                    client=self.client,
                     engine=self.engine,
                     messages=messages,
                     temperature=self.temperature,
@@ -161,18 +161,13 @@ class HF_Chat(LLM_Chat):
     #     self.in_tokens = 0
     #     self.out_tokens = 0
 
-
-def get_llm(engine, api_key=None, **kwargs) -> LLM_Chat:
-    if "gpt-" in engine:
-        return GPT_Chat(engine, **kwargs)
-    else:
-        return HF_Chat(engine, api_key, **kwargs)
-
 if __name__ == '__main__':
-    # model = get_llm("gpt-3.5-turbo-0125")
-    # llm_response = model.get_output("Hello world!")
-    # model = get_llm(engine="openai-community/gpt2", api_key="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")
-
-    model = get_llm(engine="mistralai/Mistral-7B-Instruct-v0.3", api_key="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")
+    
+    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
+    model = GPT_Chat(client=client, engine="gpt-4o-mini")
+    llm_response = model.get_output(prompt="Any TV show recommendations?")
+    print(llm_response)
+    
+    model = HF_Chat(engine="mistralai/Mistral-7B-Instruct-v0.3", api_key="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")
     llm_response = model.get_output(prompt="Any TV show recommendations?")
     print(llm_response)

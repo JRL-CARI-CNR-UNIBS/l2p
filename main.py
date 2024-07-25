@@ -6,10 +6,11 @@ from l2p.prompt_builder import PromptBuilder
 from l2p.feedback_builder import Feedback_Builder
 from l2p.domain_builder import Domain_Builder
 from l2p.task_builder import Task_Builder
-from l2p.llm_builder import LLM_Chat, get_llm
+from l2p.llm_builder import LLM_Chat, GPT_Chat
 from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
 from l2p.utils.pddl_types import Action, Predicate
 from l2p.utils.pddl_validator import Syntax_Validator
+from openai import OpenAI
 import os, json
 
 def format_json_output(data):
@@ -341,11 +342,15 @@ def open_examples(examples_dir):
 if __name__ == "__main__":
 
     unsupported_keywords = ['object', 'pddl', 'lisp']
+    
+    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
 
     # MODELS: 
-    # model = get_llm("gpt-3.5-turbo-0125")
-    model = get_llm("gpt-4o")
-    # model = get_llm("gpt-4o-mini")
+    # engine = "gpt-4o"
+    # engine = "gpt-3.5-turbo-0125"
+    engine = "gpt-4o-mini"
+    
+    model = GPT_Chat(client=client, engine=engine)
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')

@@ -4,54 +4,59 @@ This library is a collection of tools for PDDL model generation extracted from n
 
 ## Usage
 ```python
-from l2p import llm_model
+import os
+from openai import OpenAI
 
-# initialize model
-model = l2pModel(model='gpt-2') # utilizes huggingface API
+from l2p.llm_builder import GPT_Chat
+from l2p.prompt_builder import PromptBuilder
+from l2p.domain_builder import DomainBuilder
+from l2p.task_builder import TaskBuilder
+from l2p.feedback_builder import FeedbackBuilder
 
-# prompt from: https://github.com/GuanSuns/LLMs-World-Models-for-Planning/blob/main/prompts/common/action_description_prompt.txt
-domain_prompt = """
-You are defining the domain (i.e. preconditions and effects) represented in PDDL format of an AI agent's actions...
+client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
+model = GPT_Chat(client=client, engine="gpt-4o-mini")
 
-Domain information:
-BlocksWorld is a planning domain in artificial intelligence. The AI agent here is a mechanical robot arm that 
-can pick and place the blocks...
+domain_description = """BlocksWorld is a planning domain in artificial intelligence. A mechanical robot arm that can pick and place the blocks..."""
+role = """Your role is to..."""
+technique = """Your technique is..."""
+examples = ["example_1", "example_2", "..."]
 
-Here is an example from the classical BlocksWorld domain for demonstrating the output format: [EXAMPLE]
-[INSERT OTHER PROMPT TECHNIQUES (CoT, Self-reflection, naming conventions, etc.)]
-"""
+prompt = PromptBuilder(role=role, technique=tech, examples=examples, task=task)
+domain = DomainBuilder()
+task = TaskBuilder()
+feedback = FeedbackBuilder()
 
-domain_prompts = ["Problem description:", "Domain description:", ["Example 1:", "Example 2:"], "Additional Instructions:"]
-problem_prompt = """Here is the task..."""
 
-# convert prompt to PDDL
-pddl_domain = model.convert(domain_prompt) # single conversation
-pddl_problem = model.convert(problem_prompt)
-pddl_domain2, pddl_problem2 = model.convert_both(domain_prompt, problem_prompt) # combines both
-model.print_pddl_file(pddl_domain) # output PDDL domain
+types, response = domain.extract_type(model, domain_description, prompt.generate_prompt())
+domain.set_types(types=types)
 
-# other library functions
-model.convert_batch(domain_prompts) # multiple conversations
+type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, prompt.generate_prompt(), domain.get_types())    
+domain.set_type_hierarchy(type_hierarchy=type_hierarchy)
 
-verified, feedback = model.verify(pddl_domain, verifier='VAL') # returns boolean + string w/ feedback via external verifier
-model.refine(pddl_domain, feedback) # returns refined PDDL domain file (either human-in-loop or external verifier feedback)
-validated, response = model.validate_plan(pddl_domain, pddl_problem)
+.
+.
+.
 
-model.get_fluents(pddl_domain) # extract predicates from generated PDDL domain file
-actions = model.get_actions(pddl_domain) # extract actions in a list from generated PDDL domain file
-model.get_preconditions(actions[0]) # extract preconditions from specific action in generated PDDL domain file
-model.get_effects(actions[0]) # extract effects from generated PDDL domain file
+requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
 
-model.get_objects(pddl_problem)
-model.get_initial_state(pddl_problem)
-model.get_goal_state(pddl_problem)
+pddl_domain = domain_builder.generate_domain(
+    domain="test_domain", 
+    requirements=requirements,
+    types=types_str,
+    predicates=predicate_str,
+    actions=actions
+    )
 
-model.save_pddl_file(pddl_domain, "path/blocksworld_experiment.pddl")
-pddl_domain = model.load_pddl_file("path/blocksworld_experiment.pddl")
-model.swap_model(model='meta-llama/Llama-2-7b-hf')
-model.get_llm()
+print(f"PDDL domain written to {pddl_domain}")
 ```
 
 ## Installation and Setup
 
 ## Running Experiments
+
+## Current Works
+- [x] `NL2Plan`
+- [x] `LLM+DM`
+- [x] `LLM+P`
+- [ ] `LLM+DP`
+- [ ] `LLM+EW`
