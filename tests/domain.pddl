@@ -1,6 +1,6 @@
 (define (domain test_domain)
     (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
-    (:types arm block - entity table - location)
+    (:types arm block table - object)
     (:predicates (arm_empty ?a - arm)  (clear ?b - block)  (holding ?a - arm ?b - block)  (on ?b1 - block ?b2 - block)  (on_table ?b - block))
     (:action pickup
         :parameters (?a - arm ?b - block)

@@ -8,14 +8,14 @@ from .utils.pddl_types import Predicate, Action
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
 
-class Domain_Builder:
+class DomainBuilder:
     def __init__(
             self, 
-            types: dict[str,str], 
-            type_hierarchy: dict[str,str], 
-            predicates: list[Predicate], 
-            nl_actions: dict[str,str], 
-            pddl_actions: list[Action]
+            types: dict[str,str]=None, 
+            type_hierarchy: dict[str,str]=None, 
+            predicates: list[Predicate]=None, 
+            nl_actions: dict[str,str]=None, 
+            pddl_actions: list[Action]=None
             ):
         """
         Initializes a domain builder object
@@ -178,6 +178,21 @@ class Domain_Builder:
         new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
         return action, new_predicates, llm_response
+
+    def extract_predicates(self, model: LLM_Chat, action: Action, domain_desc: str="", prompt_template: str="", types: dict[str,str]=None) -> tuple[list[Predicate], str]: 
+        
+        prompt_template = domain_desc + "\n\nYour role is to construct the necessary predicates in PDDL using only the action and types given. Do not create any new types, only produce PDDL predicate(s).\n"
+        prompt_template += "End your response underneath the header: '## New Predicates'.\n"
+        prompt_template += """Here is an example: 
+            
+### New Predicates
+```
+- (at ?o - object ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
+- (connected ?l1 - location ?l2 - location): true if a road exists between ?l1 and ?l2 allowing vehicle travel between them.
+``` """
+        
+        pass
+        
 
     def extract_parameters(
             self, 

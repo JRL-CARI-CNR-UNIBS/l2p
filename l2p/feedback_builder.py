@@ -13,7 +13,7 @@ INSTRUCTION = "Make suggestions / changes if there are any checks that you deem 
 def format_json_output(data):
         return json.dumps(data, indent=4)
 
-class Feedback_Builder:
+class FeedbackBuilder:
 
     def type_feedback(
             self, 
@@ -54,7 +54,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -111,7 +111,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -166,7 +166,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
         
         llm_feedback = model.get_output(prompt=prompt)
 
@@ -183,7 +183,7 @@ END OF EXAMPLE
 
         llm_feedback_response = model.get_output(messages=messages)
 
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         new_nl_actions = convert_to_dict(llm_response=llm_feedback_response)
         return new_nl_actions, llm_feedback_response
@@ -256,7 +256,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, feedback_msg
@@ -271,7 +271,7 @@ END OF EXAMPLE
 
         llm_feedback_response = model.get_output(messages=messages)
 
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         action = parse_action(llm_response=llm_feedback_response, action_name=action['name'])
         new_predicates = parse_new_predicates(llm_feedback_response)
@@ -325,7 +325,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -339,7 +339,7 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         parameter = parse_params(llm_output=llm_feedback_response)
         return parameter, llm_feedback_response
@@ -406,7 +406,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, feedback_msg
@@ -420,7 +420,7 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
         
         preconditions = llm_feedback_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         new_predicates = parse_new_predicates(llm_output=llm_feedback_response)
@@ -490,7 +490,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, feedback_msg
@@ -504,7 +504,7 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
         
         effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
         new_predicates = parse_new_predicates(llm_output=llm_feedback_response)
@@ -572,7 +572,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, None, feedback_msg
@@ -587,7 +587,7 @@ END OF EXAMPLE
 
         llm_feedback_response = model.get_output(messages=messages)
 
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         objects = parse_objects(llm_feedback_response)
         initial = parse_initial(llm_feedback_response)
@@ -643,7 +643,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -657,7 +657,7 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
         
         parts = llm_response.split('## OUTPUT', 1)
         if len(parts) > 1:
@@ -717,7 +717,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -731,7 +731,7 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
         
         parts = llm_response.split('## OUTPUT', 1)
         if len(parts) > 1:
@@ -795,7 +795,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -809,7 +809,7 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
         
         parts = llm_response.split('## OUTPUT', 1)
         if len(parts) > 1:
@@ -822,10 +822,10 @@ END OF EXAMPLE
 
     def human_feedback(self, info: str):
 
-        print("START OF INFO\n", info)
-        print("\nEND OF INFO\n\n")
+        # print("START OF INFO\n", info)
+        # print("\nEND OF INFO\n\n")
         contents = []
-        print("Provide feedback (or 'no feedback'). End with ctrl+d.\n")
+        # print("Provide feedback (or 'no feedback'). End with ctrl+d.\n")
         while True:
             try:
                 line = input()

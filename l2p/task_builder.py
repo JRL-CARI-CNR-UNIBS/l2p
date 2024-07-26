@@ -7,8 +7,14 @@ from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, convert
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
 
-class Task_Builder:
-    def __init__(self, objects: dict[str,str], initial: dict[str,str], goal: str):
+class TaskBuilder:
+    def __init__(
+        self, 
+        objects: dict[str,str]=None, 
+        initial: dict[str,str]=None, 
+        goal: str=None
+        ):
+        
         self.objects=objects
         self.initial=initial
         self.goal=goal

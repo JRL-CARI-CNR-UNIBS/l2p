@@ -8,7 +8,6 @@ This is the general setup:
 ```python
 import os
 from openai import OpenAI
-
 from l2p.llm_builder import GPT_Chat
 from l2p.prompt_builder import PromptBuilder
 from l2p.domain_builder import DomainBuilder
@@ -73,7 +72,7 @@ pddl_problem = task.generate_task(domain="test_domain", objects=objects, initial
 print(f"PDDL domain: {pddl_problem}")
 ```
 
-Here is how you would setup a feedback Mechanism:
+Here is how you would setup a Feedback Mechanism:
 ```python
 feedback_template = """Here is the checklist I want you to perform..."""
 
@@ -96,6 +95,7 @@ print("FEEDBACK:\n", feedback_response)
 ## Current Works
 - [x] `NL2Plan`
 - [x] `LLM+DM`
+- [x] `PROC2PDDL`
 - [x] `LLM+P`
 - [ ] `LLM+DP`
 - [ ] `LLM+EW`

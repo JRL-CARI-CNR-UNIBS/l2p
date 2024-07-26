@@ -354,14 +354,14 @@ if __name__ == "__main__":
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
-    domain_builder = Domain_Builder(types=None,type_hierarchy=None,predicates=None,nl_actions=None,pddl_actions=None)
+    domain_builder = Domain_Builder()
     
     # instantiate task builder class
     problem_list = []
     problem_list.append(open_file("data/problems/blocksworld_p1.txt"))
     problem_list.append(open_file("data/problems/blocksworld_p2.txt"))
     problem_list.append(open_file("data/problems/blocksworld_p3.txt"))
-    task_builder = Task_Builder(objects=None, initial=None, goal=None)
+    task_builder = Task_Builder()
 
     # instantiate feedback builder class
     feedback_builder = Feedback_Builder()
@@ -516,7 +516,6 @@ if __name__ == "__main__":
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
     types = extract_types(type_hierarchy) # retrieve types
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
-
     pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
 
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
