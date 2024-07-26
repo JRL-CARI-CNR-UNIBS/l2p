@@ -164,8 +164,7 @@ if __name__ == "__main__":
     types_str = "\n".join(pruned_types)
 
     requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
-    # pddl_domain = domain_builder.generate_domain("test_domain", requirements, types_str, predicate_str, actions)
-    
+
     pddl_domain = domain_builder.generate_domain(
         domain="test_domain", 
         requirements=requirements,
