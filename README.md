@@ -19,10 +19,10 @@ model = GPT_Chat(client=client, engine="gpt-4o-mini")
 
 domain_description = """BlocksWorld is a planning domain in artificial intelligence. A mechanical robot arm that can pick and place the blocks..."""
 role = """Your role is to..."""
-technique = """Your technique is..."""
+technique = """Your technique is... CoT"""
 examples = ["example_1", "example_2", "..."]
 
-prompt = PromptBuilder(role=role, technique=tech, examples=examples, task=task)
+prompt = PromptBuilder(role=role, technique=technique, examples=examples, task=task)
 domain = DomainBuilder()
 task = TaskBuilder()
 feedback = FeedbackBuilder()
@@ -92,10 +92,12 @@ print("FEEDBACK:\n", feedback_response)
 
 ## Running Experiments
 
-## Current Works
+## Current Works Reconstructed Using L2P
 - [x] `NL2Plan`
-- [x] `LLM+DM`
-- [x] `PROC2PDDL`
-- [x] `LLM+P`
+- [ ] `LLM+DM`
+- [ ] `PROC2PDDL`
+- [ ] `LLM+P`
 - [ ] `LLM+DP`
 - [ ] `LLM+EW`
+
+## Current Model Construction Works
