@@ -18,7 +18,7 @@ def parse_pddl(val_parser, domain_file=None, problem_file=None) -> str:
     if problem_file:
         command.append(problem_file)
         
-    if not(domain_file and problem_file):
+    if not(domain_file or problem_file):
         raise Exception("PDDL files not found. Must have passed at least PDDL domain.")
 
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -32,6 +32,7 @@ def parse_pddl(val_parser, domain_file=None, problem_file=None) -> str:
         print("Parsing failed.")
         error = result.stderr.decode()
         raise Exception(error)
+        
         
 def extract_errors_warnings(text):
     lines = text.split('\n')

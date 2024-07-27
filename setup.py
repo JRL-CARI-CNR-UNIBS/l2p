@@ -61,7 +61,7 @@ if __name__ == "__main__":
         
     
     
-    domain_file_path = 'data/domain.pddl'
+    domain_file_path = 'tests/paper_reconstructions/llm+p/domain.pddl'
     pddl_domain = check_parse_domain(domain_file_path)
     print("PDDL domain:\n", pddl_domain)
     
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     print("------------------")
 
-    problem = 'data/problem.pddl'
+    problem = 'tests/paper_reconstructions/llm+p/problem.pddl'
     
     pddl_problem = check_parse_problem(problem)
     print("PDDL Problem:\n", pddl_problem)

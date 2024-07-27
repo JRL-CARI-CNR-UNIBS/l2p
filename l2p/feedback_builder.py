@@ -243,6 +243,8 @@ END OF EXAMPLE
     
         prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. " + INSTRUCTION
         prompt += feedback_template
+        
+        print("PROMPT:\n", prompt)
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)

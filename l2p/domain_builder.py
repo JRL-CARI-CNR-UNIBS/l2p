@@ -418,22 +418,6 @@ class DomainBuilder:
             actions: list[Action],
             requirements: list[str],
             ) -> str:
-        # Helper function to format individual action descriptions
-        def action_desc(action: Action) -> str:
-            param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
-            desc = f"(:action {action['name']}\n"
-            desc += f"   :parameters (\n{param_str}\n   )\n"
-            desc += f"   :precondition\n{action['preconditions']}\n"
-            desc += f"   :effect\n{action['effects']}\n"
-            desc += ")"
-            return desc
-
-        # Helper function to combine all action descriptions
-        def action_descs(actions) -> str:
-            desc = ""
-            for action in actions:
-                desc += "\n\n" + action_desc(action)
-            return desc
 
         # Main function to generate the domain description
         desc = ""
@@ -441,9 +425,26 @@ class DomainBuilder:
         desc += f"(:requirements\n  {" ".join(requirements)}\n)\n"
         desc += f"   (:types \n{types}\n   )\n\n"
         desc += f"   (:predicates \n{predicates}\n   )"
-        desc += action_descs(actions)
+        desc += self.action_descs(actions)
         desc += "\n)"
         desc = desc.replace("AND", "and").replace("OR", "or")  # The python PDDL package can't handle capital AND and OR
+        return desc
+    
+    # Helper function to format individual action descriptions
+    def action_desc(self, action: Action) -> str:
+        param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
+        desc = f"(:action {action['name']}\n"
+        desc += f"   :parameters (\n{param_str}\n   )\n"
+        desc += f"   :precondition\n{action['preconditions']}\n"
+        desc += f"   :effect\n{action['effects']}\n"
+        desc += ")"
+        return desc
+
+    # Helper function to combine all action descriptions
+    def action_descs(self, actions) -> str:
+        desc = ""
+        for action in actions:
+            desc += "\n\n" + self.action_desc(action)
         return desc
 
 if __name__ == "__main__":

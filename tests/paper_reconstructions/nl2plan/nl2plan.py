@@ -12,6 +12,7 @@ from l2p.domain_builder import DomainBuilder
 from l2p.task_builder import TaskBuilder
 from l2p.feedback_builder import FeedbackBuilder
 from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
+from l2p.utils.pddl_VAL import parse_pddl
 
 
 def open_file(file_path):
@@ -23,8 +24,8 @@ def format_json_output(data):
         return json.dumps(data, indent=4)
 
 
-# engine = "gpt-3.5-turbo-0125"
-engine = "gpt-4o-mini"
+engine = "gpt-3.5-turbo-0125"
+# engine = "gpt-4o-mini"
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
 model = GPT_Chat(client=client, engine=engine)
@@ -65,10 +66,6 @@ task_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task
 domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
 feedback_builder = FeedbackBuilder()
-
-
-
-
 
 
 
@@ -117,7 +114,7 @@ if __name__ == "__main__":
     feedback_template = open_file('data/prompt_templates/action_construction/extract_action/feedback.txt')
 
     predicates = []
-    max_iters = 3
+    max_iters = 2
     for _ in range(max_iters):
 
         actions = []
@@ -131,6 +128,19 @@ if __name__ == "__main__":
                 action_desc,
                 predicates
             )
+            
+            # VAL IMPLEMENTED
+            # action_file = "data/action.pddl"
+            # action_str = domain_builder.action_desc(action)
+            # with open(action_file, "w") as f:
+            #     f.write(action_str)
+                
+            # output = parse_pddl(val_parser="VAL/build/macos64/Release/bin/Parser", domain_file=action_file)
+            
+            # if output:
+            #     val_output = "\n\nHere is VAL checker output:\n" + output
+            # else:
+            #     val_output = ""
 
             # RUN FEEDBACK
             feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
@@ -191,7 +201,8 @@ if __name__ == "__main__":
         actions
         )
 
-    for _ in range(2):
+    max_iters = 2
+    for _ in range(max_iters):
         feedback_objects, feedback_initial, feedback_goal, llm_feedback_response = feedback_builder.task_feedback(
             model, 
             problem_desc, 

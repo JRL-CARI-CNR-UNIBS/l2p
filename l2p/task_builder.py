@@ -121,12 +121,12 @@ class TaskBuilder:
     def extract_task(
             self, 
             model: LLM_Chat, 
-            problem_desc: str,
-            domain_desc: str, 
-            prompt_template: PromptBuilder, 
-            types: dict[str,str], 
-            predicates: list[Predicate],
-            actions: list[Action]
+            problem_desc: str="",
+            domain_desc: str="", 
+            prompt_template: PromptBuilder="", 
+            types: dict[str,str]=None, 
+            predicates: list[Predicate]=None,
+            actions: list[Action]=None
             ) -> tuple[dict[str,str],str,str,str]:
         """
         Extracts objects, initial, and goal states from LLM output given domain description, types, and predicates
@@ -134,18 +134,27 @@ class TaskBuilder:
         """
         model.reset_tokens()
 
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-        action_str = self.format_action(actions=actions)
+        if predicates:
+            predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
+        else:
+            predicate_str = ""
+            
+        if actions:
+            action_str = self.format_action(actions=actions)
+        else:
+            action_str = ""
 
         prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{actions}', action_str)
         prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+        
+        # print("PROMPT:\n", prompt_template)
 
         llm_response = model.get_output(prompt=prompt_template)
 
-        print("LLM RESPONSE TASK BUILDER:\n", llm_response)
+        # print("LLM RESPONSE TASK BUILDER:\n", llm_response)
 
         objects = parse_objects(llm_response)
         initial = parse_initial(llm_response)

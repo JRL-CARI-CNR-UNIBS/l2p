@@ -9,11 +9,11 @@ ParameterList = NewType('ParameterList', OrderedDict[str, str]) # {param_name: p
 ObjectList = NewType('ObjectList', dict[str, str]) # {obj_name: obj_type}
 
 class Predicate(TypedDict):
-    name: str # name of the predicate
-    desc: str # description of the predicate
-    raw: str # raw LLM output
-    params: ParameterList # parameters of the predicate
-    clean: str # clean version of the predicate, with comment
+    name: str
+    desc: str
+    raw: str
+    params: ParameterList
+    clean: str
 
 class Action(TypedDict):
     name: str
