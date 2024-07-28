@@ -3,13 +3,13 @@ This file contains run code for test purposes
 """
 
 from l2p.prompt_builder import PromptBuilder
-from l2p.feedback_builder import Feedback_Builder
-from l2p.domain_builder import Domain_Builder
-from l2p.task_builder import Task_Builder
+from l2p.feedback_builder import FeedbackBuilder
+from l2p.domain_builder import DomainBuilder
+from l2p.task_builder import TaskBuilder
 from l2p.llm_builder import LLM_Chat, GPT_Chat
 from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
 from l2p.utils.pddl_types import Action, Predicate
-from l2p.utils.pddl_validator import Syntax_Validator
+from l2p.utils.pddl_validator import SyntaxValidator
 from openai import OpenAI
 import os, json
 
@@ -30,7 +30,7 @@ def run_granular_action_pipeline(
         precondition_prompt: PromptBuilder,
         effects_prompt: PromptBuilder,
         nl_actions: dict[str,str],
-        feedback_builder: Feedback_Builder,
+        feedback_builder: FeedbackBuilder,
         feedback_template: str
         ):
     predicates = []
@@ -141,7 +141,7 @@ def run_granular_action_pipeline(
 
     return actions, predicates
 
-def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builder: Domain_Builder, prompt: PromptBuilder, nl_actions: dict[str,str], types: dict[str,str], feedback_builder: Feedback_Builder, feedback_template: str):
+def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builder: DomainBuilder, prompt: PromptBuilder, nl_actions: dict[str,str], types: dict[str,str], feedback_builder: FeedbackBuilder, feedback_template: str):
     # action-by-action method used in Guan et al. (2023): https://arxiv.org/abs/2305.14909
     # iterate through each action, dynamically create new predicates
 
@@ -163,20 +163,20 @@ def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builde
             )
 
             # RUN FEEDBACK
-            feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
-                model=model, 
-                domain_desc=domain_desc, 
-                feedback_template=feedback_template, 
-                feedback_type="llm",
-                action=action, 
-                predicates=predicates, 
-                types=types, 
-                llm_response=llm_response
-                )
+            # feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
+            #     model=model, 
+            #     domain_desc=domain_desc, 
+            #     feedback_template=feedback_template, 
+            #     feedback_type="llm",
+            #     action=action, 
+            #     predicates=predicates, 
+            #     types=types, 
+            #     llm_response=llm_response
+            #     )
             
-            if feedback_action != None:
-                action=feedback_action
-                new_predicates=feedback_predicates
+            # if feedback_action != None:
+            #     action=feedback_action
+            #     new_predicates=feedback_predicates
 
             actions.append(action)
             predicates.extend(new_predicates)
@@ -197,7 +197,7 @@ def run_granular_task_pipeline(
         goal_extraction_prompt: PromptBuilder,
         types: dict[str,str],
         predicates: list[Predicate],
-        feedback_builder: Feedback_Builder,
+        feedback_builder: FeedbackBuilder,
         ) -> tuple[dict[str,str],str,str]:
     
     objects, llm_response = task_builder.extract_objects(
@@ -296,7 +296,7 @@ def run_compact_task_pipeline(
         types: dict[str,str], 
         predicates: list[Predicate],
         actions: list[Action],
-        feedback_builder: Feedback_Builder,
+        feedback_builder: FeedbackBuilder,
         ) -> tuple[dict[str,str],str,str]:
     
     feedback_template = open_file('data/prompt_templates/task_extraction/extract_task/feedback.txt')
@@ -354,17 +354,17 @@ if __name__ == "__main__":
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
-    domain_builder = Domain_Builder()
+    domain_builder = DomainBuilder()
     
     # instantiate task builder class
     problem_list = []
     problem_list.append(open_file("data/problems/blocksworld_p1.txt"))
     problem_list.append(open_file("data/problems/blocksworld_p2.txt"))
     problem_list.append(open_file("data/problems/blocksworld_p3.txt"))
-    task_builder = Task_Builder()
+    task_builder = TaskBuilder()
 
     # instantiate feedback builder class
-    feedback_builder = Feedback_Builder()
+    feedback_builder = FeedbackBuilder()
 
     # open and create type extraction prompt builder class
     role_desc = open_file('data/prompt_templates/type_extraction/role.txt')
@@ -514,6 +514,9 @@ if __name__ == "__main__":
     )
 
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
+    
+    print(predicates)
+    
     types = extract_types(type_hierarchy) # retrieve types
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
     pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words

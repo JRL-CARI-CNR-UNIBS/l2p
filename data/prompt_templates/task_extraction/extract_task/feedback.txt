@@ -20,3 +20,5 @@ Use the following checklist:
 10. Do any of the object variables have the same name as its type? Example: 'chair - chair' is incorrect.
 
 11. Are the object names meaningful? Will a human be able to interpret them easily?
+
+12. Are the predicates used missing the correct parameters? Example: Domain PDDL contains (free ?l - lock ?a arm), so it would be incorrect for PDDL task predicate to be (free ?l1 - lock)

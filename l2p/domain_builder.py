@@ -136,9 +136,6 @@ class DomainBuilder:
             action_desc: str,
             predicates: list[Predicate]=None
             ) -> tuple[Action, list[Predicate], str]:
-        
-        # FIX PROMPT TEMPLATE AND CODE TO ACCOMODATE MORE UNIVERSAL PROMPT INPUTS
-
         """
         Construct an action from a given action description using LLM
 
@@ -175,6 +172,7 @@ class DomainBuilder:
         # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
         action = parse_action(llm_response=llm_response, action_name=action_name)
         new_predicates = parse_new_predicates(llm_response)
+        
         new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
         return action, new_predicates, llm_response

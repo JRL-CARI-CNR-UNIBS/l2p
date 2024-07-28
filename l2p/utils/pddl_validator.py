@@ -1,22 +1,15 @@
 """
 This file contains collection of functions PDDL syntax validations
+
+Run: python3 -m l2p.utils.pddl_validator
 """
 
 from collections import OrderedDict
+from copy import deepcopy
+from .pddl_parser import parse_params, parse_new_predicates, parse_predicates
 from .pddl_types import Predicate
 
-class Syntax_Validator:
-
-    def validate_unsupported_keywords(self, llm_response: str, unsupported_keywords: list[str]) -> tuple[bool, str]:
-        """Checks whether PDDL model uses unsupported logic keywords"""
-
-        for key in unsupported_keywords:
-            if f'{key}' in llm_response:
-                feedback_msg = f'ERROR: The precondition or effect contains the keyword {key}.'
-                return False, feedback_msg
-
-        feedback_msg = "PASS: Unsupported keywords not found in PDDL model."
-        return True, feedback_msg
+class SyntaxValidator:
 
     def validate_params(self, parameters: OrderedDict, types: dict[str,str]) -> tuple[bool,str]:
         """Checks whether a PDDL action parameter contains types found in object types."""
@@ -31,48 +24,101 @@ class Syntax_Validator:
         feedback_msg = "PASS: All parameter types found in object types."
         return True, feedback_msg
 
-    def validate_types_predicates(self, predicates: list[Predicate], types: dict[str,str]) -> tuple[bool,str]:
-        """Check if predicate name is same as object type"""
+
+    def validate_types_predicates(self, predicates: list[dict], types: dict[str, str]) -> tuple[bool, str]:
+        """Check if predicate name is found within any type definitions"""
 
         invalid_predicates = list()
         for pred in predicates:
-            if pred['name'].lower() in types:
-                invalid_predicates.append(pred['name'])
-        if len(invalid_predicates) > 0:
-            feedback_msg = f'ERROR: The following predicate(s) have the same name(s) as existing object types:'
-            for pred_i, pred_name in enumerate(list(invalid_predicates)):
+            pred_name = pred['name'].lower()
+            
+            for type_key in types.keys():
+                # extract the actual type name, disregarding hierarchical or descriptive parts
+                type_name = type_key.split(' - ')[0].strip().lower()
+                
+                # check if the predicate name is exactly the same as the type name
+                if pred_name == type_name:
+                    invalid_predicates.append(pred_name)
+
+        if invalid_predicates:
+            feedback_msg = 'ERROR: The following predicate(s) have the same name(s) as existing object types:'
+            for pred_i, pred_name in enumerate(invalid_predicates):
                 feedback_msg += f'\n{pred_i + 1}. {pred_name}'
             feedback_msg += '\nPlease rename these predicates.'
             return False, feedback_msg
-        
-        feedback_msg = "PASS: all predicate names are unique to object type names"
+
+        feedback_msg = "PASS: All predicate names are unique to object type names"
         return True, feedback_msg
 
     def validate_duplicate_predicates(self, curr_predicates: list[Predicate], new_predicates: list[Predicate]) -> tuple[bool,str]:
         
         curr_pred_dict = {pred['name'].lower(): pred for pred in curr_predicates}
-        duplicated_predicates = list()
-
-        for predicates in new_predicates:
-            if predicates['name'].lower() in curr_pred_dict:
-                curr = curr_pred_dict[new_predicates['name'].lower()]
-                if len(curr['params']) != len(predicates['params']) or any([t1 != t2 for t1,t2 in zip(curr['params'], predicates['params'])]):
-                    duplicated_predicates.append((predicates['raw'], curr_pred_dict[predicates['name'].lower()]['raw']))
         
+        duplicated_predicates = list()
+        for new_pred in new_predicates:
+            # check if the name is already used
+            if new_pred['name'].lower() in curr_pred_dict:
+                
+                curr = curr_pred_dict[new_pred['name'].lower()]
+                
+                if len(curr['params']) != len(new_pred['params']) or any([t1 != t2 for t1, t2 in zip(curr['params'], new_pred['params'])]):
+                    # if the params are the same, then it's not a problem
+                    duplicated_predicates.append((new_pred['raw'], curr_pred_dict[new_pred['name'].lower()]['raw']))
         if len(duplicated_predicates) > 0:
-            feedback_msg = f'ERROR: The following predicate(s) have the same name(s) as existing predicate(s):'
-            for pred_i, duplicate_pred_info in enumerate(duplicated_predicates):
-                new_pred_full, existing_pred_full = duplicate_pred_info
+            feedback_msg = f'The following predicate(s) have the same name(s) as existing predicate(s):'
+            for pred_i, duplicated_pred_info in enumerate(duplicated_predicates):
+                new_pred_full, existing_pred_full = duplicated_pred_info
                 feedback_msg += f'\n{pred_i + 1}. {new_pred_full.replace(":", ",")}; existing predicate with the same name: {existing_pred_full.replace(":", ",")}'
-            
             feedback_msg += '\n\nYou should reuse existing predicates whenever possible. If you are reusing existing predicate(s), you shouldn\'t list them under \'New Predicates\'. If existing predicates are not enough and you are devising new predicate(s), please use names that are different from existing ones.'
             feedback_msg += '\n\nPlease revise the PDDL model to fix this error.\n\n'
             feedback_msg += 'Parameters:'
             return False, feedback_msg
-        
-        feedback_msg = "PASS: all predicate names are unique to each other"
+
+        feedback_msg = "PASS: All predicates are unique to each other."
         return True, feedback_msg
 
+    def validate_format_predicates(self, predicates: list[dict], types: dict[str, str]) -> tuple[bool, str]:
+        all_invalid_params = []
+
+        for pred in predicates:
+            pred_def = pred['raw'].split(': ')[0]
+            pred_def = pred_def.strip(" ()`")   # discard parentheses and similar
+            split_predicate = pred_def.split(' ')[1:]   # discard the predicate name
+            split_predicate = [e for e in split_predicate if e != '']
+
+            for i, p in enumerate(split_predicate):
+                if i % 3 == 0:
+                    if '?' not in p:
+                        feedback_msg = f'There are syntax errors in the definition of the new predicate {pred_def}. Check for any missing \'?\' variables, or missing type declarations. Please revise its definition and output the entire PDDL action model again. Note that you need to strictly follow the syntax of PDDL.'
+                        return False, feedback_msg
+                    else:
+                        if i + 1 >= len(split_predicate) or split_predicate[i+1] != '-':
+                            feedback_msg = f'There are syntax errors in the definition of the new predicate {pred_def}. Please revise its definition and output the entire PDDL action model again. Note that you need to define the object type of each parameter and strictly follow the syntax of PDDL.'
+                            return False, feedback_msg
+                        
+                        if i + 2 >= len(split_predicate):
+                            feedback_msg = f'There are syntax errors in the definition of the new predicate {pred_def}. Please revise its definition and output the entire PDDL action model again. Note that you need to define the object type of each parameter and strictly follow the syntax of PDDL.'
+                            return False, feedback_msg
+                        
+                        param_obj_type = split_predicate[i+2].lower()
+                        
+                        # Extract the base type names from the keys in types
+                        valid_types = {type_key.split(' - ')[0].strip().lower() for type_key in types.keys()}
+                        
+                        # Check if the parameter object type is in the set of valid types
+                        if param_obj_type not in valid_types:
+                            all_invalid_params.append((param_obj_type, p, pred_def))
+
+        if all_invalid_params:
+            feedback_msg = 'There are invalid object types in the predicates:'
+            for param_obj_type, p, pred_def in all_invalid_params:
+                feedback_msg += f'\n- `{param_obj_type}` for the parameter `{p}` in the definition of the predicate `{pred_def}` not found in types: {valid_types}.'
+            feedback_msg += '\nPlease revise these definitions and output the entire PDDL action model again.'
+            return False, feedback_msg
+        
+        feedback_msg = "PASS: All predicates are formatted correctly."
+        return True, feedback_msg
+    
 
     def validate_preconditions(self): pass
 
@@ -86,6 +132,174 @@ class Syntax_Validator:
     def validate_initial_state(self): pass
 
     def validate_goal_state(self): pass
+    
+    
+    def validate_header(self): pass
+    
+    def validate_unsupported_keywords(self, llm_response: str, unsupported_keywords: list[str]) -> tuple[bool, str]:
+        """Checks whether PDDL model uses unsupported logic keywords"""
+
+        for key in unsupported_keywords:
+            if f'{key}' in llm_response:
+                feedback_msg = f'ERROR: The precondition or effect contains the keyword {key}.'
+                return False, feedback_msg
+
+        feedback_msg = "PASS: Unsupported keywords not found in PDDL model."
+        return True, feedback_msg
+    
+    def validate_keyword_usage(self): pass
+    
+    def validate_messed_output(self): pass
+    
+    
+    def validate_new_action_creation(self, llm_response: str) -> tuple[bool, str]:
+        """This action checks if the LLM attempts to create a new action (so two or more actions defined in the same response)"""
+        
+        if llm_response.count('## Action Parameters') > 1 or llm_response.count('## Preconditions') > 1 or llm_response.count('## Effects') > 1 or llm_response.count('## New Predicates') > 1:
+            feedback_msg = "It's not possible to create new actions at this time. Please only define the requested action."
+            return False, feedback_msg
+        
+        feedback_msg = "PASS: no new actions created"
+        return True, feedback_msg
+
+    def validate_pddl_usage_predicates(
+        self, 
+        pddl: str, 
+        predicates: list[Predicate], 
+        action_params: list[str],
+        types: dict[str,str],
+        part='preconditions'
+        ) -> tuple[bool, str]:
+        """
+        This function checks three types of errors:
+            - check if the num of params given matches the num of params in predicate definition
+            - check if there is any param that is not listed under `Parameters:`
+            - check if the param type matches that in the predicate definition
+        """
+        def get_ordinal_suffix(_num):
+            return {1: 'st', 2: 'nd', 3: 'rd'}.get(_num % 10, 'th') if _num not in (11, 12, 13) else 'th'
+
+        pred_names = {predicates[i]['name']: i for i in range(len(predicates))}
+        pddl_elems = [e for e in pddl.split(' ') if e != '']
+        
+        idx = 0
+        while idx < len(pddl_elems):
+            if pddl_elems[idx] == '(' and idx + 1 < len(pddl_elems):        
+                if pddl_elems[idx + 1] in pred_names:
+                    
+                    curr_pred_name = pddl_elems[idx + 1]
+                    curr_pred_params = list()
+                    target_pred_info = predicates[pred_names[curr_pred_name]]
+                    
+                    # read params
+                    idx += 2
+                    while idx < len(pddl_elems) and pddl_elems[idx] != ')':
+                        curr_pred_params.append(pddl_elems[idx])
+                        idx += 1
+                    # check if the num of params are correct
+                    n_expected_param = len(target_pred_info['params'])
+                    if n_expected_param != len(curr_pred_params):
+
+                        feedback_msg = f'In the {part}, the predicate `{curr_pred_name}` requires {n_expected_param} parameters but {len(curr_pred_params)} parameters were provided. Please revise the PDDL model to fix this error.'
+                        return False, feedback_msg
+                    
+                    # check if there is any unknown param
+                    for curr_param in curr_pred_params:
+                        
+                        if curr_param not in action_params:
+                            feedback_msg = f'In the {part} and in the predicate `{curr_pred_name}`, there is an unknown parameter `{curr_param}`. You should define all parameters (i.e., name and type) under the `### Action Parameters` list. Please revise the PDDL model to fix this error (and other potentially similar errors).'
+                            return False, feedback_msg
+                    # check if the object types are correct
+                    target_param_types = [target_pred_info['params'][t_p] for t_p in target_pred_info['params']]
+                    for param_idx, target_type in enumerate(target_param_types):
+                        curr_param = curr_pred_params[param_idx]
+                        claimed_type = action_params[curr_param]
+
+                        if not self.validate_type(target_type, claimed_type, types):
+                            feedback_msg = f'There is a syntax error in the {part.lower()}, the {param_idx+1}-{get_ordinal_suffix(param_idx+1)} parameter of `{curr_pred_name}` should be a `{target_type}` but a `{claimed_type}` was given. Please use the correct predicate or devise new one(s) if needed (but note that you should use existing predicates as much as possible).'
+                            return False, feedback_msg
+            idx += 1
+            
+        feedback_msg = "PASS: all correct use of predicates."
+        return True, feedback_msg
+    
+    
+    def validate_type(self, target_type, claimed_type, types):
+        """
+        Check if the claimed_type is valid for the target_type according to the type hierarchy.
+        
+        Parameters:
+        - target_type (str): The type that is expected for the parameter.
+        - claimed_type (str): The type that is provided in the PDDL.
+        - types (dict[str, str]): A dictionary mapping subtypes to their supertypes.
+        
+        Returns:
+        - bool: True if claimed_type is valid, False otherwise.
+        """
+        # Check if the claimed type matches the target type
+        if claimed_type == target_type:
+            return True
+
+        # Iterate through the types hierarchy to check if claimed_type is a subtype of target_type
+        current_type = claimed_type
+        
+        # Extract all types from the keys in the types dictionary
+        all_types = set()
+        type_hierarchy = {}
+        for key in types.keys():
+            main_type, *subtype = key.split(' - ')
+            all_types.add(main_type.strip())
+            if subtype:
+                all_types.add(subtype[0].strip())
+                type_hierarchy[subtype[0].strip()] = main_type.strip()
+
+        while current_type in all_types:
+            # find the key that starts with the current type
+            
+            parent_type_entry = next((k for k in types.keys() if k.startswith(f'{current_type} - ')), None)
+            
+            if parent_type_entry:
+                # extract the parent type from the key
+                super_type = parent_type_entry.split(' - ')[1].strip()
+                
+                if super_type == target_type:
+                    return True
+                current_type = super_type
+            else:
+                break
+
+        return False
+
+    
+    def validate_usage_predicates(self, llm_response: str, curr_predicates: list[Predicate], types: dict[str,str]):
+        """
+        This function performs very basic check over whether the predicates are used in a valid way.
+            This check should be performed at the end.
+        """
+        
+        # parse predicates
+        new_predicates = parse_new_predicates(llm_response)
+        curr_predicates.extend(new_predicates)
+        curr_predicates = parse_predicates(curr_predicates)
+
+        # get action params
+        params_info = parse_params(llm_response)
+
+        # check preconditions
+        precond_str = llm_response.split('Preconditions')[1].split('```\n')[1].strip()
+        precond_str = precond_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
+        
+        validation_info = self.validate_pddl_usage_predicates(precond_str, curr_predicates, params_info, types, part='preconditions')
+        if not validation_info[0]:
+            return validation_info
+
+        if llm_response.split('Effects')[1].count('```\n') < 2:
+            # no effects, probably. 
+            return True, 'invalid_predicate_usage', None, None
+        eff_str = llm_response.split('Effects')[1].split('```\n')[1].strip()
+        eff_str = eff_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
+        return self.validate_pddl_usage_predicates(eff_str, curr_predicates, params_info, types, part='effects')
+
 
     
 if __name__ == '__main__':
@@ -93,60 +307,113 @@ if __name__ == '__main__':
     unsupported_keywords = ['balls']
 
     pddl_snippet = """
-    Apologies for the confusion. Since the predicates are already defined, I will not list them under 'New Predicates'. Here is the revised PDDL model.
+Apologies for the confusion. Since the predicates are already defined, I will not list them under 'New Predicates'. Here is the revised PDDL model.
 
-    Parameters:
-    1. ?x - householdObject: the object to put in/on the furniture or appliance
-    2. ?y - furnitureAppliance: the furniture or appliance to put the object in/on
+### Action Parameters
+```
+- ?v - vehicle: The vehicle travelling
+- ?from - location: The location travelling from
+- ?to - location: The location travelling to
+```
 
-    (:types city - location location vehicle - object airplane truck - vehicle)
+### Action Preconditions
+```
+(and
+    (at ?v ?from) ; The vehicle is at the starting location
+    (or (connected ?from ?to) (connected ?to ?from)) ; A road exists between the locations
+)
+```
 
-    Preconditions:
-    ```
-    (and
-        (robot-at ?y)
-        (robot-holding ?x)
-        (pickupable ?x)
-        (object-clear ?x)
-        (or
-            (not (openable ?y))
-            (opened ?y)
-        )
-    )
-    ```
+### Action Effects
+```
+(and
+    (not (at ?v ?from)) ; ?v is no longer at ?from
+    (at ?v ?to) ; ?v is now instead at ?to
+)
+```
 
-    Effects:
-    ```
-    (and
-        (not (robot-holding ?x))
-        (robot-hand-empty)
-        (object-on ?x ?y)
-        (if (openable ?y) (closed ?y))
-    )
-    ```
-
-    New Predicates:
-    1. (closed ?y - furnitureAppliance): true if the furniture or appliance ?y is closed
-    2. (openable ?y - householdObject): true if the furniture or appliance ?y can be opened
-    3. (furnitureappliance ?x - furnitureAppliance): true if xxxxxxxxx
-        """
+### New Predicates
+```
+- (at ?o - vehicle ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
+- (connected ?l1 - location ?l2 - location): true if a road exists between ?l1 and ?l2 allowing vehicle travel between them.
+``` 
+    """
     
-    params = {
+    params1 = {
         '?x': 'truck',
-        '?y': 'object'
+        '?y': 'object',
+        '?z': 'bike'
+        }
+    
+    params2 = {
+        '?x': 'truck',
+        '?y': 'object',
         }
     
     types = {
-        'object': '; Object is always root, everything is an object', 
+        'vehicle - object': 'automobile that transports packages',
         'truck - vehicle': '; A type of vehicle used for transporting packages within locations in a city.', 
         'airplane - vehicle': '; A type of vehicle used for transporting packages between cities.', 
         'location - object': '; A type of object consisting of places within a city that are directly linked to other locations.', 
         'city - location': '; A type of location representing a city that is directly connected to other cities.'
         }
     
-    # validated, feedback_msg = validate_unsupported_keywords(pddl_snippet, unsupported_keywords)
-    validated, feedback_msg = validate_params(params, types)
+    predicates = list()
+    predicates.append({
+            'name': 'truck', 
+            'desc': 'one object is at the same location as another object', 
+            'raw': '(at ?o - object ?l - location): true if the object ?o (an arm or a block) is at the location ?l',
+            'params': params1,
+            'clean': 'CLEAN',
+        })
+    
+    new_predicates = list()
+    new_predicates.append({
+        'name': 'at', 
+        'desc': 'true if the vehicle ?v (an airplane or truck) is at the location ?l', 
+        'raw': '(at ?v - vehicle ?from - location): true if the object ?o (an arm or a block) is at the location ?l', 
+        'params': OrderedDict({'?v': 'vehicle', '?from': 'location'}), 
+        'clean': '(at ?v - vehicle ?from - location): true if the vehicle ?v (an airplane or truck) is at the location ?l'
+        })
+    
+    
+    
+    validator = SyntaxValidator()
+    
+    # validated, feedback_msg = validator.validate_unsupported_keywords(pddl_snippet, unsupported_keywords)
+    # print("Validated:", validated)
+    # print("Feedback Message:", feedback_msg)
+    
+    # validated, feedback_msg = validator.validate_params(params1, types)
+
+    # print("Validated:", validated)
+    # print("Feedback Message:", feedback_msg)
+    
+    # validated, feedback_msg = validator.validate_types_predicates(predicates, types)
+
+    # print("Validated:", validated)
+    # print("Feedback Message:", feedback_msg)
+    
+    
+    # validated, feedback_msg = validator.validate_duplicate_predicates(predicates, new_predicates)
+
+    # print("Validated:", validated)
+    # print("Feedback Message:", feedback_msg)
+    
+    
+    # validated, feedback_msg = validator.validate_format_predicates(new_predicates, types)
+
+    # print("Validated:", validated)
+    # print("Feedback Message:", feedback_msg)
+    
+    
+    # validated, feedback_msg = validator.validate_pddl_usage_predicates(pddl_snippet, new_predicates, params1)
+
+    # print("Validated:", validated)
+    # print("Feedback Message:", feedback_msg)
+    
+    
+    validated, feedback_msg = validator.validate_usage_predicates(pddl_snippet, new_predicates, types)
 
     print("Validated:", validated)
     print("Feedback Message:", feedback_msg)
-

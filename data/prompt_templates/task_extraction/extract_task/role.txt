@@ -6,8 +6,8 @@ Also it is crucial you follow these checks:
     - objects types should be found in types list
     - objects name should not be the same as a type name
     - object name should not be the same as a predicate name
-    - objects should have meaningful names
     - objects should only be appointed by its respective type
+    - all predicates used must have the same parameters stated in its domain file
 
 Do not, under any circumstance, output the answers in PDDL format. Final answer must be in the following format at the end:
 ## OBJECTS
