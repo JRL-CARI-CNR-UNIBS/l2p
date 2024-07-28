@@ -119,49 +119,6 @@ class SyntaxValidator:
         feedback_msg = "PASS: All predicates are formatted correctly."
         return True, feedback_msg
     
-
-    def validate_preconditions(self): pass
-
-    def validate_effects(self): pass
-
-    def validate_types(self): pass
-
-
-    def validate_objects(self): pass
-
-    def validate_initial_state(self): pass
-
-    def validate_goal_state(self): pass
-    
-    
-    def validate_header(self): pass
-    
-    def validate_unsupported_keywords(self, llm_response: str, unsupported_keywords: list[str]) -> tuple[bool, str]:
-        """Checks whether PDDL model uses unsupported logic keywords"""
-
-        for key in unsupported_keywords:
-            if f'{key}' in llm_response:
-                feedback_msg = f'ERROR: The precondition or effect contains the keyword {key}.'
-                return False, feedback_msg
-
-        feedback_msg = "PASS: Unsupported keywords not found in PDDL model."
-        return True, feedback_msg
-    
-    def validate_keyword_usage(self): pass
-    
-    def validate_messed_output(self): pass
-    
-    
-    def validate_new_action_creation(self, llm_response: str) -> tuple[bool, str]:
-        """This action checks if the LLM attempts to create a new action (so two or more actions defined in the same response)"""
-        
-        if llm_response.count('## Action Parameters') > 1 or llm_response.count('## Preconditions') > 1 or llm_response.count('## Effects') > 1 or llm_response.count('## New Predicates') > 1:
-            feedback_msg = "It's not possible to create new actions at this time. Please only define the requested action."
-            return False, feedback_msg
-        
-        feedback_msg = "PASS: no new actions created"
-        return True, feedback_msg
-
     def validate_pddl_usage_predicates(
         self, 
         pddl: str, 
@@ -222,8 +179,80 @@ class SyntaxValidator:
             
         feedback_msg = "PASS: all correct use of predicates."
         return True, feedback_msg
+
+    def validate_usage_predicates(self, llm_response: str, curr_predicates: list[Predicate], types: dict[str,str]):
+        """
+        This function performs very basic check over whether the predicates are used in a valid way.
+            This check should be performed at the end.
+        """
+        
+        # parse predicates
+        new_predicates = parse_new_predicates(llm_response)
+        curr_predicates.extend(new_predicates)
+        curr_predicates = parse_predicates(curr_predicates)
+
+        # get action params
+        params_info = parse_params(llm_response)
+
+        # check preconditions
+        precond_str = llm_response.split('Preconditions')[1].split('```\n')[1].strip()
+        precond_str = precond_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
+        
+        validation_info = self.validate_pddl_usage_predicates(precond_str, curr_predicates, params_info, types, part='preconditions')
+        if not validation_info[0]:
+            return validation_info
+
+        if llm_response.split('Effects')[1].count('```\n') < 2:
+            # no effects, probably. 
+            return True, 'invalid_predicate_usage', None, None
+        eff_str = llm_response.split('Effects')[1].split('```\n')[1].strip()
+        eff_str = eff_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
+        return self.validate_pddl_usage_predicates(eff_str, curr_predicates, params_info, types, part='effects')
+
+    
+
+    def validate_preconditions(self): pass
+
+    def validate_effects(self): pass
+
+    def validate_types(self): pass
+
+
+    def validate_objects(self): pass
+
+    def validate_initial_state(self): pass
+
+    def validate_goal_state(self): pass
     
     
+    def validate_header(self): pass
+    
+    def validate_unsupported_keywords(self, llm_response: str, unsupported_keywords: list[str]) -> tuple[bool, str]:
+        """Checks whether PDDL model uses unsupported logic keywords"""
+
+        for key in unsupported_keywords:
+            if f'{key}' in llm_response:
+                feedback_msg = f'ERROR: The precondition or effect contains the keyword {key}.'
+                return False, feedback_msg
+
+        feedback_msg = "PASS: Unsupported keywords not found in PDDL model."
+        return True, feedback_msg
+    
+    def validate_keyword_usage(self): pass
+    
+    def validate_messed_output(self): pass
+    
+    
+    def validate_new_action_creation(self, llm_response: str) -> tuple[bool, str]:
+        """This action checks if the LLM attempts to create a new action (so two or more actions defined in the same response)"""
+        
+        if llm_response.count('## Action Parameters') > 1 or llm_response.count('## Preconditions') > 1 or llm_response.count('## Effects') > 1 or llm_response.count('## New Predicates') > 1:
+            feedback_msg = "It's not possible to create new actions at this time. Please only define the requested action."
+            return False, feedback_msg
+        
+        feedback_msg = "PASS: no new actions created"
+        return True, feedback_msg
+
     def validate_type(self, target_type, claimed_type, types):
         """
         Check if the claimed_type is valid for the target_type according to the type hierarchy.
@@ -269,38 +298,6 @@ class SyntaxValidator:
                 break
 
         return False
-
-    
-    def validate_usage_predicates(self, llm_response: str, curr_predicates: list[Predicate], types: dict[str,str]):
-        """
-        This function performs very basic check over whether the predicates are used in a valid way.
-            This check should be performed at the end.
-        """
-        
-        # parse predicates
-        new_predicates = parse_new_predicates(llm_response)
-        curr_predicates.extend(new_predicates)
-        curr_predicates = parse_predicates(curr_predicates)
-
-        # get action params
-        params_info = parse_params(llm_response)
-
-        # check preconditions
-        precond_str = llm_response.split('Preconditions')[1].split('```\n')[1].strip()
-        precond_str = precond_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
-        
-        validation_info = self.validate_pddl_usage_predicates(precond_str, curr_predicates, params_info, types, part='preconditions')
-        if not validation_info[0]:
-            return validation_info
-
-        if llm_response.split('Effects')[1].count('```\n') < 2:
-            # no effects, probably. 
-            return True, 'invalid_predicate_usage', None, None
-        eff_str = llm_response.split('Effects')[1].split('```\n')[1].strip()
-        eff_str = eff_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
-        return self.validate_pddl_usage_predicates(eff_str, curr_predicates, params_info, types, part='effects')
-
-
     
 if __name__ == '__main__':
 
