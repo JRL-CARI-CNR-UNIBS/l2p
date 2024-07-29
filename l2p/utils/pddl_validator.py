@@ -157,7 +157,7 @@ class SyntaxValidator:
                     n_expected_param = len(target_pred_info['params'])
                     if n_expected_param != len(curr_pred_params):
 
-                        feedback_msg = f'In the {part}, the predicate `{curr_pred_name}` requires {n_expected_param} parameters but {len(curr_pred_params)} parameters were provided. Please revise the PDDL model to fix this error.'
+                        feedback_msg = f'In the {part}, the predicate `{curr_pred_name}` requires {n_expected_param} parameters but {len(curr_pred_params)} parameters were provided. Object type should not be declared in the {part}, but just the variable. For example, "(drive ?a ?from)" does not contain its object types, just variables. Do not change the predicates. Please revise the PDDL model to fix this error.'
                         return False, feedback_msg
                     
                     # check if there is any unknown param

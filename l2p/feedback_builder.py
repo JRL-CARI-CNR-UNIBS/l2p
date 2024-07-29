@@ -243,6 +243,8 @@ END OF EXAMPLE
     
         prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. " + INSTRUCTION
         prompt += feedback_template
+        
+        print("FEEDBACK PROMPT:", prompt)
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
@@ -253,10 +255,12 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        # print("FEEDBACK MESSAGE:\n", feedback_msg)
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, feedback_msg
@@ -271,7 +275,7 @@ END OF EXAMPLE
 
         llm_feedback_response = model.get_output(messages=messages)
 
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         action = parse_action(llm_response=llm_feedback_response, action_name=action['name'])
         new_predicates = parse_new_predicates(llm_feedback_response)

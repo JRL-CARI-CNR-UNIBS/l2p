@@ -128,7 +128,8 @@ if __name__ == "__main__":
                 pddl_action_extraction_prompt.generate_prompt(),
                 action_name,
                 action_desc,
-                predicates
+                predicates,
+                type_hierarchy
             )
 
             # RUN FEEDBACK

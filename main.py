@@ -30,8 +30,8 @@ def run_granular_action_pipeline(
         precondition_prompt: PromptBuilder,
         effects_prompt: PromptBuilder,
         nl_actions: dict[str,str],
-        feedback_builder: FeedbackBuilder,
-        feedback_template: str
+        feedback_builder: FeedbackBuilder=None,
+        feedback_template: str=""
         ):
     predicates = []
     max_iters = 2
@@ -50,22 +50,22 @@ def run_granular_action_pipeline(
                 types=domain_builder.get_type_hierarchy()
             )
             
-            feedback_template = open_file('data/prompt_templates/action_construction/extract_params/feedback.txt')
+            # feedback_template = open_file('data/prompt_templates/action_construction/extract_params/feedback.txt')
             
-            feedback_params, feedback_llm_response = feedback_builder.parameter_feedback(
-                model=model, 
-                domain_desc=domain_desc, 
-                feedback_template=feedback_template, 
-                feedback_type="llm",
-                parameter=params,
-                action_name=action_name,
-                action_desc=action_desc,
-                types=domain_builder.get_type_hierarchy(),
-                llm_response=llm_response
-                )
+            # feedback_params, feedback_llm_response = feedback_builder.parameter_feedback(
+            #     model=model, 
+            #     domain_desc=domain_desc, 
+            #     feedback_template=feedback_template, 
+            #     feedback_type="llm",
+            #     parameter=params,
+            #     action_name=action_name,
+            #     action_desc=action_desc,
+            #     types=domain_builder.get_type_hierarchy(),
+            #     llm_response=llm_response
+            #     )
             
-            if feedback_params != None:
-                params=feedback_params
+            # if feedback_params != None:
+            #     params=feedback_params
 
             preconditions, new_predicates, llm_response = domain_builder.extract_preconditions(
                 model=model,
@@ -77,25 +77,25 @@ def run_granular_action_pipeline(
                 predicates=predicates
             )
             
-            feedback_template = open_file('data/prompt_templates/action_construction/extract_preconditions/feedback.txt')
+            # feedback_template = open_file('data/prompt_templates/action_construction/extract_preconditions/feedback.txt')
             
-            feedback_preconditions, feedback_predicates, feedback_llm_response = feedback_builder.precondition_feedback(
-                model=model, 
-                domain_desc=domain_desc, 
-                feedback_template=feedback_template, 
-                feedback_type="llm",
-                parameter=params,
-                preconditions=preconditions,
-                action_name=action_name,
-                action_desc=action_desc,
-                types=domain_builder.get_type_hierarchy(),
-                predicates=new_predicates,
-                llm_response=llm_response
-                )
+            # feedback_preconditions, feedback_predicates, feedback_llm_response = feedback_builder.precondition_feedback(
+            #     model=model, 
+            #     domain_desc=domain_desc, 
+            #     feedback_template=feedback_template, 
+            #     feedback_type="llm",
+            #     parameter=params,
+            #     preconditions=preconditions,
+            #     action_name=action_name,
+            #     action_desc=action_desc,
+            #     types=domain_builder.get_type_hierarchy(),
+            #     predicates=new_predicates,
+            #     llm_response=llm_response
+            #     )
             
-            if feedback_preconditions != None:
-                preconditions=feedback_preconditions
-                new_predicates=feedback_predicates
+            # if feedback_preconditions != None:
+            #     preconditions=feedback_preconditions
+            #     new_predicates=feedback_predicates
             
             predicates.extend(new_predicates)
 
@@ -110,26 +110,26 @@ def run_granular_action_pipeline(
                 predicates=predicates
             )
             
-            feedback_template = open_file('data/prompt_templates/action_construction/extract_effects/feedback.txt')
+            # feedback_template = open_file('data/prompt_templates/action_construction/extract_effects/feedback.txt')
             
-            feedback_effects, feedback_predicates, feedback_llm_response = feedback_builder.effects_feedback(
-                model=model, 
-                domain_desc=domain_desc, 
-                feedback_template=feedback_template, 
-                feedback_type="llm",
-                parameter=params,
-                preconditions=preconditions,
-                effects=effects,
-                action_name=action_name,
-                action_desc=action_desc,
-                types=domain_builder.get_type_hierarchy(),
-                predicates=new_predicates,
-                llm_response=llm_response
-                )
+            # feedback_effects, feedback_predicates, feedback_llm_response = feedback_builder.effects_feedback(
+            #     model=model, 
+            #     domain_desc=domain_desc, 
+            #     feedback_template=feedback_template, 
+            #     feedback_type="llm",
+            #     parameter=params,
+            #     preconditions=preconditions,
+            #     effects=effects,
+            #     action_name=action_name,
+            #     action_desc=action_desc,
+            #     types=domain_builder.get_type_hierarchy(),
+            #     predicates=new_predicates,
+            #     llm_response=llm_response
+            #     )
             
-            if feedback_effects != None:
-                effects=feedback_effects
-                new_predicates=feedback_predicates
+            # if feedback_effects != None:
+            #     effects=feedback_effects
+            #     new_predicates=feedback_predicates
             
             predicates.extend(new_predicates)
             action = {"name": action_name, "parameters": params, "preconditions": preconditions, "effects": effects}
@@ -488,30 +488,29 @@ if __name__ == "__main__":
     print("\n\n---------------------------------\n\nPDDL action output:\n")
 
     # GRANULAR ACTION EXTRACTION PIPELINE
-    # actions, predicates = run_granular_action_pipeline(
-    #     model=model, 
-    #     domain_desc=domain_desc, 
-    #     param_prompt=pddl_param_extraction_prompt,
-    #     precondition_prompt=pddl_precondition_extraction_prompt,
-    #     effects_prompt=pddl_effects_extraction_prompt,
-    #     nl_actions=nl_actions,
-    #     feedback_builder=feedback_builder,
-    #     feedback_template=feedback_template
-    #     )
+    actions, predicates = run_granular_action_pipeline(
+        model=model, 
+        domain_desc=domain_desc, 
+        param_prompt=pddl_param_extraction_prompt,
+        precondition_prompt=pddl_precondition_extraction_prompt,
+        effects_prompt=pddl_effects_extraction_prompt,
+        nl_actions=nl_actions,
+        feedback_builder=feedback_builder
+        )
 
     
     # COMPACT ACTION EXTRACTION PIPELINE
-    feedback_template = open_file('data/prompt_templates/action_construction/extract_action/feedback.txt')
-    actions, predicates = run_compact_action_pipeline(
-        model=model, 
-        domain_desc=domain_desc,
-        domain_builder=domain_builder, 
-        prompt=pddl_action_extraction_prompt,
-        nl_actions=domain_builder.get_nl_actions(),
-        types=domain_builder.get_type_hierarchy(),
-        feedback_builder=feedback_builder,
-        feedback_template=feedback_template
-    )
+    # feedback_template = open_file('data/prompt_templates/action_construction/extract_action/feedback.txt')
+    # actions, predicates = run_compact_action_pipeline(
+    #     model=model, 
+    #     domain_desc=domain_desc,
+    #     domain_builder=domain_builder, 
+    #     prompt=pddl_action_extraction_prompt,
+    #     nl_actions=domain_builder.get_nl_actions(),
+    #     types=domain_builder.get_type_hierarchy(),
+    #     feedback_builder=feedback_builder,
+    #     feedback_template=feedback_template
+    # )
 
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
     

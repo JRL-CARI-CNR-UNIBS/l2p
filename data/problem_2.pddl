@@ -7,26 +7,30 @@ blue - block
 red - block
 green - block
 yellow - block
+arm1 - arm
+table1 - table
    )
 
    (:init
-(on_table red table)
-(on_table green table)
-(on_table yellow table)
-(on blue red)
-(clear blue)
-(clear green)
-(empty arm1)
-(at arm1 table)
+(on_table blue)
+(on_table red)
+(on_table green)
+(on_table yellow)
+(on_top blue red)
+(on_top green yellow)
+(arm_empty )
+(block_clear blue)
+(block_clear green)
+(block_clear red)
+(block_clear yellow)
    )
 
    (:goal
 (and 
-   (on red table) 
-   (on green red) 
-   (on blue green) 
-   (on yellow blue) 
-   (clear yellow) 
+   (on_top red green) 
+   (on_top green blue) 
+   (on_top blue yellow) 
+   (block_clear yellow) 
 )
    )
 
