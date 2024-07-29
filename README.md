@@ -98,6 +98,6 @@ print("FEEDBACK:\n", feedback_response)
 - [ ] `PROC2PDDL`
 - [x] `LLM+P`
 - [ ] `LLM+DP`
-- [-] `LLM+EW`
+- [ ] `LLM+EW`
 
 ## Current Model Construction Works

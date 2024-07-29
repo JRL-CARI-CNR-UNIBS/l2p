@@ -172,8 +172,6 @@ class DomainBuilder:
         prompt_template = prompt_template.replace('{action_desc}', action_desc)
         prompt_template = prompt_template.replace('{predicate_list}', predicate_str)
         llm_response = model.get_output(prompt=prompt_template)
-        
-        print("PROMPT:\n", prompt_template)
 
         # extract actions and predicates - EVENTUALLY SWAP THESE FUNCTIONS
         action = parse_action(llm_response=llm_response, action_name=action_name)
@@ -257,8 +255,6 @@ class DomainBuilder:
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
 
         preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
-        
-        print('Preconditions:', preconditions)
         
         new_predicates = parse_new_predicates(llm_output=llm_response)
 

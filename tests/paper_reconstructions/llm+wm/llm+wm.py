@@ -3,8 +3,6 @@ Paper: "Leveraging Pre-trained Large Language Models to Construct and Utilize Wo
 Source code: https://github.com/GuanSuns/LLMs-World-Models-for-Planning
 Run: python3 -m tests.paper_reconstructions.llm+wm.llm+wm
 
-Focus: have human-in-the-loop feedback mechanism to refine domain model, then construct task model from it.
-
 Assumes the following:
     1. NL descriptions of all the actions
     2. A description of the domain
@@ -32,19 +30,6 @@ def open_json(file_path):
         file = json.load(file)
     return file
 
-action_model = open_json('tests/paper_reconstructions/llm+wm/prompts/action_model.json')
-domain_desc = open_txt('tests/paper_reconstructions/llm+wm/prompts/domain_desc.txt')
-hierarchy_requirements = open_json('tests/paper_reconstructions/llm+wm/prompts/hierarchy_requirements.json')
-prompt_template = open_txt('tests/paper_reconstructions/llm+wm/prompts/pddl_prompt.txt')
-
-engine = "gpt-4o-mini"
-
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-model = GPT_Chat(client=client, engine=engine)
-
-domain_builder = DomainBuilder()
-feedback_builder = FeedbackBuilder()
-syntax_validator = SyntaxValidator()
 
 def construct_action_model(domain_desc, action_predicate_prompt, action_name, action_desc, predicate_list, max_iterations=3, syntax_validator=None): 
     
@@ -108,15 +93,29 @@ def construct_action_model(domain_desc, action_predicate_prompt, action_name, ac
 
 
 if __name__ == "__main__":    
-    actions = None
-    domain = 'logistics'
+    
+    # setup prompt templates
+    action_model = open_json('tests/paper_reconstructions/llm+wm/prompts/action_model.json')
+    domain_desc = open_txt('tests/paper_reconstructions/llm+wm/prompts/domain_desc.txt')
+    hierarchy_requirements = open_json('tests/paper_reconstructions/llm+wm/prompts/hierarchy_requirements.json')
+    prompt_template = open_txt('tests/paper_reconstructions/llm+wm/prompts/pddl_prompt.txt')
+
+    # setup LLM engine
+    engine = "gpt-4o-mini"
+    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
+    model = GPT_Chat(client=client, engine=engine)
+
+    # setup L2P libraries
+    domain_builder = DomainBuilder()
+    feedback_builder = FeedbackBuilder()
+    syntax_validator = SyntaxValidator()
+
+    domain = 'logistics' # using logistics domain for this example
     
     max_iterations = 2
     max_feedback = 1
         
-    if actions is None:
-        actions = list(action_model.keys())
-    
+    actions = list(action_model.keys())
     predicate_list = list()
     
     """
@@ -126,7 +125,7 @@ if __name__ == "__main__":
         new predicates are added to the list. This is an action model refinement algorithm, that refines itself by a growing predicate list.
     """
     
-    action_predicate_prompt = ''
+    action_predicate_prompt = ""
     
     # iterate however many times
     for i_iter in range(max_iterations):
@@ -185,7 +184,7 @@ if __name__ == "__main__":
         actions=action_list
         )
     
-    domain_file = "tests/paper_reconstructions/llm+wm/domain.pddl"
+    domain_file = "tests/paper_reconstructions/llm+wm/results/domain.pddl"
     
     # save domain file
     with open(domain_file, "w") as f:
