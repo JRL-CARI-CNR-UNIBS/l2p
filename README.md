@@ -17,7 +17,7 @@ from l2p.feedback_builder import FeedbackBuilder
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
 model = GPT_Chat(client=client, engine="gpt-4o-mini")
 
-domain_description = """BlocksWorld is a planning domain in artificial intelligence. A mechanical robot arm that can pick and place the blocks..."""
+domain_desc = """BlocksWorld is a planning domain in artificial intelligence. A mechanical robot arm that can pick and place the blocks..."""
 role = """Your role is to..."""
 technique = """Your technique is... CoT"""
 examples = ["example_1", "example_2", "..."]
@@ -28,7 +28,7 @@ task = TaskBuilder()
 feedback = FeedbackBuilder()
 
 
-types, response = domain.extract_type(model, domain_description, prompt.generate_prompt())
+types, response = domain.extract_type(model, domain_desc, prompt.generate_prompt())
 domain.set_types(types=types)
 
 type_hierarchy, response = domain.extract_type_hierarchy(model, domain_desc, prompt.generate_prompt(), domain.get_types())    
@@ -55,12 +55,12 @@ print(f"PDDL domain: {pddl_domain}")
 Here is how you would setup a PDDL problem:
 ```python
 
-problem_description = """Your task is to rearrange the blocks..."""
+problem_desc= """Your task is to rearrange the blocks..."""
 
-objects, initial, goal, llm_response = task.extract_task(
+objects, initial_states, goal_states, llm_response = task.extract_task(
     model=model,
-    problem_desc=problem_description,
-    domain_desc=domain_description,
+    problem_desc=problem_desc,
+    domain_desc=domain_desc,
     prompt_template=prompt.generate_prompt(),
     types=types,
     predicates=predicates,

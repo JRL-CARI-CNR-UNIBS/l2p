@@ -24,7 +24,6 @@ class SyntaxValidator:
         feedback_msg = "PASS: All parameter types found in object types."
         return True, feedback_msg
 
-
     def validate_types_predicates(self, predicates: list[dict], types: dict[str, str]) -> tuple[bool, str]:
         """Check if predicate name is found within any type definitions"""
 
@@ -224,7 +223,18 @@ class SyntaxValidator:
     def validate_goal_state(self): pass
     
     
-    def validate_header(self): pass
+    def validate_header(self, llm_response: str):
+        for header in ['Parameters', 'Preconditions', 'Effects', 'New Predicates']:
+            if header not in llm_response:
+                feedback_msg = f'FAIL: The header `{header}` is missing in the PDDL model. Please include the header `{header}` in the PDDL model.'
+                return False, feedback_msg
+        for header in ['Parameters', 'Preconditions', 'Effects']:
+            if llm_response.split(f"{header}")[1].split("##")[0].count('```\n') < 2:
+                feedback_msg = f'FAIL: The header `{header}` is missing in the formalised code block. Please include a "```" section in the {header} section.'
+                return False, feedback_msg
+            
+        feedback_msg = "PASS: headers are identified properly in LLM output."
+        return True, feedback_msg
     
     def validate_unsupported_keywords(self, llm_response: str, unsupported_keywords: list[str]) -> tuple[bool, str]:
         """Checks whether PDDL model uses unsupported logic keywords"""
@@ -237,9 +247,32 @@ class SyntaxValidator:
         feedback_msg = "PASS: Unsupported keywords not found in PDDL model."
         return True, feedback_msg
     
-    def validate_keyword_usage(self): pass
+    def validate_keyword_usage(self, llm_response: str):
+        if not "Action Effects" in llm_response:
+            feedback_msg = "PASS"
+            return True, feedback_msg
+        heading = llm_response.split("Action Effects")[1].split("```\n")[1].strip()
+        for keyword in ['forall', 'exists', "if "]:
+            if keyword in heading:
+                feedback_msg = f'The keyword `{keyword}` is not supported in the action effects.'
+                return False, feedback_msg
+            
+        feedback_msg = "PASS: unsupported keywords are not found in the action effects."
+        return True, feedback_msg
     
-    def validate_messed_output(self): pass
+    def validate_messed_output(self, llm_response: str) -> tuple[bool, str]:
+        """
+        Though this happens extremely rarely, the LLM (even GPT-4) might generate messed-up outputs (basically
+            listing a large number of predicates in preconditions and effects)
+        """
+        assert '\nPreconditions:' in llm_response, llm_response
+        precond_str = llm_response.split('\nPreconditions:')[1].split('```\n')[1].strip()
+        if len(precond_str.split('\n')) > 20:
+            feedback_msg = f'FAIL: You seem to have generated an action model with an unusually long list of preconditions. Please include only the relevant preconditions/effects and keep the action model concise.\n\nParameters:'
+            return False, feedback_msg
+
+        feedback_msg = "PASS: predicate output is fine."
+        return True, feedback_msg
     
     
     def validate_new_action_creation(self, llm_response: str) -> tuple[bool, str]:
