@@ -163,6 +163,11 @@ class TaskBuilder:
         return objects, initial, goal, llm_response
 
 
+    def extract_nl_conditions() -> list[str]: 
+        """Extracts initial and goal states in natural language"""
+        pass
+
+
     def set_objects(self, objects: dict[str,str]):
         self.set_objects = objects
 
@@ -205,5 +210,4 @@ class TaskBuilder:
         return desc
 
 if __name__ == "__main__":
-
     pass

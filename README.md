@@ -94,10 +94,9 @@ print("FEEDBACK:\n", feedback_response)
 
 ## Current Works Reconstructed Using L2P
 - [x] `NL2Plan`
-- [x] `LLM+WM` 
-- [ ] `PROC2PDDL`
+- [x] `LLM+DM` 
 - [x] `LLM+P`
-- [ ] `LLM+DP`
+- [ ] `PROC2PDDL`
 - [ ] `LLM+EW`
 
 ## Current Model Construction Works

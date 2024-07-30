@@ -32,8 +32,7 @@ def parse_pddl(val_parser, domain_file=None, problem_file=None) -> str:
         print("Parsing failed.")
         error = result.stderr.decode()
         raise Exception(error)
-        
-        
+          
 def extract_errors_warnings(text):
     lines = text.split('\n')
     relevant_lines = []
@@ -58,3 +57,6 @@ if __name__ == '__main__':
         print("ERROR:\n", output)
     else:
         print("SUCCESS")
+        
+
+

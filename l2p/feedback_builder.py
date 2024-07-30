@@ -51,6 +51,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -108,6 +110,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -163,6 +167,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -324,6 +330,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -405,6 +413,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -489,6 +499,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -571,6 +583,8 @@ END OF EXAMPLE
             feedback_msg = model.get_output(prompt=prompt)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -642,6 +656,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -716,6 +732,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -794,6 +812,8 @@ END OF EXAMPLE
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
+        elif feedback_type.lower() == "validator":
+            feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
@@ -824,10 +844,10 @@ END OF EXAMPLE
 
     def human_feedback(self, info: str):
 
-        # print("START OF INFO\n", info)
-        # print("\nEND OF INFO\n\n")
+        print("START OF INFO\n", info)
+        print("\nEND OF INFO\n\n")
         contents = []
-        # print("Provide feedback (or 'no feedback'). End with ctrl+d.\n")
+        print("Provide feedback (or 'no feedback'). End with ctrl+d.\n")
         while True:
             try:
                 line = input()

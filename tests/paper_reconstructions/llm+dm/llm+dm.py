@@ -1,7 +1,9 @@
+
+
 """
 Paper: "Leveraging Pre-trained Large Language Models to Construct and Utilize World Models for Model-based Task Planning" Guan et al. (2023)
 Source code: https://github.com/GuanSuns/LLMs-World-Models-for-Planning
-Run: python3 -m tests.paper_reconstructions.llm+wm.llm+wm
+Run: python3 -m tests.paper_reconstructions.llm+dm.llm+dm
 
 Assumes the following:
     1. NL descriptions of all the actions
@@ -95,10 +97,10 @@ def construct_action_model(domain_desc, action_predicate_prompt, action_name, ac
 if __name__ == "__main__":    
     
     # setup prompt templates
-    action_model = open_json('tests/paper_reconstructions/llm+wm/prompts/action_model.json')
-    domain_desc = open_txt('tests/paper_reconstructions/llm+wm/prompts/domain_desc.txt')
-    hierarchy_requirements = open_json('tests/paper_reconstructions/llm+wm/prompts/hierarchy_requirements.json')
-    prompt_template = open_txt('tests/paper_reconstructions/llm+wm/prompts/pddl_prompt.txt')
+    action_model = open_json('tests/paper_reconstructions/llm+dm/prompts/action_model.json')
+    domain_desc = open_txt('tests/paper_reconstructions/llm+dm/prompts/domain_desc.txt')
+    hierarchy_requirements = open_json('tests/paper_reconstructions/llm+dm/prompts/hierarchy_requirements.json')
+    prompt_template = open_txt('tests/paper_reconstructions/llm+dm/prompts/pddl_prompt.txt')
 
     # setup LLM engine
     engine = "gpt-4o-mini"
@@ -184,7 +186,7 @@ if __name__ == "__main__":
         actions=action_list
         )
     
-    domain_file = "tests/paper_reconstructions/llm+wm/results/domain.pddl"
+    domain_file = "tests/paper_reconstructions/llm+dm/results/domain.pddl"
     
     # save domain file
     with open(domain_file, "w") as f:

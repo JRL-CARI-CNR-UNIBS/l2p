@@ -173,7 +173,7 @@ if __name__ == "__main__":
         actions=actions
         )
 
-    domain_file = "tests/paper_reconstructions/nl2plan/domain.pddl"
+    domain_file = "tests/paper_reconstructions/nl2plan/results/domain.pddl"
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
 
@@ -218,7 +218,7 @@ if __name__ == "__main__":
     objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
     pddl_problem = task_builder.generate_task("test_domain", objects, initial, goal)
 
-    problem_file = "tests/paper_reconstructions/nl2plan/problem.pddl"
+    problem_file = "tests/paper_reconstructions/nl2plan/results/problem.pddl"
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
         

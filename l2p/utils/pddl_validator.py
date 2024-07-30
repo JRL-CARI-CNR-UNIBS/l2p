@@ -209,7 +209,6 @@ class SyntaxValidator:
         eff_str = eff_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
         return self.validate_pddl_usage_predicates(eff_str, curr_predicates, params_info, types, part='effects')
 
-    
 
     def validate_preconditions(self): pass
 
