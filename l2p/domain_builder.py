@@ -92,41 +92,6 @@ class DomainBuilder:
 
         type_hierarchy = convert_to_dict(llm_response=llm_response)
         return type_hierarchy, llm_response
-
-    def extract_nl_actions(
-            self, 
-            model: LLM_Chat,
-            domain_desc: str, 
-            prompt_template: PromptBuilder, 
-            type_hierarchy: dict[str,str]=None,
-            nl_actions: dict[str,str]=None
-            ) -> tuple[dict[str,str], str]:
-        
-        """
-        Extract actions in natural language given domain description using LLM.
-
-        Args:
-            model (LLM_Chat): LLM
-            domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
-            type_hierarchy (dict[str,str]): type hierarchy
-            feedback (bool): whether to request feedback from LM - default True
-            feedback_template (str): feedback template. Has to be specified if feedback is used - defaults None
-
-        Returns:
-            nl_actions (dict[str, str]): a dictionary of extracted actions, where the keys are action names and values are action descriptions
-        """
-
-        model.reset_tokens()
-
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
-        prompt_template = prompt_template.replace('{actions}', str(nl_actions))
-
-        llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
-
-        nl_actions = convert_to_dict(llm_response=llm_response)
-        return nl_actions, llm_response
     
     def extract_pddl_action(
             self, 
@@ -284,6 +249,17 @@ class DomainBuilder:
 
         return effects, new_predicates, llm_response
 
+    def extract_pddl_actions(self, 
+            model: LLM_Chat, 
+            domain_desc: str,
+            prompt_template: PromptBuilder, 
+            nl_actions: list[str]=None,
+            predicates: list[Predicate]=None,
+            types: dict[str,str]=None
+            ) -> tuple[Action, list[Predicate], str]:
+        
+        pass
+
 
     def extract_predicates(
         self, 
@@ -322,6 +298,42 @@ class DomainBuilder:
             - nl_constraints (list[str]): list of natural language constraints (either preconditions or effects)
         """
         pass
+
+    def extract_nl_actions(
+            self, 
+            model: LLM_Chat,
+            domain_desc: str, 
+            prompt_template: PromptBuilder, 
+            type_hierarchy: dict[str,str]=None,
+            nl_actions: dict[str,str]=None
+            ) -> tuple[dict[str,str], str]:
+        
+        """
+        Extract actions in natural language given domain description using LLM.
+
+        Args:
+            model (LLM_Chat): LLM
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            type_hierarchy (dict[str,str]): type hierarchy
+            feedback (bool): whether to request feedback from LM - default True
+            feedback_template (str): feedback template. Has to be specified if feedback is used - defaults None
+
+        Returns:
+            nl_actions (dict[str, str]): a dictionary of extracted actions, where the keys are action names and values are action descriptions
+        """
+
+        model.reset_tokens()
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{type_hierarchy}', str(type_hierarchy))
+        prompt_template = prompt_template.replace('{actions}', str(nl_actions))
+
+        llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
+
+        nl_actions = convert_to_dict(llm_response=llm_response)
+        return nl_actions, llm_response
+
 
     """Add functions"""
     def add_type(

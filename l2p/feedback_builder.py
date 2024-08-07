@@ -6,6 +6,7 @@ from .llm_builder import LLM_Chat
 from .utils.pddl_parser import convert_to_dict, parse_action, parse_new_predicates, parse_objects, parse_initial, parse_goal, parse_params
 from .utils.pddl_types import Action, Predicate
 from collections import OrderedDict
+from textwrap import dedent
 import json
 
 INSTRUCTION = "Make suggestions / changes if there are any checks that you deem are insufficient, if not, respond with 'no feedback' (once) at the end of your whole response. You either return a suggestion/feedback or you respond with 'no feedback' not both.'\n Do not respond with 'no feedback' in between each check. \nDo not add anything new other than what is focused on the specific PDDL aspect at hand.\n\n"
@@ -30,14 +31,14 @@ class FeedbackBuilder:
         feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
         feedback_template += "\n\nORIGINAL TYPES (to be analysed):\n" + format_json_output(types)
         
-        example = """START OF EXAMPLE:
-## OUTPUT
-{
-    "location": "Locations can be visited and travelled between.",
-    "house": "Constructed by the company. Are a type of location."
-}
-END OF EXAMPLE
-"""
+        example = dedent("""START OF EXAMPLE:
+        ## OUTPUT
+        {
+            "location": "Locations can be visited and travelled between.",
+            "house": "Constructed by the company. Are a type of location."
+        }
+        END OF EXAMPLE
+        """)
         
         prompt = "ROLE:\nYou are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain." + INSTRUCTION
         prompt += feedback_template

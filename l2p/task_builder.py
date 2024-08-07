@@ -163,9 +163,41 @@ class TaskBuilder:
         return objects, initial, goal, llm_response
 
 
-    def extract_nl_conditions() -> list[str]: 
-        """Extracts initial and goal states in natural language"""
+    def extract_nl_initial():
         pass
+    
+    def extract_nl_goal():
+        pass
+
+    def extract_nl_conditions(
+        self, 
+        model: LLM_Chat, 
+        problem_desc: str,
+        domain_desc: str,
+        prompt_template: PromptBuilder,
+        type_hierarchy: dict[str,str]=None, 
+        predicates: list[Predicate]=None,
+        objects: dict[str,str]=None) -> str:
+        """Extracts initial and goal states in natural language"""
+        
+        model.reset_tokens()
+
+        if predicates:
+            predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
+            prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        if type_hierarchy:
+            types_str = "\n".join(type_hierarchy)
+            prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
+        if objects:
+            objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+            prompt_template = prompt_template.replace('{objects}', objects_str)
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+
+        llm_response = model.get_output(prompt=prompt_template)
+        
+        return llm_response
 
 
     def set_objects(self, objects: dict[str,str]):

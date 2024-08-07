@@ -451,7 +451,7 @@ truck1 - truck
 #         return False
 
 
-def select_final_domain_and_problem(best_domains: list[str], p_candidates: list[Tuple[str, str, str, str]]) -> tuple[str, str]:
+def select_final_domain_and_problem(best_domains: list[str], p_candidates: list[tuple[str, str, str, str]]) -> tuple[str, str]:
     # Placeholder for selecting the best final domain and problem based on some criteria
     # Here, we might choose the one with the highest EW score or any other metric
     best_d = best_domains[0]

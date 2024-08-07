@@ -8,10 +8,10 @@ Run: python3 -m l2p.utils.pddl_val
 import subprocess
 
 VAL_PARSER = "VAL/build/macos64/Release/bin/Parser"
+VAL_VALIDATE = "VAL/build/macos64/Release/bin/Validate"
 
-
-def parse_pddl(val_parser, domain_file=None, problem_file=None) -> str:
-    command = [val_parser]
+def validate_pddl(val_command, domain_file=None, problem_file=None) -> str:
+    command = [val_command]
     
     if domain_file:
         command.append(domain_file)
@@ -48,10 +48,10 @@ def extract_errors_warnings(text):
 
 if __name__ == '__main__':
 
-    domain = "data/domain.pddl"
-    problem = "data/problem.pddl"
+    domain = "tests/domain.pddl"
+    problem = "tests/problem_1.pddl"
     
-    output = parse_pddl(VAL_PARSER, domain_file=domain, problem_file=problem)
+    output = validate_pddl(VAL_VALIDATE, domain_file=domain, problem_file=problem)
     
     if output:
         print("ERROR:\n", output)
