@@ -1,0 +1,5 @@
+## Domain
+{domain_desc}
+
+## Available types:
+{type_hierarchy}
