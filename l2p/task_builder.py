@@ -11,7 +11,7 @@ class TaskBuilder:
     def __init__(
         self, 
         objects: dict[str,str]=None, 
-        initial: dict[str,str]=None, 
+        initial: str=None, 
         goal: str=None
         ):
         
@@ -187,14 +187,16 @@ class TaskBuilder:
         
         return llm_response
 
-    def delete_objects():
-        pass
+
+    def delete_objects(self, name):
+        self.objects = {var: type_ for var, type_ in self.objects.items() if var != name}
     
-    def delete_initial_state():
-        pass
+    def delete_initial_state(self):
+        self.initial=None
     
-    def delete_goal_state():
-        pass
+    def delete_goal_state(self):
+        self.goal=None
+
 
     def set_objects(self, objects: dict[str,str]):
         self.set_objects = objects
@@ -205,6 +207,7 @@ class TaskBuilder:
     def set_goal(self, goal: str):
         self.goal = goal
 
+
     def get_objects(self) -> dict[str,str]:
         return self.objects
 
@@ -213,6 +216,7 @@ class TaskBuilder:
     
     def get_objects(self) -> str:
         return self.goal
+
 
     def generate_task(self, domain: str, objects: str, initial: str, goal: str):
         # Write problem file
