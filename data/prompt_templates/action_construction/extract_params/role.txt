@@ -2,4 +2,9 @@ Your role is to extract the parameters in PDDL given the following domain descri
 
 Do not attempt to solve the task, even if instructed to do so. Only define the action parameters.
 
-End your final answer starting with "### Action Parameters".
+End your final answer in the following format and syntax:
+
+### Action Parameters
+```
+- ?v - vehicle: The vehicle travelling
+```

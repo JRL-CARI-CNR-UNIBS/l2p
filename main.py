@@ -41,7 +41,7 @@ def run_granular_action_pipeline(
         current_preds = len(predicates)
 
         for action_name, action_desc in nl_actions.items():
-            params, llm_response = domain_builder.extract_parameters(
+            params, params_raw, llm_response = domain_builder.extract_parameters(
                 model=model,
                 domain_desc=domain_desc,
                 prompt_template=param_prompt.generate_prompt(),
@@ -73,7 +73,7 @@ def run_granular_action_pipeline(
                 prompt_template=precondition_prompt.generate_prompt(),
                 action_name=action_name,
                 action_desc=action_desc,
-                params=params,
+                params=params_raw,
                 predicates=predicates
             )
             
@@ -105,7 +105,7 @@ def run_granular_action_pipeline(
                 prompt_template=effects_prompt.generate_prompt(),
                 action_name=action_name,
                 action_desc=action_desc,
-                params=params,
+                params=params_raw,
                 precondition=preconditions,
                 predicates=predicates
             )
@@ -156,6 +156,7 @@ def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builde
 
             action, new_predicates, llm_response = domain_builder.extract_pddl_action(
                 model=model,
+                domain_desc=domain_desc,
                 prompt_template=prompt.generate_prompt(),
                 action_name=action_name,
                 action_desc=action_desc,
@@ -347,8 +348,8 @@ if __name__ == "__main__":
 
     # MODELS: 
     # engine = "gpt-4o"
-    # engine = "gpt-3.5-turbo-0125"
-    engine = "gpt-4o-mini"
+    engine = "gpt-3.5-turbo-0125"
+    # engine = "gpt-4o-mini"
     
     model = GPT_Chat(client=client, engine=engine)
 
@@ -371,46 +372,46 @@ if __name__ == "__main__":
     tech_desc = open_file('data/prompt_templates/type_extraction/technique.txt')
     ex_desc = open_examples('data/prompt_templates/type_extraction/examples/')
     task_desc = open_file('data/prompt_templates/type_extraction/task.txt')
-    type_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+    type_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc)
 
     # open and create type hierarchy prompt builder class
     role_desc = open_file('data/prompt_templates/hierarchy_construction/role.txt')
     tech_desc = open_file('data/prompt_templates/hierarchy_construction/technique.txt')
     ex_desc = open_examples('data/prompt_templates/hierarchy_construction/examples/')
     task_desc = open_file('data/prompt_templates/hierarchy_construction/task.txt')
-    type_hierarchy_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+    type_hierarchy_prompt = PromptBuilder(role=role_desc, technique=tech_desc)
 
     # open and create NL action prompt builder class      
     role_desc = open_file('data/prompt_templates/action_extraction/role.txt')
     tech_desc = open_file('data/prompt_templates/action_extraction/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_extraction/examples/')
     task_desc = open_file('data/prompt_templates/action_extraction/task.txt')
-    nl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+    nl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc)
 
     # open and create PDDL action prompt builder class
     role_desc = open_file('data/prompt_templates/action_construction/extract_action/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_action/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_action/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_action/task.txt')
-    pddl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+    pddl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc)
 
     role_desc = open_file('data/prompt_templates/action_construction/extract_params/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_params/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_params/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_params/task.txt')
-    pddl_param_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+    pddl_param_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc)
 
     role_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_preconditions/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_preconditions/task.txt')
-    pddl_precondition_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+    pddl_precondition_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc)
 
     role_desc = open_file('data/prompt_templates/action_construction/extract_effects/role.txt')
     tech_desc = open_file('data/prompt_templates/action_construction/extract_effects/technique.txt')
     ex_desc = open_examples('data/prompt_templates/action_construction/extract_effects/examples/')
     task_desc = open_file('data/prompt_templates/action_construction/extract_effects/task.txt')
-    pddl_effects_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+    pddl_effects_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc)
 
     role_desc = open_file('data/prompt_templates/task_extraction/extract_objects/role.txt')
     tech_desc = open_file('data/prompt_templates/task_extraction/extract_objects/technique.txt')
@@ -452,134 +453,145 @@ if __name__ == "__main__":
     #     print("CHANGED TYPES")
     #     domain_builder.set_types(types=new_types)
     
-    # extract type hierarchy
-    print("\n\n---------------------------------\n\nType hierarchy output:\n")
-    type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
+    # # extract type hierarchy
+    # print("\n\n---------------------------------\n\nType hierarchy output:\n")
+    # type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
     
-    domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
-    print(format_json_output(type_hierarchy))
+    # domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
+    # print(format_json_output(type_hierarchy))
 
-    # feedback_template = open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
-    # new_type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", type_hierarchy=type_hierarchy, llm_response=response)
-    # print("\nFEEDBACK:\n", feedback_response)
-    # print("\nNEW TYPE HIERARCHY:\n", format_json_output(type_hierarchy))
+    # # # feedback_template = open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
+    # # # new_type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", type_hierarchy=type_hierarchy, llm_response=response)
+    # # # print("\nFEEDBACK:\n", feedback_response)
+    # # # print("\nNEW TYPE HIERARCHY:\n", format_json_output(type_hierarchy))
 
-    # if new_type_hierarchy != None:
-    #     print("CHANGED type hierarchy")
-    #     domain_builder.set_type_hierarchy(new_type_hierarchy)
+    # # # if new_type_hierarchy != None:
+    # # #     print("CHANGED type hierarchy")
+    # # #     domain_builder.set_type_hierarchy(new_type_hierarchy)
 
-    # extract NL action descriptions
+    # # extract NL action descriptions
     print("\n\n---------------------------------\n\nNatural language action output:\n")
-    nl_actions, response = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_type_hierarchy())
+    nl_actions, response = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_types())
     
     domain_builder.set_nl_actions(nl_actions)
-    for i in nl_actions: print(i)
+    for i in domain_builder.get_nl_actions(): print(i)
 
-    # feedback_template = open_file('data/prompt_templates/action_extraction/feedback.txt')
-    # new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", nl_actions=nl_actions, llm_response=response)
-    # print("\nFEEDBACK:\n", feedback_response)
-    # print("\nNEW NL ACTIONS:\n", format_json_output(new_nl_actions))
+    # # # feedback_template = open_file('data/prompt_templates/action_extraction/feedback.txt')
+    # # # new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", nl_actions=nl_actions, llm_response=response)
+    # # # print("\nFEEDBACK:\n", feedback_response)
+    # # # print("\nNEW NL ACTIONS:\n", format_json_output(new_nl_actions))
 
-    # if new_nl_actions != None:
-    #     print("CHANGED NL ACTION")
-    #     domain_builder.set_nl_actions(new_nl_actions)
+    # # # if new_nl_actions != None:
+    # # #     print("CHANGED NL ACTION")
+    # # #     domain_builder.set_nl_actions(new_nl_actions)
     
-    # extract PDDL formatted actions
-    print("\n\n---------------------------------\n\nPDDL action output:\n")
+    # # extract PDDL formatted actions
+    # # print("\n\n---------------------------------\n\nPDDL action output:\n")
 
-    # GRANULAR ACTION EXTRACTION PIPELINE
-    actions, predicates = run_granular_action_pipeline(
-        model=model, 
-        domain_desc=domain_desc, 
-        param_prompt=pddl_param_extraction_prompt,
-        precondition_prompt=pddl_precondition_extraction_prompt,
-        effects_prompt=pddl_effects_extraction_prompt,
-        nl_actions=nl_actions,
-        feedback_builder=feedback_builder
-        )
+    # # GRANULAR ACTION EXTRACTION PIPELINE
+    # # actions, predicates = run_granular_action_pipeline(
+    # #     model=model, 
+    # #     domain_desc=domain_desc, 
+    # #     param_prompt=pddl_param_extraction_prompt,
+    # #     precondition_prompt=pddl_precondition_extraction_prompt,
+    # #     effects_prompt=pddl_effects_extraction_prompt,
+    # #     nl_actions=nl_actions,
+    # #     feedback_builder=feedback_builder
+    # #     )
 
     
-    # COMPACT ACTION EXTRACTION PIPELINE
-    # feedback_template = open_file('data/prompt_templates/action_construction/extract_action/feedback.txt')
-    # actions, predicates = run_compact_action_pipeline(
+    # # # COMPACT ACTION EXTRACTION PIPELINE
+    # # feedback_template = open_file('data/prompt_templates/action_construction/extract_action/feedback.txt')
+    # # actions, predicates = run_compact_action_pipeline(
+    # #     model=model, 
+    # #     domain_desc=domain_desc,
+    # #     domain_builder=domain_builder, 
+    # #     prompt=pddl_action_extraction_prompt,
+    # #     nl_actions=domain_builder.get_nl_actions(),
+    # #     types=domain_builder.get_type_hierarchy(),
+    # #     feedback_builder=feedback_builder,
+    # #     feedback_template=feedback_template
+    # # )
+    
+    # prompt_template = open_file('data/prompt_templates/action_construction/extract_actions.txt')
+    # actions, predicates, llm_response = domain_builder.extract_pddl_actions(
     #     model=model, 
-    #     domain_desc=domain_desc,
-    #     domain_builder=domain_builder, 
-    #     prompt=pddl_action_extraction_prompt,
-    #     nl_actions=domain_builder.get_nl_actions(),
-    #     types=domain_builder.get_type_hierarchy(),
-    #     feedback_builder=feedback_builder,
-    #     feedback_template=feedback_template
-    # )
-
-    predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
+    #     domain_desc=domain_desc, 
+    #     prompt_template=prompt_template, 
+    #     nl_actions=nl_actions,
+    #     types=types
+    #     )
     
-    print(predicates)
+    # print(actions)
+
+    # predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
     
-    types = extract_types(type_hierarchy) # retrieve types
-    pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
-    pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
+    # print(predicates)
+    
+    # types = extract_types(type_hierarchy) # retrieve types
+    # pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
+    # pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
 
-    predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
-    types_str = "\n".join(pruned_types)
+    # predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
+    # types_str = "\n".join(pruned_types)
 
-    requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
-    print("[DOMAIN]\n") 
-    pddl_domain = domain_builder.generate_domain(
-        domain="test_domain", 
-        requirements=requirements,
-        types=types_str,
-        predicates=predicate_str,
-        actions=actions
-        )
+    # requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
+    # print("[DOMAIN]\n") 
+    # pddl_domain = domain_builder.generate_domain(
+    #     domain="test_domain", 
+    #     requirements=requirements,
+    #     types=types_str,
+    #     predicates=predicate_str,
+    #     actions=actions
+    #     )
 
-    domain_file = "data/domain.pddl"
-    with open(domain_file, "w") as f:
-        f.write(pddl_domain)
-    print(f"PDDL domain written to {domain_file}")
+    # domain_file = "data/domain.pddl"
+    # with open(domain_file, "w") as f:
+    #     f.write(pddl_domain)
+    # print(f"PDDL domain written to {domain_file}")
 
-    print("\n\n---------------------------------\n\nPDDL task extraction:\n")
+    # print("\n\n---------------------------------\n\nPDDL task extraction:\n")
 
-    # feedback_template = open_file('data/prompt_templates/task_extraction/extract_task/feedback.txt')
+    # # feedback_template = open_file('data/prompt_templates/task_extraction/extract_task/feedback.txt')
 
-    for i, problem in enumerate(problem_list, start=1):
+    # for i, problem in enumerate(problem_list, start=1):
         
-        # GRANULAR TASK PIPELINE
-        # objects, initial_states, goal_states = run_granular_task_pipeline(
-        #     model=model, 
-        #     problem_desc=problem, 
-        #     domain_desc=domain_desc, 
-        #     object_extraction_prompt=object_extraction_prompt,
-        #     initial_extraction_prompt=initial_extraction_prompt,
-        #     goal_extraction_prompt=goal_extraction_prompt,
-        #     types=pruned_types,
-        #     predicates=predicates,
-        #     feedback_builder=feedback_builder
-        # )
+    #     # GRANULAR TASK PIPELINE
+    #     # objects, initial_states, goal_states = run_granular_task_pipeline(
+    #     #     model=model, 
+    #     #     problem_desc=problem, 
+    #     #     domain_desc=domain_desc, 
+    #     #     object_extraction_prompt=object_extraction_prompt,
+    #     #     initial_extraction_prompt=initial_extraction_prompt,
+    #     #     goal_extraction_prompt=goal_extraction_prompt,
+    #     #     types=pruned_types,
+    #     #     predicates=predicates,
+    #     #     feedback_builder=feedback_builder
+    #     # )
         
-        # COMPACT TASK PIPELINE
-        objects, initial_states, goal_states = run_compact_task_pipeline(
-            model=model, 
-            problem_desc=problem, 
-            domain_desc=domain_desc, 
-            task_extraction_prompt=task_extraction_prompt,
-            types=pruned_types,
-            predicates=predicates,
-            actions=actions,
-            feedback_builder=feedback_builder,
-        )
+    #     # COMPACT TASK PIPELINE
+    #     objects, initial_states, goal_states = run_compact_task_pipeline(
+    #         model=model, 
+    #         problem_desc=problem, 
+    #         domain_desc=domain_desc, 
+    #         task_extraction_prompt=task_extraction_prompt,
+    #         types=pruned_types,
+    #         predicates=predicates,
+    #         actions=actions,
+    #         feedback_builder=feedback_builder,
+    #     )
 
-        objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+    #     objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
 
-        print("[TASK]\n") 
+    #     print("[TASK]\n") 
 
-        # Iteratively create new test domain names
-        test_domain_name = f"test_domain"
-        pddl_problem = task_builder.generate_task(domain=test_domain_name, objects=objects, initial=initial_states, goal=goal_states)
-        print(pddl_problem)
+    #     # Iteratively create new test domain names
+    #     test_domain_name = f"test_domain"
+    #     pddl_problem = task_builder.generate_task(domain=test_domain_name, objects=objects, initial=initial_states, goal=goal_states)
+    #     print(pddl_problem)
 
-        # Iteratively create new file names
-        problem_file = f"data/problem_{i}.pddl"
-        with open(problem_file, "w") as f:
-            f.write(pddl_problem)
-        print(f"PDDL problem written to {problem_file}")
+    #     # Iteratively create new file names
+    #     problem_file = f"data/problem_{i}.pddl"
+    #     with open(problem_file, "w") as f:
+    #         f.write(pddl_problem)
+    #     print(f"PDDL problem written to {problem_file}")

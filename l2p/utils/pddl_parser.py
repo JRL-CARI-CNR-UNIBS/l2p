@@ -5,12 +5,13 @@ This file contains collection of functions for extracting/parsing information fr
 from .pddl_types import Action, Predicate
 from collections import OrderedDict
 from copy import deepcopy
-import re, ast
+import re, ast, json
 
 def parse_params(llm_output):
     params_info = OrderedDict()
     params_heading = llm_output.split('Parameters')[1].strip().split('##')[0]
     params_str = combine_blocks(params_heading)
+    params_raw = []
     for line in params_str.split('\n'):
         if line.strip() == '' or ('.' not in line and not line.strip().startswith('-')):
             print(f"[WARNING] checking param object types - empty line or not a valid line: '{line}'")
@@ -19,13 +20,14 @@ def parse_params(llm_output):
             print(f"[WARNING] checking param object types - not a valid line: '{line}'")
             continue
         try:
+            params_raw.append(line.strip())
             p_info = [e for e in line.split(':')[0].split(' ') if e != '']
             param_name, param_type = p_info[1].strip(" `"), p_info[3].strip(" `")
             params_info[param_name] = param_type
         except Exception:
             print(f'[WARNING] checking param object types - fail to parse: {line}')
             break
-    return params_info
+    return params_info, params_raw
 
 def parse_new_predicates(llm_output) -> list[Predicate]:
     new_predicates = list()
@@ -120,7 +122,7 @@ def parse_action(llm_response: str, action_name: str) -> Action:
     Returns:
         Action: The parsed action.
     """
-    parameters = parse_params(llm_response)
+    parameters, _ = parse_params(llm_response)
     try:
         preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
     except:
@@ -318,6 +320,11 @@ def combine_blocks(heading_str: str):
     combined = "\n".join(blocks) # Join the blocks together
     return combined.replace("\n\n", "\n").strip() # Remove leading/trailing whitespace and internal empty lines
 
+def format_dict(dictionary):
+    return json.dumps(dictionary, indent=4)
+
+def format_predicates(predicates):
+    return "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
 
 if __name__ == '__main__':
     string = """

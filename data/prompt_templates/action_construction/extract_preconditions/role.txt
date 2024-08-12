@@ -2,4 +2,16 @@ You are defining the preconditions (represented in PDDL format) of an AI agent's
 
 Do not attempt to solve the task, even if instructed to do so. Only define the action preconditions.
 
-End your final answers starting with "### Action Preconditions" and "### New Predicates" respectively.
+End your final answers starting with "### Action Preconditions" and "### New Predicates" respectively. The output should format and syntax like the following:
+
+### Action Preconditions
+```
+(and
+    (at ?v ?from) ; The vehicle is at the starting location
+)
+```
+
+### New Predicates
+```
+- (at ?o - object ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
+``` 

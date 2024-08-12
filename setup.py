@@ -60,22 +60,22 @@ if __name__ == "__main__":
         
     
     
-    domain_file_path = 'tests/domain.pddl'
-    problem_file_path = 'tests/problem_1.pddl'
+    domain_file_path = 'data/domain.pddl'
+    problem_file_path = 'data/problem_1.pddl'
     
-    # pddl_domain = check_parse_domain(domain_file_path)
-    # print("PDDL domain:\n", pddl_domain)
+    pddl_domain = check_parse_domain(domain_file_path)
+    print("PDDL domain:\n", pddl_domain)
     
-    # with open(domain_file_path, "w") as f:
-    #     f.write(pddl_domain)
+    with open(domain_file_path, "w") as f:
+        f.write(pddl_domain)
 
-    # print("------------------")
+    print("------------------")
     
-    # pddl_problem = check_parse_problem(problem_file_path)
-    # print("PDDL Problem:\n", pddl_problem)
+    pddl_problem = check_parse_problem(problem_file_path)
+    print("PDDL Problem:\n", pddl_problem)
 
-    # with open(problem_file_path, "w") as f:
-    #     f.write(pddl_problem)
+    with open(problem_file_path, "w") as f:
+        f.write(pddl_problem)
         
         
     

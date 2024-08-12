@@ -1,0 +1,6 @@
+(define (problem test_domain_problem)
+    (:domain test_domain)
+    (:objects arm1 - arm blue green red yellow - block table1 - table)
+    (:init (empty arm1) (on blue red) (on green table1) (on red yellow) (on yellow table1))
+    (:goal (on red green))
+)
