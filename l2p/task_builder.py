@@ -3,7 +3,7 @@ This file contains collection of functions for PDDL task generation purposes
 """
 
 from .utils.pddl_types import Predicate, Action
-from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, convert_to_dict
+from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, convert_to_dict, format_dict, format_predicates
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
 
@@ -24,19 +24,19 @@ class TaskBuilder:
             problem_desc: str,
             domain_desc: str, 
             prompt_template: PromptBuilder,
-            type_hierarchy: dict[str,str], 
+            types: dict[str,str], 
             predicates: list[Predicate]
             ) -> tuple[dict[str,str], str]:
         
         model.reset_tokens()
 
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-        types_str = "\n".join(type_hierarchy)
+        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
+        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
+        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
         
@@ -54,34 +54,30 @@ class TaskBuilder:
             problem_desc: str,
             domain_desc: str,
             prompt_template: PromptBuilder,
-            type_hierarchy: dict[str,str], 
-            predicates: list[Predicate],
-            objects: dict[str,str]
+            types: dict[str,str]=None, 
+            predicates: list[Predicate]=None,
+            objects: dict[str,str]=None
             ) -> tuple[str, str]:
         
         model.reset_tokens()
 
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-        types_str = "\n".join(type_hierarchy)
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
+        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else ""
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
+        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{objects}', objects_str)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
 
         llm_response = model.get_output(prompt=prompt_template)
 
-        # FIX THIS SO THAT IT JUST RETURNS STRING INSTEAD OF DICT
-
         parts = llm_response.split('## OUTPUT', 1)
         if len(parts) > 1:
-            initial = convert_to_dict(parts[1].strip())
+            initial = parts[1].strip()
         else:
-            initial = {}
-
-        initial = "\n".join(initial.keys())
+            initial = "Could not parse answer."
 
         return initial, llm_response
         
@@ -91,22 +87,24 @@ class TaskBuilder:
             problem_desc: str,
             domain_desc: str,
             prompt_template: PromptBuilder,
-            type_hierarchy: dict[str,str], 
-            predicates: list[Predicate],
-            objects: dict[str,str]
+            types: dict[str,str]=None, 
+            predicates: list[Predicate]=None,
+            objects: dict[str,str]=None,
+            initial: str=None
             ) -> tuple[str, str]:
         
         model.reset_tokens()
 
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-        types_str = "\n".join(type_hierarchy)
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
+        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else ""
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
+        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{objects}', objects_str)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+        prompt_template = prompt_template.replace('{initial_state}', "## Initial States:\n" + initial if initial else "")
+        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
 
         llm_response = model.get_output(prompt=prompt_template)
 
@@ -114,7 +112,7 @@ class TaskBuilder:
         if len(parts) > 1:
             goal = parts[1].strip()
         else:
-            goal = "Could not parse answer. Here is original LLM response:\n" + llm_response
+            goal = "Could not parse answer."
 
         return goal, llm_response
 
@@ -134,27 +132,17 @@ class TaskBuilder:
         """
         model.reset_tokens()
 
-        if predicates:
-            predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-        else:
-            predicate_str = ""
-            
-        if actions:
-            action_str = self.format_action(actions=actions)
-        else:
-            action_str = ""
+        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
+        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        action_str = "## Available Actions:\n" + self.format_action(actions=actions) if actions else ""
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', str(types))
+        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{actions}', action_str)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
         
-        # print("PROMPT:\n", prompt_template)
-
         llm_response = model.get_output(prompt=prompt_template)
-
-        # print("LLM RESPONSE TASK BUILDER:\n", llm_response)
 
         objects = parse_objects(llm_response)
         initial = parse_initial(llm_response)
@@ -199,6 +187,14 @@ class TaskBuilder:
         
         return llm_response
 
+    def delete_objects():
+        pass
+    
+    def delete_initial_state():
+        pass
+    
+    def delete_goal_state():
+        pass
 
     def set_objects(self, objects: dict[str,str]):
         self.set_objects = objects
