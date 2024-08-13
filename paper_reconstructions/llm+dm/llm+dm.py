@@ -20,7 +20,7 @@ from l2p.domain_builder import DomainBuilder
 from l2p.feedback_builder import FeedbackBuilder
 from l2p.utils.pddl_validator import SyntaxValidator
 from l2p.utils.pddl_parser import parse_new_predicates, prune_predicates, prune_types, extract_types
-from setup import check_parse_domain
+from tests.setup import check_parse_domain
 
 def open_txt(file_path):
     with open(file_path, 'r') as file:

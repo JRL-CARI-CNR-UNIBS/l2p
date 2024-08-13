@@ -13,7 +13,7 @@ This library only focuses on model generation, so it is not concerned with the o
 from l2p.task_builder import TaskBuilder
 from l2p.prompt_builder import PromptBuilder
 from l2p.llm_builder import GPT_Chat
-from planner import FastDownward
+from tests.planner import FastDownward
 from openai import OpenAI
 import os
 
