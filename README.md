@@ -96,7 +96,8 @@ print("FEEDBACK:\n", feedback_response)
 - [x] `NL2Plan`
 - [x] `LLM+DM` 
 - [x] `LLM+P`
-- [ ] `PROC2PDDL`
+- [x] `PROC2PDDL`
 - [ ] `LLM+EW`
+- [ ] `LLM+consistency`
 
 ## Current Model Construction Works
