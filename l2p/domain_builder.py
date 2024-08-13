@@ -56,10 +56,12 @@ class DomainBuilder:
 
         model.reset_tokens() # reset tokens
         
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        types_str = "## Available Types:\n" + format_dict(types) if types else ""
         
         prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
+        
+        # print("PROMPT TEMPLATE:\n", prompt_template)
 
         llm_response = model.get_output(prompt=prompt_template) # prompt model
 
@@ -88,10 +90,12 @@ class DomainBuilder:
 
         model.reset_tokens()
 
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        types_str = "## Available Types:\n" + format_dict(types) if types else ""
 
         prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
+        
+        # print("PROMPT TEMPLATE:\n", prompt_template)
 
         llm_response = model.get_output(prompt=prompt_template)
 
@@ -124,12 +128,14 @@ class DomainBuilder:
 
         model.reset_tokens()
         
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        types_str = "## Available Types:\n" + format_dict(types) if types else ""
         nl_actions_str = "## Available actions:\n" + "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else ""
         
         prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
+        
+        # print("PROMPT TEMPLATE:\n", prompt_template)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
 
@@ -143,6 +149,7 @@ class DomainBuilder:
             prompt_template: PromptBuilder, 
             action_name: str,
             action_desc: str,
+            action_list: dict[str,str]=None,
             predicates: list[Predicate]=None,
             types: dict[str,str]=None
             ) -> tuple[Action, list[Predicate], str]:
@@ -167,14 +174,18 @@ class DomainBuilder:
 
         model.reset_tokens()
         
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        types_str = "## Available Types:\n" + format_dict(types) if types else ""
         predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
+        action_list_str = "## Future actions to be defined later to make up whole domain:\n" + str(action_list) if action_list else ""
         
         prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{action_list}', action_list_str)
         prompt_template = prompt_template.replace('{action_name}', "## Action name:\n" + action_name)
         prompt_template = prompt_template.replace('{action_desc}', "## Action description:\n" + action_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicates_str)
+        
+        # print("PROMPT TEMPLATE:\n", prompt_template)
 
         llm_response = model.get_output(prompt=prompt_template)
 
@@ -197,7 +208,7 @@ class DomainBuilder:
         
         model.reset_tokens()
         
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        types_str = "## Available Types:\n" + format_dict(types) if types else ""
         predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
         nl_actions_str = "## Available actions:\n" + format_dict(nl_actions) if nl_actions else ""
         
@@ -249,7 +260,7 @@ class DomainBuilder:
         
         model.reset_tokens()
         
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        types_str = "## Available Types:\n" + format_dict(types) if types else ""
         
         prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
         prompt_template = prompt_template.replace('{action_name}', "## Action name:\n" + action_name)
@@ -340,7 +351,7 @@ class DomainBuilder:
         
         model.reset_tokens() # reset tokens
         
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        types_str = "## Available Types:\n" + format_dict(types) if types else ""
         predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
         nl_actions_str = "## Available actions:\n" + "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else ""
         

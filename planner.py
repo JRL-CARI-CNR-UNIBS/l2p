@@ -170,6 +170,6 @@ if __name__ == "__main__":
     # run_fast_downward(domain_file_path, problem_file_path_2)
     # run_fast_downward(domain_file_path, problem_file_path_3)
     
-    domain = "data/domain.pddl"
-    problem = "data/problem_1.pddl"
+    domain = "tests/paper_reconstructions/nl2plan/results/domain.pddl"
+    problem = "tests/paper_reconstructions/nl2plan/results/problem.pddl"
     planner.run_fast_downward(domain, problem)

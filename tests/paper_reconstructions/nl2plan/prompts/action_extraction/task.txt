@@ -1,8 +1,5 @@
-## Domain
 {domain_desc}
 
-## Types 
-{type_hierarchy}
+{types}
 
-## Available Actions
-{actions}
+{nl_actions}

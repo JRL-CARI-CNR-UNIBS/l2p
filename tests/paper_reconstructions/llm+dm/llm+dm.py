@@ -139,21 +139,21 @@ if __name__ == "__main__":
         for i_action, action in enumerate(actions):
             
             action_desc_prompt = action_model[action]['desc']
-            action_prompt = str(prompt_template) + ' ' + action_desc_prompt
+            action_prompt = str(prompt_template)
             
             action_predicate_prompt = f'{action_prompt}'
             
             # replace prompt with dynamic predicate list
             if len(predicate_list) == 0:
                 # if no predicates in list
-                action_predicate_prompt = action_predicate_prompt.replace('{predicate_list}', '\nNo predicate has been defined yet')
+                action_predicate_prompt = action_predicate_prompt.replace('{predicates}', '\nNo predicate has been defined yet')
             else:
                 # replace with current predicates
                 readable_results = ""
                 for i, p in enumerate(predicate_list):
                     readable_results += f'\n{i + 1}. {p["raw"]}'
                     
-                action_predicate_prompt = action_predicate_prompt.replace('{predicate_list}', readable_results)
+                action_predicate_prompt = action_predicate_prompt.replace('{predicates}', readable_results)
             
             # construct action model
             pddl_action, predicate_list, llm_output = construct_action_model(

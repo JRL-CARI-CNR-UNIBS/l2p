@@ -324,6 +324,9 @@ def format_dict(dictionary):
     return json.dumps(dictionary, indent=4)
 
 def format_predicates(predicates):
+    if len(predicates) == 0:
+        print("THIS IS WORKING")
+        return ""
     return "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
 
 if __name__ == '__main__':

@@ -80,17 +80,16 @@ END OF EXAMPLE
 
 Here is the task.
 
-Domain information: {domain_desc}
+{domain_desc}
 
-Given types:
-{type_hierarchy}
+{types}
 
 Action:
-{action_name}: {action_desc}
+{action_name}
 
-## Future Actions
-The following actions will be defined later and together they make up the entire domain:
+{action_desc}
+
 {action_list}
 
 You can create and define new predicates, but you may also reuse the following predicates:
-{predicate_list}
+{predicates}

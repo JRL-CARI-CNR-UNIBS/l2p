@@ -1,6 +1,3 @@
-## Domain
 {domain_desc}
 
-## Types
-The types are:
-{type_list}
+{types}
