@@ -558,29 +558,29 @@ if __name__ == "__main__":
     # for i, problem in enumerate(problem_list, start=1):
         
     # GRANULAR TASK PIPELINE
-    objects, initial_states, goal_states = run_granular_task_pipeline(
-        model=model, 
-        problem_desc=open_file("data/problems/blocksworld_p1.txt"), 
-        domain_desc=domain_desc, 
-        object_extraction_prompt=object_extraction_prompt,
-        initial_extraction_prompt=initial_extraction_prompt,
-        goal_extraction_prompt=goal_extraction_prompt,
-        types=pruned_types,
-        predicates=predicates,
-        feedback_builder=feedback_builder
-    )
-        
-    # COMPACT TASK PIPELINE
-    # objects, initial_states, goal_states = run_compact_task_pipeline(
+    # objects, initial_states, goal_states = run_granular_task_pipeline(
     #     model=model, 
     #     problem_desc=open_file("data/problems/blocksworld_p1.txt"), 
     #     domain_desc=domain_desc, 
-    #     task_extraction_prompt=task_extraction_prompt,
+    #     object_extraction_prompt=object_extraction_prompt,
+    #     initial_extraction_prompt=initial_extraction_prompt,
+    #     goal_extraction_prompt=goal_extraction_prompt,
     #     types=pruned_types,
     #     predicates=predicates,
-    #     actions=actions,
-    #     feedback_builder=feedback_builder,
+    #     feedback_builder=feedback_builder
     # )
+        
+    # COMPACT TASK PIPELINE
+    objects, initial_states, goal_states = run_compact_task_pipeline(
+        model=model, 
+        problem_desc=open_file("data/problems/blocksworld_p1.txt"), 
+        domain_desc=domain_desc, 
+        task_extraction_prompt=task_extraction_prompt,
+        types=pruned_types,
+        predicates=predicates,
+        actions=actions,
+        feedback_builder=feedback_builder,
+    )
     
     objects_str = task_builder.format_objects(objects=objects)
     initial_states_str = task_builder.format_initial(initial_states=initial_states)

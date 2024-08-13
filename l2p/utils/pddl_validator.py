@@ -233,7 +233,7 @@ class SyntaxValidator:
         return True, feedback_msg
     
 
-    def validate_objects(self, objects: dict[str,str], types: dict[str,str]):
+    def validate_task_objects(self, objects: dict[str,str], types: dict[str,str]) -> tuple[bool, str]:
         """
         Parameters:
             - objects (dict[str,str]): a dictionary of the task objects.
@@ -279,9 +279,84 @@ class SyntaxValidator:
             
         return valid, feedback_msg
             
-    def validate_initial_state(self): pass
+    def validate_task_states(
+        self,
+        states: list[dict[str,str]], 
+        objects: dict[str,str],
+        predicates: list[Predicate],
+        state_type: str="initial"
+        ) -> tuple[bool, str]: 
+        """
+        Parameters:
+            - states (list[dict[str,str]]): a list of dictionaries of the state states.
+            - parameters (OrderedDict): parameters of the current action.
+            - types (dict[str,str]): a dictionary of the domain types.
+        
+        Returns:
+            - check, feedback_msg (bool, str)
+        
+        Checks following cases: 
+            (i) if predicates in states are found in predicates in domain
+            (ii) if object variables in states are found in task object list
+        """
+        
+        valid = True
+        feedback_msgs = []
+        
+        # loop through each state
+        for state in states:
+            
+            # (i) check if predicates in states are found in predicates in domain
+            matched_preds = False
+            state_name = state['name'] # retrieve predicate name from state
+            
+            # loop through each predicate name from domain
+            for pred in predicates:
+                # check if predicate in state is found in predicate domain
+                if state_name == pred['name']:
+                    matched_preds = True
+                    
+            # if no matches, then that state is missusing a predicate - not found in domain
+            if matched_preds == False:
+                feedback_msgs.append(f"ERROR: In the {state_type} state, '({state['name']} {' '.join(state['params'])})' contains '{state_name}' predicate, which is not found in {[p['name'] for p in predicates]}, predicate in state is missused.")
+                valid = False
+            
+            # (ii) check if object variables in states are found in task object list
+            state_params = state['params'] # retrieve variables from state
+            
+            # loop through each parameter in current state
+            for state_p in state_params:
+                
+                matched_params = False
+                for obj_name, obj_type in objects.items():
+                    # check if parameter is found in object names
+                    if state_p == obj_name:
+                        matched_params = True
+                
+                if matched_params == False:
+                    feedback_msgs.append(f"ERROR: In the {state_type} state, '({state['name']} {' '.join(state['params'])})' contains parameter '{state_p} not found in '{objects.keys()}'.")
+                    valid = False
 
-    def validate_goal_state(self): pass
+        feedback_msg = "\n".join(feedback_msgs) if not valid else "PASS: all objects are valid."
+            
+        return valid, feedback_msg
+                    
+
+    def validate_goal_state(self, goal_states: list[dict[str,str]], parameters: OrderedDict, types: dict[str,str]): 
+        """
+        Parameters:
+            - goal_states (list[dict[str,str]]): a list of dictionaries of the goal states.
+            - parameters (OrderedDict): parameters of the current action
+            - types (dict[str,str]): a dictionary of the domain types.
+        
+        Returns:
+            - check, feedback_msg (bool, str)
+        
+        Checks following cases: 
+            (i) if predicates in states are found in predicates in domain
+            (ii) if object types in states are found in the action parameter
+        """
+        pass
     
     
     def validate_header(self, llm_response: str):
@@ -498,21 +573,62 @@ Apologies for the confusion. Since the predicates are already defined, I will no
     # print("Validated:", validated)
     # print("Feedback Message:", feedback_msg)
     
-    thisdict =	{
-        "motor": "vehicle",
-        "bike": "vehicle",
-        "barrie": "location"
-        }
+    # thisdict =	{
+    #     "motor": "vehicle",
+    #     "bike": "vehicle",
+    #     "barrie": "location"
+    #     }
     
-    types = {
-        'vehicle - object': 'automobile that transports packages',
-        'truck - vehicle': '; A type of vehicle used for transporting packages within locations in a city.', 
-        'airplane - vehicle': '; A type of vehicle used for transporting packages between cities.', 
-        'location - object': '; A type of object consisting of places within a city that are directly linked to other locations.', 
-        'city - location': '; A type of location representing a city that is directly connected to other cities.'
-        }
+    # types = {
+    #     'vehicle - object': 'automobile that transports packages',
+    #     'truck - vehicle': '; A type of vehicle used for transporting packages within locations in a city.', 
+    #     'airplane - vehicle': '; A type of vehicle used for transporting packages between cities.', 
+    #     'location - object': '; A type of object consisting of places within a city that are directly linked to other locations.', 
+    #     'city - location': '; A type of location representing a city that is directly connected to other cities.'
+    #     }
     
-    valid, msg = validator.validate_objects(thisdict, types)
+    # valid, msg = validator.validate_task_objects(thisdict, types)
+    
+    # print(valid)
+    # print(msg)
+    
+    objects = {
+        'blue': 'block',
+        'red': 'block',
+        'arm1': 'arm'
+    }
+    
+    initial_states = [
+        {
+            'name':'on',
+            'params': ['black','red'],
+            'neg': False
+        },
+        {
+            'name':'empty',
+            'params': ['arm1'],
+            'neg': False 
+        }
+    ]
+    
+    predicates = list()
+    predicates.append({
+        'name': 'on', 
+        'desc': 'true if the vehicle ?v (an airplane or truck) is at the location ?l', 
+        'raw': '(at ?v - vehicle ?from - location): true if the object ?o (an arm or a block) is at the location ?l', 
+        'params': OrderedDict({'?v': 'vehicle', '?from': 'location'}), 
+        'clean': '(at ?v - vehicle ?from - location): true if the vehicle ?v (an airplane or truck) is at the location ?l'
+        })
+    
+    predicates.append({
+        'name': 'empty', 
+        'desc': 'true if the vehicle ?v (an airplane or truck) is at the location ?l', 
+        'raw': '(at ?v - vehicle ?from - location): true if the object ?o (an arm or a block) is at the location ?l', 
+        'params': OrderedDict({'?v': 'vehicle', '?from': 'location'}), 
+        'clean': '(at ?v - vehicle ?from - location): true if the vehicle ?v (an airplane or truck) is at the location ?l'
+        })
+    
+    valid, msg = validator.validate_task_states(states=initial_states, objects=objects, predicates=predicates)
     
     print(valid)
     print(msg)

@@ -149,9 +149,6 @@ def parse_objects(llm_response: str) -> dict[str, str]:
     objects_clean = clear_comments(objects_raw, comments=[':','//','#',';','(']) # Remove comments
     objects = {obj.split(" - ")[0].strip(" `"): obj.split(" - ")[1].strip(" `").lower() for obj in objects_clean.split("\n") if obj.strip()}
 
-    # IMPLEMENT CHECKS (if objects are/are not in types/predicates)
-    # objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-
     return objects
 
 def parse_initial(llm_response: str) -> list[dict[str,str]]:
