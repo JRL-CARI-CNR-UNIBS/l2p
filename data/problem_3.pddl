@@ -3,13 +3,7 @@
    (:domain test_domain)
 
    (:objects 
-block1 - block
-block2 - block
-block3 - block
-block4 - block
-block5 - block
-arm1 - arm
-table1 - table
+{'block1': 'block', 'block2': 'block', 'block3': 'block', 'block4': 'block', 'block5': 'block', 'arm1': 'arm', 'table1': 'table'}
    )
 
    (:init
@@ -24,19 +18,15 @@ table1 - table
 (clear block4)
 (clear block5)
 (empty arm1)
-(on block1 table1)
 (on block2 block1)
 (on block3 block2)
-(on block4 table1)
-(on block5 block4)
+(on block4 block5)
    )
 
    (:goal
-(and
-   (on block1 block2) 
-   (on block2 block3) 
-   (on block3 block4) 
-   (on block4 block5) 
+(and 
+   (on block3 block1) 
+   (on block5 block3) 
 )
    )
 

@@ -2,24 +2,24 @@
     (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
     (:types arm block table - object)
     (:predicates (clear ?b - block)  (empty) (holding ?b - block)  (on ?b1 - block ?b2 - block)  (on-table ?b - block))
-    (:action Pickup
+    (:action pickup
         :parameters (?b - block)
-        :precondition (and (clear ?b) (empty) (on-table ?b))
-        :effect (and (holding ?b) (not (clear ?b)) (not (on-table ?b)))
+        :precondition (and (clear ?b) (on-table ?b) (empty))
+        :effect (and (holding ?b) (not (on-table ?b)) (not (clear ?b)))
     )
-     (:action Putdown
+     (:action putdown
         :parameters (?b - block)
         :precondition (holding ?b)
-        :effect (and (clear ?b) (on-table ?b) (empty))
+        :effect (and (not (holding ?b)) (on-table ?b) (clear ?b))
     )
-     (:action Stack
-        :parameters (?b1 - block ?b2 - block)
-        :precondition (and (holding ?b2) (clear ?b1))
-        :effect (and (on ?b2 ?b1) (not (clear ?b1)) (empty))
+     (:action stack
+        :parameters (?top - block ?bottom - block)
+        :precondition (and (empty) (holding ?top) (clear ?bottom))
+        :effect (and (not (empty)) (not (holding ?top)) (on ?top ?bottom) (not (clear ?bottom)))
     )
-     (:action Unstack
-        :parameters (?b1 - block ?b2 - block)
-        :precondition (and (empty) (clear ?b2) (on ?b2 ?b1))
-        :effect (and (holding ?b2) (clear ?b1) (not (on ?b2 ?b1)))
+     (:action unstack
+        :parameters (?top - block ?bottom - block)
+        :precondition (and (empty) (clear ?top) (on ?top ?bottom))
+        :effect (and (holding ?top) (not (on ?top ?bottom)) (clear ?bottom))
     )
 )

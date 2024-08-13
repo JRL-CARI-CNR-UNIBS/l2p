@@ -30,21 +30,18 @@ class TaskBuilder:
         
         model.reset_tokens()
 
-        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
+        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
+            if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
         
-        parts = llm_response.split('## OUTPUT', 1)
-        if len(parts) > 1:
-            objects = convert_to_dict(parts[1].strip())
-        else:
-            objects = {}
+        objects = parse_objects(llm_response)
 
         return objects, llm_response
 
@@ -57,27 +54,24 @@ class TaskBuilder:
             types: dict[str,str]=None, 
             predicates: list[Predicate]=None,
             objects: dict[str,str]=None
-            ) -> tuple[str, str]:
+            ) -> tuple[list[dict[str,str]], str]:
         
         model.reset_tokens()
 
-        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else ""
+        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
+            if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{objects}', objects_str)
-        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
         llm_response = model.get_output(prompt=prompt_template)
 
-        parts = llm_response.split('## OUTPUT', 1)
-        if len(parts) > 1:
-            initial = parts[1].strip()
-        else:
-            initial = "Could not parse answer."
+        initial = parse_initial(llm_response)
 
         return initial, llm_response
         
@@ -91,28 +85,25 @@ class TaskBuilder:
             predicates: list[Predicate]=None,
             objects: dict[str,str]=None,
             initial: str=None
-            ) -> tuple[str, str]:
+            ) -> tuple[list[dict[str,str]], str]:
         
         model.reset_tokens()
 
-        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else ""
+        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
+            if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{objects}', objects_str)
-        prompt_template = prompt_template.replace('{initial_state}', "## Initial States:\n" + initial if initial else "")
-        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
+        prompt_template = prompt_template.replace('{initial_state}', initial if initial else "No initial state provided.")
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
         llm_response = model.get_output(prompt=prompt_template)
 
-        parts = llm_response.split('## OUTPUT', 1)
-        if len(parts) > 1:
-            goal = parts[1].strip()
-        else:
-            goal = "Could not parse answer."
+        goal = parse_goal(llm_response)
 
         return goal, llm_response
 
@@ -125,22 +116,23 @@ class TaskBuilder:
             types: dict[str,str]=None, 
             predicates: list[Predicate]=None,
             actions: list[Action]=None
-            ) -> tuple[dict[str,str],str,str,str]:
+            ) -> tuple[dict[str,str],list[dict[str,str]],list[dict[str,str]],str]:
         """
         Extracts objects, initial, and goal states from LLM output given domain description, types, and predicates
         Returns -> tuple[str,str,str]
         """
         model.reset_tokens()
 
-        predicate_str = "## Available Predicates:\n" + "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else ""
-        types_str = "## Available Types:\n" + "\n".join(types) if types else ""
-        action_str = "## Available Actions:\n" + self.format_action(actions=actions) if actions else ""
+        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
+            if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+        action_str = self.format_action(actions=actions) if actions else "No actions provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicate_str)
         prompt_template = prompt_template.replace('{actions}', action_str)
-        prompt_template = prompt_template.replace('{problem_desc}', "## Problem description:\n" + problem_desc)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
         
         llm_response = model.get_output(prompt=prompt_template)
 
@@ -240,6 +232,31 @@ class TaskBuilder:
             desc += f"   :effect\n{action['effects']}\n"
             desc += ")\n\n"
         return desc
+
+    def format_objects(self, objects: dict[str,str]) -> str:
+        objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+        return objects
+
+    def format_initial(self, initial_states: list[dict[str,str]]) -> str:
+        inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in initial_states] # The main part of each predicate
+        full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(initial_states, inner_str)] # Add the `not` if needed
+        initial_states_str = "\n".join(full_str) # Combine the states into a single string
+        
+        return initial_states_str
+    
+    def format_goal(self, goal_states: list[dict[str,str]]) -> str:
+        goal_states_str = "(AND \n"
+
+        # loop through each dictionary in the list
+        for item in goal_states:
+            # extract the name and parameters from the dictionary
+            name = item['name']
+            params = " ".join(item['params'])
+            goal_states_str += f"   ({name} {params}) \n" # append the predicate in the desired format
+
+        goal_states_str += ")"
+        
+        return goal_states_str
 
 if __name__ == "__main__":
     pass

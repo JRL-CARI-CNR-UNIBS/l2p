@@ -7,4 +7,9 @@ Also it is crucial you follow these checks:
     - objects name should not be the same as a type name
     - object name should not be the same as a predicate name
 
-End your final answer starting with "## OUTPUT".
+Do not, under any circumstance, output the answers in PDDL format. Final answer must be in the following format at the end:
+
+## OBJECTS
+```
+truck1 - truck
+```

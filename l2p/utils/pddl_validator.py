@@ -5,11 +5,12 @@ Run: python3 -m l2p.utils.pddl_validator
 """
 
 from collections import OrderedDict
-from copy import deepcopy
 from .pddl_parser import parse_params, parse_new_predicates, parse_predicates
 from .pddl_types import Predicate
 
 class SyntaxValidator:
+
+    # PARAMETER CHECKS
 
     def validate_params(self, parameters: OrderedDict, types: dict[str,str]) -> tuple[bool,str]:
         """Checks whether a PDDL action parameter contains types found in object types."""
@@ -24,6 +25,8 @@ class SyntaxValidator:
         feedback_msg = "PASS: All parameter types found in object types."
         return True, feedback_msg
 
+    # PREDICATE CHECKS
+    
     def validate_types_predicates(self, predicates: list[dict], types: dict[str, str]) -> tuple[bool, str]:
         """Check if predicate name is found within any type definitions"""
 
@@ -50,6 +53,7 @@ class SyntaxValidator:
         return True, feedback_msg
 
     def validate_duplicate_predicates(self, curr_predicates: list[Predicate], new_predicates: list[Predicate]) -> tuple[bool,str]:
+        """Checks if predicates have the same name but different parameters"""
         
         curr_pred_dict = {pred['name'].lower(): pred for pred in curr_predicates}
         
@@ -77,6 +81,8 @@ class SyntaxValidator:
         return True, feedback_msg
 
     def validate_format_predicates(self, predicates: list[dict], types: dict[str, str]) -> tuple[bool, str]:
+        """Checks for any PDDL syntax found within predicates"""
+        
         all_invalid_params = []
 
         for pred in predicates:
@@ -201,29 +207,86 @@ class SyntaxValidator:
         if not validation_info[0]:
             return validation_info
 
-        if llm_response.split('Effects')[1].count('```\n') < 2:
-            # no effects, probably. 
-            return True, 'invalid_predicate_usage', None, None
+        # check effects
+        if llm_response.split('Effects')[1].count('```\n') < 2: 
+            return True, 'invalid_predicate_usage'
         eff_str = llm_response.split('Effects')[1].split('```\n')[1].strip()
         eff_str = eff_str.replace('\n', ' ').replace('(', ' ( ').replace(')', ' ) ')
         return self.validate_pddl_usage_predicates(eff_str, curr_predicates, params_info, types, part='effects')
 
+    def validate_overflow_predicates(self, llm_response: str, limit: int) -> tuple[bool, str]:
+        """
+        Checks if LLM output contains too many predicates in precondition/effects (based on users assigned limit)
+        """
+        assert '\nPreconditions:' in llm_response, llm_response
+        precond_str = llm_response.split('\nPreconditions:')[1].split('```\n')[1].strip()
+        if len(precond_str.split('\n')) > limit:
+            feedback_msg = f'FAIL: You seem to have generated an action model with an unusually long list of preconditions. Please include only the relevant preconditions/effects and keep the action model concise.\n\nParameters:'
+            return False, feedback_msg
+        
+        eff_str = llm_response.split('Effects')[1].split('```\n')[1].strip()
+        if len(eff_str.split('\n')) > limit:
+            feedback_msg = f'FAIL: You seem to have generated an action model with an unusually long list of effects. Please include only the relevant preconditions/effects and keep the action model concise.\n\nParameters:'
+            return False, feedback_msg
 
-    def validate_preconditions(self): pass
+        feedback_msg = "PASS: predicate output is fine."
+        return True, feedback_msg
+    
 
-    def validate_effects(self): pass
-
-    def validate_types(self): pass
-
-
-    def validate_objects(self): pass
-
+    def validate_objects(self, objects: dict[str,str], types: dict[str,str]):
+        """
+        Parameters:
+            - objects (dict[str,str]): a dictionary of the task objects.
+            - types (dict[str,str]): a dictionary of the domain types.
+        
+        Returns:
+            - check, feedback_msg (bool, str)
+        
+        Checks following cases: 
+            (i) if object type is the same as type
+            (ii) if object name is the same as type
+        """
+        
+        valid = True
+        feedback_msgs = []
+        
+        for obj_name, obj_type in objects.items():
+            obj_type_found = False
+            
+            for type_key in types.keys():
+                current_type, parent_type = type_key.split(" - ")
+                
+                # checks if obj_type is found in types
+                if obj_type == current_type or obj_type == parent_type:
+                    obj_type_found = True
+                    
+                # checks if obj_name matches either current_type or parent_type
+                if obj_name == current_type:
+                    feedback_msgs.append(f"ERROR: Object variable '{obj_name}' matches the type name '{current_type}', change it to be unique from types: {types.keys()}")
+                    valid = False
+                    break
+                if obj_name == parent_type:
+                    feedback_msgs.append(f"ERROR: Object variable '{obj_name}' matches the type name '{parent_type}', change it to be unique from types: {types.keys()}")
+                    valid = False
+                    break
+            
+            # clause that checks if obj_type is found in types
+            if not obj_type_found:
+                feedback_msgs.append(f"ERROR: Object variable '{obj_name}' has an invalid type '{obj_type}' not found in types: {types.keys()}")
+                valid = False
+                
+        feedback_msg = "\n".join(feedback_msgs) if not valid else "PASS: all objects are valid."
+            
+        return valid, feedback_msg
+            
     def validate_initial_state(self): pass
 
     def validate_goal_state(self): pass
     
     
     def validate_header(self, llm_response: str):
+        """Checks if domain headers and formatted code block syntax are found in LLM output"""
+        
         for header in ['Parameters', 'Preconditions', 'Effects', 'New Predicates']:
             if header not in llm_response:
                 feedback_msg = f'FAIL: The header `{header}` is missing in the PDDL model. Please include the header `{header}` in the PDDL model.'
@@ -248,6 +311,8 @@ class SyntaxValidator:
         return True, feedback_msg
     
     def validate_keyword_usage(self, llm_response: str):
+        """Checks if action effects uses unsupported universal condition keywords"""
+        
         if not "Action Effects" in llm_response:
             feedback_msg = "PASS"
             return True, feedback_msg
@@ -260,23 +325,9 @@ class SyntaxValidator:
         feedback_msg = "PASS: unsupported keywords are not found in the action effects."
         return True, feedback_msg
     
-    def validate_messed_output(self, llm_response: str) -> tuple[bool, str]:
-        """
-        Though this happens extremely rarely, the LLM (even GPT-4) might generate messed-up outputs (basically
-            listing a large number of predicates in preconditions and effects)
-        """
-        assert '\nPreconditions:' in llm_response, llm_response
-        precond_str = llm_response.split('\nPreconditions:')[1].split('```\n')[1].strip()
-        if len(precond_str.split('\n')) > 20:
-            feedback_msg = f'FAIL: You seem to have generated an action model with an unusually long list of preconditions. Please include only the relevant preconditions/effects and keep the action model concise.\n\nParameters:'
-            return False, feedback_msg
-
-        feedback_msg = "PASS: predicate output is fine."
-        return True, feedback_msg
-    
     
     def validate_new_action_creation(self, llm_response: str) -> tuple[bool, str]:
-        """This action checks if the LLM attempts to create a new action (so two or more actions defined in the same response)"""
+        """Checks if the LLM attempts to create a new action (so two or more actions defined in the same response)"""
         
         if llm_response.count('## Action Parameters') > 1 or llm_response.count('## Preconditions') > 1 or llm_response.count('## Effects') > 1 or llm_response.count('## New Predicates') > 1:
             feedback_msg = "It's not possible to create new actions at this time. Please only define the requested action."
@@ -290,12 +341,12 @@ class SyntaxValidator:
         Check if the claimed_type is valid for the target_type according to the type hierarchy.
         
         Parameters:
-        - target_type (str): The type that is expected for the parameter.
-        - claimed_type (str): The type that is provided in the PDDL.
-        - types (dict[str, str]): A dictionary mapping subtypes to their supertypes.
+            - target_type (str): The type that is expected for the parameter.
+            - claimed_type (str): The type that is provided in the PDDL.
+            - types (dict[str, str]): A dictionary mapping subtypes to their supertypes.
         
         Returns:
-        - bool: True if claimed_type is valid, False otherwise.
+            - bool: True if claimed_type is valid, False otherwise.
         """
         # Check if the claimed type matches the target type
         if claimed_type == target_type:
@@ -442,7 +493,26 @@ Apologies for the confusion. Since the predicates are already defined, I will no
     # print("Feedback Message:", feedback_msg)
     
     
-    validated, feedback_msg = validator.validate_usage_predicates(pddl_snippet, new_predicates, types)
+    # validated, feedback_msg = validator.validate_usage_predicates(pddl_snippet, new_predicates, types)
 
-    print("Validated:", validated)
-    print("Feedback Message:", feedback_msg)
+    # print("Validated:", validated)
+    # print("Feedback Message:", feedback_msg)
+    
+    thisdict =	{
+        "motor": "vehicle",
+        "bike": "vehicle",
+        "barrie": "location"
+        }
+    
+    types = {
+        'vehicle - object': 'automobile that transports packages',
+        'truck - vehicle': '; A type of vehicle used for transporting packages within locations in a city.', 
+        'airplane - vehicle': '; A type of vehicle used for transporting packages between cities.', 
+        'location - object': '; A type of object consisting of places within a city that are directly linked to other locations.', 
+        'city - location': '; A type of location representing a city that is directly connected to other cities.'
+        }
+    
+    valid, msg = validator.validate_objects(thisdict, types)
+    
+    print(valid)
+    print(msg)

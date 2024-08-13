@@ -1,7 +1,5 @@
 """
 This file uses inputted NL descriptions to generate prompts for LLM
-
-ADD IN {given} within each assignment instead of having it in the prompt
 """
 
 import os

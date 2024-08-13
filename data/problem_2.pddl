@@ -3,12 +3,7 @@
    (:domain test_domain)
 
    (:objects 
-blue - block
-red - block
-green - block
-yellow - block
-arm1 - arm
-table1 - table
+{'blue': 'block', 'red': 'block', 'green': 'block', 'yellow': 'block', 'arm1': 'arm', 'table1': 'table'}
    )
 
    (:init
@@ -21,14 +16,16 @@ table1 - table
 (clear green)
 (clear yellow)
 (empty arm1)
+(on blue red)
+(on green yellow)
    )
 
    (:goal
-(and
-   (on red green)
-   (on green blue)
-   (on blue yellow)
-   (finalised house1)
+(and 
+   (on red green) 
+   (on green blue) 
+   (on blue yellow) 
+   (finalised house1) 
 )
    )
 

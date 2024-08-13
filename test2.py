@@ -1,23 +1,27 @@
-from typing import Dict
+def dict_list_to_string(dict_list):
+    # Start the string with "(AND "
+    result_str = "(AND \n"
 
-def delete_key_from_dict(d: Dict[str, str], key_to_delete: str) -> Dict[str, str]:
-    """
-    Removes the specified key from the dictionary if it exists.
+    # Loop through each dictionary in the list
+    for item in dict_list:
+        # Extract the name and parameters from the dictionary
+        name = item['name']
+        params = " ".join(item['params'])
+        
+        # Append the predicate in the desired format
+        result_str += f"   ({name} {params}) \n"
 
-    :param d: The dictionary from which the key should be removed.
-    :param key_to_delete: The key to remove from the dictionary.
-    :return: A new dictionary with the specified key removed.
-    """
-    # Create a new dictionary excluding the key to delete
-    return {k: v for k, v in d.items() if k != key_to_delete}
+    # Close the string with ")"
+    result_str += ")"
 
-# Example usage:
-my_dict = {
-    "key1": "value1",
-    "key2": "value2",
-    "key3": "value3"
-}
+    return result_str
 
-# Delete the key "key2"
-updated_dict = delete_key_from_dict(my_dict, "key2")
-print(updated_dict)
+# Example usage
+dict_list = [
+    {'name': 'on', 'params': ['red_block', 'green_block']},
+    {'name': 'clear', 'params': ['green_block']},
+    {'name': 'clear', 'params': ['red_block']}
+]
+
+result = dict_list_to_string(dict_list)
+print(result)

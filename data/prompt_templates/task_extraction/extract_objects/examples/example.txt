@@ -64,17 +64,9 @@ bob - general_worker: The second worker, Bob
 
 Response: all feedback is correct, no suggestions.
 
-3. Re-iterate over all objects if suggestion needed. Otherwise, format objects into Python dictionary '{'name':'type'}':
+3. Re-iterate over all objects if suggestion needed. Otherwise, define them under the capitalized header as final input: '## OBJECTS':
 
-## OUTPUT
-{
-    'truck1': 'vehicle',
-    'truck2': 'vehicle',
-    'chicago_depot': 'location',
-    'house1': 'house',
-    'house2': 'house',
-    'house3': 'house',
-    'jamie': 'administrator',
-    'emma': 'general_worker',
-    'bob': 'general_worker'
-}
+## OBJECTS
+```
+truck1 - truck
+```

@@ -81,11 +81,13 @@ My concrete suggestions are the following:
 
 Suggestion response: For the goal, we remove the "truck1" location predicate, but still check that all the houses are finalised.
 
-3. Re-iterate the corrected goal state under the following header in string format
+3. Re-iterate the corrected goal state under the following header:
 
-## OUTPUT
+## GOAL
+```
 (AND ; all the following should be done
    (finalised house1) ; house 1 is done
    (finalised house2) ; house 2 is done
    (finalised house3) ; house 3 is done
 )
+```

@@ -154,7 +154,7 @@ def parse_objects(llm_response: str) -> dict[str, str]:
 
     return objects
 
-def parse_initial(llm_response: str) -> str:
+def parse_initial(llm_response: str) -> list[dict[str,str]]:
     """Extracts state (PDDL-init) from LLM response and returns it as a string"""
     state_head = extract_heading(llm_response, "INITIAL")
     state_raw = combine_blocks(state_head)
@@ -175,12 +175,9 @@ def parse_initial(llm_response: str) -> str:
             params = line.split(" ")[1:] if len(line.split(" ")) > 1 else []
         states.append({"name": name, "params": params, "neg": neg})
 
-    inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in states] # The main part of each predicate
-    full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(states, inner_str)] # Add the `not` if needed
-    state_str = "\n".join(full_str) # Combine the states into a single string
-    return state_str
+    return states
 
-def parse_goal(llm_response: str) -> str:
+def parse_goal(llm_response: str) -> list[dict[str,str]]:
     """Extracts goal (PDDL-goal) from LLM response and returns it as a string"""
     goal_head = extract_heading(llm_response, "GOAL")
 
@@ -190,16 +187,16 @@ def parse_goal(llm_response: str) -> str:
     goal_clean = clear_comments(goal_raw)
 
     goal_pure = goal_clean.replace("and", "").replace("AND", "").replace("not", "").replace("NOT", "")
-    goals = []
+    goal = []
     for line in goal_pure.split("\n"):
         line = line.strip(" ()")
         if not line: # Skip empty lines
             continue
         name = line.split(" ")[0]
         params = line.split(" ")[1:] if len(line.split(" ")) > 1 else []
-        goals.append({"name": name, "params": params})
+        goal.append({"name": name, "params": params})
 
-    return goal_clean # Since the goal uses `and` and `not` recombining it is difficult 
+    return goal # Since the goal uses `and` and `not` recombining it is difficult 
 
 
 def prune_types(types: dict[str,str], predicates: list[Predicate], actions: list[Action]) -> dict[str,str]:

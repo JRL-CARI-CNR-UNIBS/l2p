@@ -2,7 +2,7 @@
 {domain_desc}
 
 ## Types
-{type_hierarchy}
+{types}
 
 ## Predicates
 {predicates}

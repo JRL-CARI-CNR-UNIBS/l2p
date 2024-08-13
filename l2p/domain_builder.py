@@ -7,7 +7,7 @@ from .utils.pddl_parser import parse_params, parse_new_predicates, parse_action,
 from .utils.pddl_types import Predicate, Action
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
-import re
+import re, time
 
 class DomainBuilder:
     def __init__(
@@ -40,7 +40,8 @@ class DomainBuilder:
             model: LLM_Chat, 
             domain_desc: str, 
             prompt_template: PromptBuilder,
-            types: dict[str,str]=None
+            types: dict[str,str]=None,
+            max_retries: int=3
             ) -> tuple[dict[str,str], str]:
         """
         Extracts types with domain given
@@ -53,27 +54,35 @@ class DomainBuilder:
         Returns:
             type_dict (dict[str,str]): dictionary of types with (name:description) pair
         """
-
-        model.reset_tokens() # reset tokens
         
-        types_str = "## Available Types:\n" + format_dict(types) if types else ""
-        
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
-        
-        # print("PROMPT TEMPLATE:\n", prompt_template)
+        for attempt in range(max_retries):
+            try:
+                model.reset_tokens() # reset tokens
+                
+                types_str = format_dict(types) if types else "No types provided."
+                
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
 
-        llm_response = model.get_output(prompt=prompt_template) # prompt model
+                llm_response = model.get_output(prompt=prompt_template) # prompt model
 
-        types = convert_to_dict(llm_response=llm_response)
-        return types, llm_response
+                types = convert_to_dict(llm_response=llm_response)
+                
+                return types, llm_response
+
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract types.")
     
     def extract_type_hierarchy(
             self, 
             model: LLM_Chat, 
             domain_desc: str,
             prompt_template: PromptBuilder, 
-            types: dict[str,str]=None
+            types: dict[str,str]=None,
+            max_retries: int=3
             ) -> tuple[dict[str,str], str]:
         """
         Extracts type hierarchy from types list and domain given
@@ -87,28 +96,36 @@ class DomainBuilder:
         Returns:
             type_hierarchy (dict[str,str]): dictionary of type hierarchy
         """
-
-        model.reset_tokens()
-
-        types_str = "## Available Types:\n" + format_dict(types) if types else ""
-
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
         
-        # print("PROMPT TEMPLATE:\n", prompt_template)
+        for attempt in range(max_retries):
+            try:
 
-        llm_response = model.get_output(prompt=prompt_template)
+                model.reset_tokens()
 
-        type_hierarchy = convert_to_dict(llm_response=llm_response)
-        return type_hierarchy, llm_response
-    
+                types_str = format_dict(types) if types else "No types provided."
+
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
+
+                llm_response = model.get_output(prompt=prompt_template)
+
+                type_hierarchy = convert_to_dict(llm_response=llm_response)
+                return type_hierarchy, llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract type hierarchy.")
+            
     def extract_nl_actions(
             self, 
             model: LLM_Chat,
             domain_desc: str, 
             prompt_template: PromptBuilder, 
             types: dict[str,str]=None,
-            nl_actions: dict[str,str]=None
+            nl_actions: dict[str,str]=None,
+            max_retries: int=3
             ) -> tuple[dict[str,str], str]:
         
         """
@@ -126,21 +143,28 @@ class DomainBuilder:
             nl_actions (dict[str, str]): a dictionary of extracted actions, where the keys are action names and values are action descriptions
         """
 
-        model.reset_tokens()
-        
-        types_str = "## Available Types:\n" + format_dict(types) if types else ""
-        nl_actions_str = "## Available actions:\n" + "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else ""
-        
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
-        prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
-        
-        # print("PROMPT TEMPLATE:\n", prompt_template)
+        for attempt in range(max_retries):
+            try:
 
-        llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
+                model.reset_tokens()
+                
+                types_str = format_dict(types) if types else "No types provided."
+                nl_actions_str = "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else "No actions provided."
+                
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
+                prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
 
-        nl_actions = convert_to_dict(llm_response=llm_response)
-        return nl_actions, llm_response
+                llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
+
+                nl_actions = convert_to_dict(llm_response=llm_response)
+                return nl_actions, llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract type hierarchy.")
     
     def extract_pddl_action(
             self, 
@@ -151,7 +175,8 @@ class DomainBuilder:
             action_desc: str,
             action_list: dict[str,str]=None,
             predicates: list[Predicate]=None,
-            types: dict[str,str]=None
+            types: dict[str,str]=None,
+            max_retries: int=3
             ) -> tuple[Action, list[Predicate], str]:
         """
         Construct an action from a given action description using LLM
@@ -171,30 +196,37 @@ class DomainBuilder:
             new_predicates list[Predicate]: a list of new predicates
 
         """
-
-        model.reset_tokens()
         
-        types_str = "## Available Types:\n" + format_dict(types) if types else ""
-        predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
-        action_list_str = "## Future actions to be defined later to make up whole domain:\n" + str(action_list) if action_list else ""
-        
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{action_list}', action_list_str)
-        prompt_template = prompt_template.replace('{action_name}', "## Action name:\n" + action_name)
-        prompt_template = prompt_template.replace('{action_desc}', "## Action description:\n" + action_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
-        prompt_template = prompt_template.replace('{predicates}', predicates_str)
-        
-        # print("PROMPT TEMPLATE:\n", prompt_template)
+        for attempt in range(max_retries):
+            try:
 
-        llm_response = model.get_output(prompt=prompt_template)
+                model.reset_tokens()
+                
+                types_str = format_dict(types) if types else "No types provided."
+                predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
+                action_list_str = str(action_list) if action_list else "No other actions provided"
+                
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{action_list}', action_list_str)
+                prompt_template = prompt_template.replace('{action_name}', action_name)
+                prompt_template = prompt_template.replace('{action_desc}', action_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
+                prompt_template = prompt_template.replace('{predicates}', predicates_str)
+                
+                llm_response = model.get_output(prompt=prompt_template)
 
-        action = parse_action(llm_response=llm_response, action_name=action_name)
-        new_predicates = parse_new_predicates(llm_response)
-        
-        new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
+                action = parse_action(llm_response=llm_response, action_name=action_name)
+                new_predicates = parse_new_predicates(llm_response)
+                
+                new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
-        return action, new_predicates, llm_response
+                return action, new_predicates, llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract natural language actions.")
  
     def extract_pddl_actions(
         self, 
@@ -208,11 +240,11 @@ class DomainBuilder:
         
         model.reset_tokens()
         
-        types_str = "## Available Types:\n" + format_dict(types) if types else ""
-        predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
-        nl_actions_str = "## Available actions:\n" + format_dict(nl_actions) if nl_actions else ""
+        types_str = format_dict(types) if types else "No types provided."
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
+        nl_actions_str = format_dict(nl_actions) if nl_actions else "No actions provided."
         
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicates_str)
         prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
@@ -260,11 +292,11 @@ class DomainBuilder:
         
         model.reset_tokens()
         
-        types_str = "## Available Types:\n" + format_dict(types) if types else ""
+        types_str = format_dict(types) if types else "No types provided."
         
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{action_name}', "## Action name:\n" + action_name)
-        prompt_template = prompt_template.replace('{action_desc}', "## Action description:\n" + action_desc)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
@@ -291,12 +323,12 @@ class DomainBuilder:
 
         model.reset_tokens()
         
-        predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{action_name}', "## Action name:\n" + action_name)
-        prompt_template = prompt_template.replace('{action_desc}', "## Action description:\n" + action_desc)
-        prompt_template = prompt_template.replace('{parameters}', "## Parameters:\n" + "\n".join(params))
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
+        prompt_template = prompt_template.replace('{parameters}', "\n".join(params))
         prompt_template = prompt_template.replace('{predicates}', predicates_str)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
@@ -324,13 +356,13 @@ class DomainBuilder:
         """
         model.reset_tokens()
         
-        predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
         
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
-        prompt_template = prompt_template.replace('{action_name}', "## Action name:\n" + action_name)
-        prompt_template = prompt_template.replace('{action_desc}', "## Action description:\n" + action_desc)
-        prompt_template = prompt_template.replace('{parameters}', "## Parameters:\n" + "\n".join(params))
-        prompt_template = prompt_template.replace('{preconditions}', "## Preconditions:\n" + precondition)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
+        prompt_template = prompt_template.replace('{parameters}', "\n".join(params))
+        prompt_template = prompt_template.replace('{preconditions}', precondition)
         prompt_template = prompt_template.replace('{predicates}', predicates_str)
 
         llm_response = model.get_output(prompt=prompt_template) # get LLM response
@@ -351,11 +383,11 @@ class DomainBuilder:
         
         model.reset_tokens() # reset tokens
         
-        types_str = "## Available Types:\n" + format_dict(types) if types else ""
-        predicates_str = "## Available Predicates:\n" + format_predicates(predicates) if predicates else ""
-        nl_actions_str = "## Available actions:\n" + "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else ""
+        types_str = format_dict(types) if types else "No types provided."
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
+        nl_actions_str = "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else "No actions provided."
         
-        prompt_template = prompt_template.replace('{domain_desc}', "## Domain:\n" + domain_desc)
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
         prompt_template = prompt_template.replace('{types}', types_str)
         prompt_template = prompt_template.replace('{predicates}', predicates_str)
         prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)

@@ -2,4 +2,4 @@ Chain of Thought for extracting task objects:
 
 1. Identify all key terms in the description describing a certain type, for each object extracted, identify the cardinality of each object described
 2. Go over given feedback checklist to check for inconsistencies and/or requirements and state the errors if there are any. If there are errors, generate a suggestion
-3. Re-iterate over the objects and put them into a Python dictionary pair '{'name':'type'}' underneath the header "## OUTPUT". Keep the objects the same if they do not need to be modified.
+3. Re-iterate over the objects. At this point, define them under the capitalized header as final input: '## OBJECTS'. Keep the objects the same if they do not need to be modified.

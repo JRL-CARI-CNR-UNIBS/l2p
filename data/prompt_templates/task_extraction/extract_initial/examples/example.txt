@@ -79,21 +79,21 @@ Finally, the "connected" predicate states that two locations are connected if th
 Reponse: adding the starting location for Bob as well as removing the goal condition for truck1 is both correct however. I'll make those changes.
 
 
-3. Re-iterate the corrected initialization under the following header in Python dictionary format: '{'state': 'description'}'
+3. Re-iterate the corrected initialization.
 
 Let's start by specifying where everyone is again. This time, we make sure to include Bob. We still assume that all the houses are entirely unbuilt and no orders are written. The connections between the locations are the same bi-directional connections as before.
 
-## OUTPUT
-{
-    '(at truck1 chicago_depot)': 'truck1 is at the chicago_depot',
-    '(at truck2 chicago_depot)': 'truck2 is at the chicago_depot',
-    '(at jamie chicago_depot)': 'Jamie is at the depot',
-    '(at emma chicago_depot)': 'Emma is at the depot',
-    '(at bob chicago_depot)': 'Bob is at the depot',
-    '(connected house1 chicago_depot)': 'house1 is connected to the chicago_depot',
-    '(connected house2 chicago_depot)': 'house2 is connected to the chicago_depot',
-    '(connected house3 chicago_depot)': 'house3 is connected to the chicago_depot',
-    '(connected chicago_depot house1)': 'chicago_depot is connected to house1',
-    '(connected chicago_depot house2)': 'chicago_depot is connected to house2',
-    '(connected chicago_depot house3)': 'chicago_depot is connected to house3'
-}
+## INITIAL
+```
+(at truck1 chicago_depot): truck1 is at the chicago_depot
+(at truck2 chicago_depot): truck2 is at the chicago_depot
+(at jamie chicago_depot): Jamie is at the depot
+(at emma chicago_depot): Emma is at the depot
+(at bob chicago_depot): Bob is at the depot
+(connected house1 chicago_depot): house1 is connected to the chicago_depot
+(connected house2 chicago_depot): house2 is connected to the chicago_depot
+(connected house3 chicago_depot): house3 is connected to the chicago_depot
+(connected chicago_depot house1): chicago_depot is connected to house1
+(connected chicago_depot house2): chicago_depot is connected to house2
+(connected chicago_depot house3): chicago_depot is connected to house3
+```

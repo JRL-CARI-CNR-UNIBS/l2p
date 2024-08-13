@@ -80,15 +80,19 @@ END OF EXAMPLE
 
 Here is the task.
 
+## Domain
 {domain_desc}
 
+## Available types
 {types}
 
-Action:
+## Action name
 {action_name}
 
+## Action description
 {action_desc}
 
+## Future actions to be used later
 {action_list}
 
 You can create and define new predicates, but you may also reuse the following predicates:

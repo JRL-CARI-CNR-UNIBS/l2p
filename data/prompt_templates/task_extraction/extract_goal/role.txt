@@ -2,4 +2,11 @@ Your task is to extract the goal state for a PDDL problem based on the available
 
 You will be given the available objects to be used. Do not create any new objects under any circumstances.
 
-End your final answer starting with "## OUTPUT".
+Do not, under any circumstance, output the answers in PDDL format. Final answer must be in the following format at the end:
+
+## GOAL
+```
+(AND ; all the following should be done
+   (finalised house1) ; house 1 is done
+)
+```

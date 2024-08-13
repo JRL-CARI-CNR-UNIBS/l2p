@@ -1,17 +1,19 @@
-## Domain 
+Here is the task:
+
+## Domain
 {domain_desc}
 
 ## Types
-{type_hierarchy}
+{types}
 
-## Future Actions
-The following actions will be defined later and together they make up the entire domain:
+## Future actions to be used later:
 {action_list}
 
-## Action
+## Action name
 {action_name}
 
+## Action description
 {action_desc}
 
-### Available Predicates
-{predicate_list}
+# Available predicates
+{predicates}
