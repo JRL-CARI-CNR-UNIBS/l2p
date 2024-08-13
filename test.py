@@ -1,12 +1,6 @@
 from pddl.parser.domain import DomainParser
 from textwrap import dedent
 
-"""
-PDDL parser does not catch
-    - If there is a variable being used in action, but is missing in parameter
-    - 
-"""
-
 def test_hierarchical_types() -> None:
     """Test correct parsing of hierarchical types (see https://github.com/AI-Planning/pddl/issues/70)."""
     domain_str = dedent(

@@ -1,0 +1,75 @@
+(define (domain test_domain)
+    (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
+    (:types down east in north out south up west - direction player survivor - human fire fish leaves raft rock spear tinder vines water wood - item beach jungle ocean treetop - location direction human item location - object)
+    (:predicates (at ?obj - object ?loc - location)  (at_ocean ?loc - location)  (can_light_fire ?loc - location)  (connected ?loc1 - location ?dir - direction ?loc2 - location)  (cooked ?item - item)  (drank ?water - water)  (groove ?wood - wood)  (has_escaped ?player - player)  (has_fire ?loc - location)  (has_fish ?loc - location)  (has_friend ?survivor - survivor)  (has_shelter ?loc - location)  (has_water_source ?loc - location)  (has_wood ?loc - location)  (inventory ?player ?item)  (is_safe ?loc - location)  (treated ?water - water))
+    (:action build_raft
+        :parameters (?player - human ?raft - raft ?loc - location)
+        :precondition (and (inventory ?player ?raft) (is_safe ?loc))
+        :effect (and (has_escaped ?player))
+    )
+     (:action build_shelter
+        :parameters (?player - human ?wood - wood ?loc - location)
+        :precondition (and (inventory ?player ?wood) (is_safe ?loc))
+        :effect (and (has_shelter ?loc))
+    )
+     (:action carve_groove
+        :parameters (?player - human ?wood - wood)
+        :precondition (inventory ?player ?wood)
+        :effect (and (groove ?wood))
+    )
+     (:action chop_wood
+        :parameters (?player - human ?wood - wood ?loc - location)
+        :precondition (and (at ?player ?loc) (has_wood ?loc))
+        :effect (and (inventory ?player ?wood))
+    )
+     (:action clean_water
+        :parameters (?player - human ?water - water ?loc - location)
+        :precondition (and (inventory ?player ?water) (has_fire ?loc))
+        :effect (and (treated ?water))
+    )
+     (:action cook_fish
+        :parameters (?player - human ?fish - fish ?loc - location)
+        :precondition (and (inventory ?player ?fish) (has_fire ?loc))
+        :effect (and (cooked ?fish))
+    )
+     (:action drink_water
+        :parameters (?player - human ?water - water)
+        :precondition (inventory ?player ?water)
+        :effect (and (not (inventory ?player ?water)) (drank ?player))
+    )
+     (:action find_other_survivors
+        :parameters (?player - human ?loc - location)
+        :precondition (at ?player ?loc)
+        :effect (and (has_friend ?player))
+    )
+     (:action get
+        :parameters (?player - human ?item - object ?loc - location)
+        :precondition (and (at ?player ?loc) (at ?item ?loc))
+        :effect (and (not (at ?item ?loc)) (inventory ?player ?item))
+    )
+     (:action get_water
+        :parameters (?player - human ?water - water ?loc - location)
+        :precondition (and (at ?player ?loc) (has_water_source ?loc))
+        :effect (and (inventory ?player ?water))
+    )
+     (:action go
+        :parameters (?player - human ?from - location ?to - location)
+        :precondition (and (at ?player ?from) (connected ?from ?to))
+        :effect (and (not (at ?player ?from)) (at ?player ?to))
+    )
+     (:action hunt_fish
+        :parameters (?player - human ?fish - fish ?loc - location)
+        :precondition (and (at ?player ?loc) (has_fish ?loc))
+        :effect (and (not (has_fish ?loc)) (inventory ?player ?fish))
+    )
+     (:action light_fire
+        :parameters (?player - human ?loc - location)
+        :precondition (and (at ?player ?loc) (can_light_fire ?loc))
+        :effect (and (has_fire ?loc))
+    )
+     (:action make_weapon
+        :parameters (?player - human ?spear - spear)
+        :precondition (inventory ?player ?spear)
+        :effect (and (inventory ?player ?spear))
+    )
+)

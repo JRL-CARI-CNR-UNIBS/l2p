@@ -1,7 +1,7 @@
 """
 Paper: "NL2Plan: Robust LLM-Driven Planning from Minimal Text Descriptions" Gestrin et al (2024)
 Source code: https://github.com/mrlab-ai/NL2Plan
-Run: python3 -m tests.paper_reconstructions.nl2plan.nl2plan
+Run: python3 -m paper_reconstructions.nl2plan.nl2plan
 """
 
 import os, json

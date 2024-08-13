@@ -154,6 +154,8 @@ class DomainBuilder:
                 prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
                 prompt_template = prompt_template.replace('{types}', types_str)
                 prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
+                
+                print("PROMPT TEMPLATE:\n", prompt_template)
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
 
@@ -233,7 +235,7 @@ class DomainBuilder:
         model: LLM_Chat, 
         domain_desc: str,
         prompt_template: PromptBuilder, 
-        nl_actions: list[str]=None,
+        nl_actions: dict[str,str]=None,
         predicates: list[Predicate]=None,
         types: dict[str,str]=None
         ) -> tuple[list[Action], list[Predicate], str]:
@@ -250,6 +252,9 @@ class DomainBuilder:
         prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
 
         llm_response = model.get_output(prompt=prompt_template)
+        
+        print(llm_response)
+        
         raw_actions = llm_response.split('## NEXT ACTION')
         
         actions = []
@@ -267,11 +272,16 @@ class DomainBuilder:
             rest_of_string = rest_match.group(2).strip() if rest_match else None
             
             actions.append(parse_action(llm_response=rest_of_string, action_name=action_name))
-        
-        new_predicates = parse_new_predicates(llm_response)
-        
-        if predicates:
-            new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
+            
+        try:
+            new_predicates = parse_new_predicates(llm_response)
+            
+            if predicates:
+                new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
+        except Exception as e:
+            # Log or print the exception if needed
+            print(f"No new predicates: {e}")
+            new_predicates = None
 
         return actions, new_predicates, llm_response 
         
