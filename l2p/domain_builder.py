@@ -34,7 +34,7 @@ class DomainBuilder:
         self.nl_actions = nl_actions
         self.pddl_actions = pddl_actions
 
-
+    """Extract functions"""
     def extract_type(
             self, 
             model: LLM_Chat, 
@@ -488,6 +488,9 @@ class DomainBuilder:
         for action in actions:
             desc += "\n\n" + self.action_desc(action)
         return desc
+
+    def format_predicates(self, predicates: list[Predicate]) -> str:
+        return "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
 
 if __name__ == "__main__":
     pass

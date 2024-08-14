@@ -7,7 +7,7 @@ from l2p.feedback_builder import FeedbackBuilder
 from l2p.domain_builder import DomainBuilder
 from l2p.task_builder import TaskBuilder
 from l2p.llm_builder import LLM_Chat, GPT_Chat
-from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
+from l2p.utils.pddl_parser import prune_predicates, prune_types, format_types
 from l2p.utils.pddl_types import Action, Predicate
 from l2p.utils.pddl_validator import SyntaxValidator
 from openai import OpenAI
@@ -525,16 +525,13 @@ if __name__ == "__main__":
     
     # print(actions)
 
-    predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
-    
-    print(predicates)
-    
-    types = extract_types(type_hierarchy) # retrieve types
+    predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates    
+    types = format_types(type_hierarchy)
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
     pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
-
-    predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
+    
     types_str = "\n".join(pruned_types)
+    predicate_str = domain_builder.format_predicates(predicates=predicates)
 
     requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
     print("[DOMAIN]\n") 
@@ -590,7 +587,13 @@ if __name__ == "__main__":
 
     # Iteratively create new test domain names
     test_domain_name = f"test_domain"
-    pddl_problem = task_builder.generate_task(domain=test_domain_name, objects=objects_str, initial=initial_states_str, goal=goal_states_str)
+    pddl_problem = task_builder.generate_task(
+        domain=test_domain_name, 
+        objects=objects_str, 
+        initial=initial_states_str, 
+        goal=goal_states_str
+        )
+    
     print(pddl_problem)
 
     # Iteratively create new file names

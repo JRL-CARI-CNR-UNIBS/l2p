@@ -3,7 +3,7 @@
 """
 Paper: "Leveraging Pre-trained Large Language Models to Construct and Utilize World Models for Model-based Task Planning" Guan et al. (2023)
 Source code: https://github.com/GuanSuns/LLMs-World-Models-for-Planning
-Run: python3 -m tests.paper_reconstructions.llm+dm.llm+dm
+Run: python3 -m paper_reconstructions.llm+dm.llm+dm
 
 Assumes the following:
     1. NL descriptions of all the actions
@@ -13,13 +13,13 @@ Assumes the following:
 
 import os, json
 from copy import deepcopy
-from addict import Dict
 from openai import OpenAI
 from l2p.llm_builder import GPT_Chat
 from l2p.domain_builder import DomainBuilder
 from l2p.feedback_builder import FeedbackBuilder
 from l2p.utils.pddl_validator import SyntaxValidator
-from l2p.utils.pddl_parser import parse_new_predicates, prune_predicates, prune_types, extract_types
+from l2p.utils.pddl_parser import parse_new_predicates, prune_predicates
+from l2p.utils.pddl_types import Action, Predicate
 from tests.setup import check_parse_domain
 
 def open_txt(file_path):
@@ -33,7 +33,15 @@ def open_json(file_path):
     return file
 
 
-def construct_action_model(domain_desc, action_predicate_prompt, action_name, action_desc, predicate_list, max_iterations=3, syntax_validator=None): 
+def construct_action_model(
+    domain_desc, 
+    action_predicate_prompt, 
+    action_name, 
+    action_desc, 
+    predicate_list, 
+    max_iterations=3, 
+    syntax_validator=None
+    ) -> tuple[Action,list[Predicate],str]: 
     
     """
     This function constructs an action model for a single action. Specifically, it runs through syntax validator to refine model in a certain
@@ -97,10 +105,10 @@ def construct_action_model(domain_desc, action_predicate_prompt, action_name, ac
 if __name__ == "__main__":    
     
     # setup prompt templates
-    action_model = open_json('tests/paper_reconstructions/llm+dm/prompts/action_model.json')
-    domain_desc = open_txt('tests/paper_reconstructions/llm+dm/prompts/domain_desc.txt')
-    hierarchy_requirements = open_json('tests/paper_reconstructions/llm+dm/prompts/hierarchy_requirements.json')
-    prompt_template = open_txt('tests/paper_reconstructions/llm+dm/prompts/pddl_prompt.txt')
+    action_model = open_json('paper_reconstructions/llm+dm/prompts/action_model.json')
+    domain_desc = open_txt('paper_reconstructions/llm+dm/prompts/domain_desc.txt')
+    hierarchy_requirements = open_json('paper_reconstructions/llm+dm/prompts/hierarchy_requirements.json')
+    prompt_template = open_txt('paper_reconstructions/llm+dm/prompts/pddl_prompt.txt')
 
     # setup LLM engine
     engine = "gpt-4o-mini"
@@ -186,7 +194,7 @@ if __name__ == "__main__":
         actions=action_list
         )
     
-    domain_file = "tests/paper_reconstructions/llm+dm/results/domain.pddl"
+    domain_file = "paper_reconstructions/llm+dm/results/domain.pddl"
     
     # save domain file
     with open(domain_file, "w") as f:

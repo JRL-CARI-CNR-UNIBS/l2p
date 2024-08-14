@@ -11,7 +11,7 @@ from l2p.prompt_builder import PromptBuilder
 from l2p.domain_builder import DomainBuilder
 from l2p.task_builder import TaskBuilder
 from l2p.feedback_builder import FeedbackBuilder
-from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
+from l2p.utils.pddl_parser import prune_predicates, prune_types, format_types
 from tests.planner import FastDownward
 from tests.setup import check_parse_domain, check_parse_problem
 
@@ -35,33 +35,33 @@ domain_desc = open_file('data/domains/blocksworld.txt')
 problem_desc = open_file("data/problems/blocksworld_p1.txt")
 
 # open and create type extraction prompt builder class
-role_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/type_extraction/role.txt')
-tech_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/type_extraction/technique.txt')
-task_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/type_extraction/task.txt')
+role_desc = open_file('paper_reconstructions/nl2plan/prompts/type_extraction/role.txt')
+tech_desc = open_file('paper_reconstructions/nl2plan/prompts/type_extraction/technique.txt')
+task_desc = open_file('paper_reconstructions/nl2plan/prompts/type_extraction/task.txt')
 type_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
 # open and create type hierarchy prompt builder class
-role_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt')
-tech_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/hierarchy_construction/technique.txt')
-task_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt')
+role_desc = open_file('paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt')
+tech_desc = open_file('paper_reconstructions/nl2plan/prompts/hierarchy_construction/technique.txt')
+task_desc = open_file('paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt')
 type_hierarchy_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
 # open and create NL action prompt builder class      
-role_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/action_extraction/role.txt')
-tech_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/action_extraction/technique.txt')
-task_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/action_extraction/task.txt')
+role_desc = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/role.txt')
+tech_desc = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/technique.txt')
+task_desc = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/task.txt')
 nl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
 # open and create PDDL action prompt builder class
-role_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/action_construction/role.txt')
-tech_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/action_construction/technique.txt')
-task_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/action_construction/task.txt')
+role_desc = open_file('paper_reconstructions/nl2plan/prompts/action_construction/role.txt')
+tech_desc = open_file('paper_reconstructions/nl2plan/prompts/action_construction/technique.txt')
+task_desc = open_file('paper_reconstructions/nl2plan/prompts/action_construction/task.txt')
 pddl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
 # open and create compact action prompt builder class
-role_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/task_extraction/role.txt')
-tech_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/task_extraction/technique.txt')
-task_desc = open_file('tests/paper_reconstructions/nl2plan/prompts/task_extraction/task.txt')
+role_desc = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/role.txt')
+tech_desc = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/technique.txt')
+task_desc = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/task.txt')
 task_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
 domain_builder = DomainBuilder()
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     types, response = domain_builder.extract_type(model, domain_desc, type_extraction_prompt.generate_prompt())
     domain_builder.set_types(types)
 
-    feedback_template = open_file('tests/paper_reconstructions/nl2plan/prompts/type_extraction/feedback.txt')
+    feedback_template = open_file('paper_reconstructions/nl2plan/prompts/type_extraction/feedback.txt')
     new_types, feedback_response = feedback_builder.type_feedback(model, domain_desc, feedback_template, "llm", types, response)
     if new_types != None: 
         domain_builder.set_types(new_types)
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
     domain_builder.set_type_hierarchy(type_hierarchy)
 
-    feedback_template = open_file('tests/paper_reconstructions/nl2plan/prompts/hierarchy_construction/feedback.txt')
+    feedback_template = open_file('paper_reconstructions/nl2plan/prompts/hierarchy_construction/feedback.txt')
     new_type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(model, domain_desc, feedback_template, "llm", type_hierarchy, response)
     if new_type_hierarchy != None: 
         domain_builder.set_type_hierarchy(new_type_hierarchy)
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     nl_actions, response = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_type_hierarchy())
     domain_builder.set_nl_actions(nl_actions)
 
-    feedback_template = open_file('tests/paper_reconstructions/nl2plan/prompts/action_extraction/feedback.txt')
+    feedback_template = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/feedback.txt')
     new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model, domain_desc, feedback_template, "llm", nl_actions, response)
     if new_nl_actions != None:
         domain_builder.set_nl_actions(new_nl_actions)
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
 
     # STEP FOUR: action construction
-    feedback_template = open_file('tests/paper_reconstructions/nl2plan/prompts/action_construction/feedback.txt')
+    feedback_template = open_file('paper_reconstructions/nl2plan/prompts/action_construction/feedback.txt')
 
     predicates = []
     max_iters = 3
@@ -161,7 +161,7 @@ if __name__ == "__main__":
             break
 
     predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
-    types = extract_types(type_hierarchy) # retrieve types
+    types = format_types(type_hierarchy) # retrieve types
     pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
     pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
     
@@ -178,13 +178,13 @@ if __name__ == "__main__":
         actions=actions
         )
 
-    domain_file = "tests/paper_reconstructions/nl2plan/results/domain.pddl"
+    domain_file = "paper_reconstructions/nl2plan/results/domain.pddl"
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
 
 
     # STEP FIVE: task extraction
-    feedback_template = open_file('tests/paper_reconstructions/nl2plan/prompts/task_extraction/feedback.txt')
+    feedback_template = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/feedback.txt')
 
     objects, initial, goal, llm_response = task_builder.extract_task(
         model,
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
     pddl_problem = task_builder.generate_task("test_domain", objects, initial, goal)
 
-    problem_file = "tests/paper_reconstructions/nl2plan/results/problem.pddl"
+    problem_file = "paper_reconstructions/nl2plan/results/problem.pddl"
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
         

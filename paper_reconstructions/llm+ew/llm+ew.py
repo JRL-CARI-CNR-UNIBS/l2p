@@ -1,7 +1,7 @@
 """
 Paper: "Leveraging Environment Interaction for Automated PDDL Generation and Planning with Large Language Models" Mahdavi et al (2024)
 Source code: N/A
-Run: python3 -m tests.paper_reconstructions.llm+ew.llm+ew
+Run: python3 -m paper_reconstructions.llm+ew.llm+ew
 
 Focus: using LLMs and environmental feedback to auto-generate both PDDL domain+problem files w/o human intervention
     - Problem of limited feedback from PDDL plan failures

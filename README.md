@@ -1,6 +1,8 @@
 # l2p : LLM-driven PDDL library kit
 
-This library is a collection of tools for PDDL model generation extracted from natural language driven by large language models.
+This library is a collection of tools for PDDL model generation extracted from natural language driven by large language models. This library is an expansion from the survey paper **Leveraging Large Language Models for Automated Planning and Model Construction: A Survey** which can be found [here](https://puginarug.com) (currently under work)
+
+L2P is an offline, NL to PDDL system that supports domain-agnostic planning. It does this via creating an intermediate [PDDL](https://planning.wiki/guide/whatis/pddl) representation of the domain and task, which can then be solved by a classical planner. 
 
 ## Usage
 
@@ -89,8 +91,31 @@ print("FEEDBACK:\n", feedback_response)
 
 
 ## Installation and Setup
+You can set up a Python environment using either [Conda](https://conda.io) or [venv](https://docs.python.org/3/library/venv.html) and install the dependencies via the following steps.
 
-## Running Experiments
+**Conda**
+```
+conda create -n L2P python=3.10
+conda activate L2P
+pip install -r requirements.txt
+```
+
+**venv**
+```
+python3.10 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+``` 
+
+These environments can then be exited with `conda deactivate` and `deactivate` respectively. The instructions below assume that a suitable environemnt is active. 
+
+**API keys**
+L2P requires access to an LLM. Currently, it only supports OpenAI's GPT-series models. To configure these, provide the necessary API-key in an environment variable.
+
+**OpenAI**
+```
+export OPENAI_API_KEY='YOUR-KEY' # e.g. OPENAI_API_KEY='sk-123456'
+```
 
 ## Current Works Reconstructed Using L2P
 - [x] `NL2Plan`
@@ -101,3 +126,6 @@ print("FEEDBACK:\n", feedback_response)
 - [ ] `LLM+consistency`
 
 ## Current Model Construction Works
+
+## Contact
+Please contact `20mt1@queensu.ca` for questions, comments, or feedback about the L2P library.

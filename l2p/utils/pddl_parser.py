@@ -263,25 +263,6 @@ def extract_heading(llm_output: str, heading: str):
     heading_str = llm_output.split(heading)[1].split("\n## ")[0].strip() # Get the text between the heading and the next heading
     return heading_str
 
-def extract_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
-    def process_node(node, parent_type=None):
-        current_type = list(node.keys())[0]
-        description = node[current_type]
-        parent_type = parent_type if parent_type else current_type
-
-        name = f"{current_type} - {parent_type}" if current_type != parent_type else f"{current_type}"
-        desc = f"; {description}"
-        
-        result[name] = desc
-
-        for child in node.get("children", []):
-            process_node(child, current_type)
-
-    result = {}
-    process_node(type_hierarchy)
-    return result
-
-
 def convert_to_dict(llm_response: str) -> dict[str,str]:
     
     dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
@@ -310,16 +291,36 @@ def combine_blocks(heading_str: str):
     """Combine the inside of blocks from the heading string into a single string."""
 
     possible_blocks = heading_str.split("```")
-    blocks = [possible_blocks[i] for i in range(1, len(possible_blocks), 2)] # Get the text between the ```s, every other one
-    combined = "\n".join(blocks) # Join the blocks together
+    blocks = [possible_blocks[i] for i in range(1, len(possible_blocks), 2)] # obtain string between ```s
+    combined = "\n".join(blocks) # combine blocks
     return combined.replace("\n\n", "\n").strip() # Remove leading/trailing whitespace and internal empty lines
 
 def format_dict(dictionary):
+    """Formats dictionary in JSON format easier for readability"""
     return json.dumps(dictionary, indent=4)
 
+def format_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
+    """Formats Python dictionary hierarchy to PDDL formatted dictionary"""
+    def process_node(node, parent_type=None):
+        current_type = list(node.keys())[0]
+        description = node[current_type]
+        parent_type = parent_type if parent_type else current_type
+
+        name = f"{current_type} - {parent_type}" if current_type != parent_type else f"{current_type}"
+        desc = f"; {description}"
+        
+        result[name] = desc
+
+        for child in node.get("children", []):
+            process_node(child, current_type)
+
+    result = {}
+    process_node(type_hierarchy)
+    return result
+
 def format_predicates(predicates):
+    """Formats list of predicates easier for readability"""
     if len(predicates) == 0:
-        print("THIS IS WORKING")
         return ""
     return "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
 
