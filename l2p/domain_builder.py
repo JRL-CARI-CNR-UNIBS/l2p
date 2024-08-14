@@ -71,7 +71,7 @@ class DomainBuilder:
 
                 llm_response = model.get_output(prompt=prompt_template) # prompt model
 
-                # format to respective types
+                # extract respective types from response
                 types = convert_to_dict(llm_response=llm_response)
                 
                 return types, llm_response
@@ -119,7 +119,7 @@ class DomainBuilder:
 
                 llm_response = model.get_output(prompt=prompt_template)
 
-                # format to respective types
+                # extract respective types from response
                 type_hierarchy = convert_to_dict(llm_response=llm_response)
                 
                 return type_hierarchy, llm_response
@@ -171,7 +171,7 @@ class DomainBuilder:
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
                 
-                # format to respective types
+                # extract respective types from response
                 nl_actions = convert_to_dict(llm_response=llm_response)
                 
                 return nl_actions, llm_response
@@ -204,7 +204,7 @@ class DomainBuilder:
             action_name (str): action name
             action_desc (str): action description
             action_list (dict[str,str]): dictionary of other actions to be translated
-            predicates (list[Predicate]): list of predicates
+            predicates (list[Predicate]): list of predicates in current model
             types (dict[str,str]): current types in model
             max_retries (int): max # of retries if failure occurs
 
@@ -234,7 +234,7 @@ class DomainBuilder:
                 
                 llm_response = model.get_output(prompt=prompt_template)
 
-                # format to respective types
+                # extract respective types from response
                 action = parse_action(llm_response=llm_response, action_name=action_name)
                 new_predicates = parse_new_predicates(llm_response)
                 new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
@@ -287,7 +287,7 @@ class DomainBuilder:
 
         llm_response = model.get_output(prompt=prompt_template)
         
-        # format to respective types
+        # extract respective types from response
         raw_actions = llm_response.split('## NEXT ACTION')
         
         actions = []
@@ -362,7 +362,7 @@ class DomainBuilder:
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM response
                 
-                # format to respective types
+                # extract respective types from response
                 param, param_raw = parse_params(llm_output=llm_response)
 
                 return param, param_raw, llm_response
@@ -419,7 +419,7 @@ class DomainBuilder:
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM response
                 
-                # format to respective types
+                # extract respective types from response
                 preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
                 new_predicates = parse_new_predicates(llm_output=llm_response)
 
@@ -480,7 +480,7 @@ class DomainBuilder:
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM response
                 
-                # format to respective types
+                # extract respective types from response
                 effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
                 new_predicates = parse_new_predicates(llm_output=llm_response)
 
@@ -536,7 +536,7 @@ class DomainBuilder:
                 
                 llm_response = model.get_output(prompt=prompt_template) # prompt model
                 
-                # format to respective types
+                # extract respective types from response
                 new_predicates = parse_new_predicates(llm_output=llm_response)
                 
                 return new_predicates, llm_response

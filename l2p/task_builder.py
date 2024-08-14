@@ -2,8 +2,9 @@
 This file contains collection of functions for PDDL task generation purposes
 """
 
+import time
 from .utils.pddl_types import Predicate, Action
-from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, convert_to_dict, format_dict, format_predicates
+from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, format_predicates
 from .llm_builder import LLM_Chat
 from .prompt_builder import PromptBuilder
 
@@ -19,135 +20,249 @@ class TaskBuilder:
         self.initial=initial
         self.goal=goal
 
+    """Extract functions"""
     def extract_objects(self, 
-            model: LLM_Chat, 
-            problem_desc: str,
-            domain_desc: str, 
-            prompt_template: PromptBuilder,
-            types: dict[str,str], 
-            predicates: list[Predicate]
-            ) -> tuple[dict[str,str], str]:
+        model: LLM_Chat, 
+        problem_desc: str,
+        domain_desc: str, 
+        prompt_template: PromptBuilder,
+        types: dict[str,str], 
+        predicates: list[Predicate],
+        max_retries: int=3
+        ) -> tuple[dict[str,str], str]:
+        """
+        Extracts objects with given predicates in current model
+
+        Args:
+            model (LLM_Chat): LLM
+            problem_desc (str): problem description
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            types (dict[str,str]): current types in model
+            predicates (list[Predicate]): list of predicates in current model
+            max_retries (int): max # of retries if failure occurs
+
+        Returns:
+            objects (dict[str,str]): dictionary of object types {name:description}
+            llm_response (str): the raw string LLM response
+        """
         
-        model.reset_tokens()
+        # iterate through attempts in case of extraction failure
+        for attempt in range(max_retries):
+            try:
+                model.reset_tokens()
 
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
-            if predicates else "No predicates provided."
-        types_str = "\n".join(types) if types else "No types provided."
+                # replace prompt placeholders
+                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+                types_str = "\n".join(types) if types else "No types provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
-        prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
+                prompt_template = prompt_template.replace('{predicates}', predicate_str)
+                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
-        llm_response = model.get_output(prompt=prompt_template) # get LLM response
-        
-        objects = parse_objects(llm_response)
+                llm_response = model.get_output(prompt=prompt_template) # get LLM response
+                
+                # extract respective types from response
+                objects = parse_objects(llm_response)
 
-        return objects, llm_response
+                return objects, llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract objects.")
 
     def extract_initial_state(
-            self, 
-            model: LLM_Chat, 
-            problem_desc: str,
-            domain_desc: str,
-            prompt_template: PromptBuilder,
-            types: dict[str,str]=None, 
-            predicates: list[Predicate]=None,
-            objects: dict[str,str]=None
-            ) -> tuple[list[dict[str,str]], str]:
+        self, 
+        model: LLM_Chat, 
+        problem_desc: str,
+        domain_desc: str,
+        prompt_template: PromptBuilder,
+        types: dict[str,str]=None, 
+        predicates: list[Predicate]=None,
+        objects: dict[str,str]=None,
+        initial: list[dict[str,str]]=None,
+        goal: list[dict[str,str]]=None,
+        max_retries: int=3
+        ) -> tuple[list[dict[str,str]], str]:
+        """
+        Extracts initial states with given predicates, objects, and states in current model
+
+        Args:
+            model (LLM_Chat): LLM
+            problem_desc (str): problem description
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            types (dict[str,str]): current types in model
+            predicates (list[Predicate]): current list of predicates in model
+            objects (dict[str,str]): current dictionary of task objects in model
+            initial (list[dict[str,str]]): current initial states in model
+            goal (list[dict[str,str]]): current goal states in model
+            max_retries (int): max # of retries if failure occurs
+
+        Returns:
+            initial (list[dict[str,str]]): list of dictionary of initial states [{predicate,params,neg}]
+            llm_response (str): the raw string LLM response
+        """
         
-        model.reset_tokens()
+        # iterate through attempts in case of extraction failure
+        for attempt in range(max_retries):
+            try:
+                model.reset_tokens()
 
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
-            if predicates else "No predicates provided."
-        types_str = "\n".join(types) if types else "No types provided."
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
+                # replace prompt placeholders
+                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+                types_str = "\n".join(types) if types else "No types provided."
+                objects_str = self.format_objects(objects) if objects else "No objects provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
-        prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{objects}', objects_str)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
+                prompt_template = prompt_template.replace('{predicates}', predicate_str)
+                prompt_template = prompt_template.replace('{objects}', objects_str)
+                prompt_template = prompt_template.replace('{initial_state}', self.format_initial(initial) if initial else "No initial state provided.")
+                prompt_template = prompt_template.replace('{goal_state}', self.format_goal(goal) if goal else "No goal state provided.")
+                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
-        llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.get_output(prompt=prompt_template)
 
-        initial = parse_initial(llm_response)
+                # extract respective types from response
+                initial = parse_initial(llm_response)
 
-        return initial, llm_response
+                return initial, llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract initial states.")
         
     def extract_goal_state(
-            self, 
-            model: LLM_Chat, 
-            problem_desc: str,
-            domain_desc: str,
-            prompt_template: PromptBuilder,
-            types: dict[str,str]=None, 
-            predicates: list[Predicate]=None,
-            objects: dict[str,str]=None,
-            initial: str=None
-            ) -> tuple[list[dict[str,str]], str]:
+        self, 
+        model: LLM_Chat, 
+        problem_desc: str,
+        domain_desc: str,
+        prompt_template: PromptBuilder,
+        types: dict[str,str]=None, 
+        predicates: list[Predicate]=None,
+        objects: dict[str,str]=None,
+        initial: list[dict[str,str]]=None,
+        goal: list[dict[str,str]]=None,
+        max_retries: int=3
+        ) -> tuple[list[dict[str,str]], str]:
+        """
+        Extracts goal states with given predicates, objects, and states in current model
+
+        Args:
+            model (LLM_Chat): LLM
+            problem_desc (str): problem description
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            types (dict[str,str]): current types in model
+            predicates (list[Predicate]): current list of predicates in model
+            objects (dict[str,str]): current dictionary of task objects in model
+            initial (list[dict[str,str]]): current initial states in model
+            goal (list[dict[str,str]]): current goal states in model
+            max_retries (int): max # of retries if failure occurs
+
+        Returns:
+            goal (list[dict[str,str]]): list of dictionary of goal states [{predicate,params,neg}]
+            llm_response (str): the raw string LLM response
+        """
         
-        model.reset_tokens()
+        # iterate through attempts in case of extraction failure
+        for attempt in range(max_retries):
+            try:
+                model.reset_tokens()
 
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
-            if predicates else "No predicates provided."
-        types_str = "\n".join(types) if types else "No types provided."
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
+                # replace prompt placeholders
+                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+                types_str = "\n".join(types) if types else "No types provided."
+                objects_str = self.format_objects(objects) if objects else "No objects provided."
 
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
-        prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{objects}', objects_str)
-        prompt_template = prompt_template.replace('{initial_state}', initial if initial else "No initial state provided.")
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
+                prompt_template = prompt_template.replace('{predicates}', predicate_str)
+                prompt_template = prompt_template.replace('{objects}', objects_str)
+                prompt_template = prompt_template.replace('{initial_state}', self.format_initial(initial) if initial else "No initial state provided.")
+                prompt_template = prompt_template.replace('{goal_state}', self.format_goal(goal) if goal else "No goal state provided.")
+                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
-        llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.get_output(prompt=prompt_template)
 
-        goal = parse_goal(llm_response)
+                # extract respective types from response
+                goal = parse_goal(llm_response)
 
-        return goal, llm_response
+                return goal, llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract goal states.")
 
     def extract_task(
-            self, 
-            model: LLM_Chat, 
-            problem_desc: str="",
-            domain_desc: str="", 
-            prompt_template: PromptBuilder="", 
-            types: dict[str,str]=None, 
-            predicates: list[Predicate]=None,
-            actions: list[Action]=None
-            ) -> tuple[dict[str,str],list[dict[str,str]],list[dict[str,str]],str]:
+        self, 
+        model: LLM_Chat, 
+        problem_desc: str,
+        domain_desc: str, 
+        prompt_template: PromptBuilder, 
+        types: dict[str,str]=None, 
+        predicates: list[Predicate]=None,
+        actions: list[Action]=None,
+        max_retries: int=3
+        ) -> tuple[dict[str,str], list[dict[str,str]], list[dict[str,str]], str]:
         """
-        Extracts objects, initial, and goal states from LLM output given domain description, types, and predicates
-        Returns -> tuple[str,str,str]
+        Extracts whole task specification in current model
+
+        Args:
+            model (LLM_Chat): LLM
+            problem_desc (str): problem description
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            types (dict[str,str]): current types in model
+            predicates (list[Predicate]): current list of predicates in model
+            actions (list[Action]): current list of Action instances in model
+            max_retries (int): max # of retries if failure occurs
+
+        Returns:
+            objects (dict[str,str]): dictionary of object types {name:description}
+            initial (list[dict[str,str]]): list of dictionary of initial states [{predicate,params,neg}]
+            goal (list[dict[str,str]]): list of dictionary of goal states [{predicate,params,neg}]
+            llm_response (str): the raw string LLM response
         """
-        model.reset_tokens()
-
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) \
-            if predicates else "No predicates provided."
-        types_str = "\n".join(types) if types else "No types provided."
-        action_str = self.format_action(actions=actions) if actions else "No actions provided."
-
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{types}', types_str)
-        prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        prompt_template = prompt_template.replace('{actions}', action_str)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
         
-        llm_response = model.get_output(prompt=prompt_template)
+        # iterate through attempts in case of extraction failure
+        for attempt in range(max_retries):
+            try:
+                model.reset_tokens()
 
-        objects = parse_objects(llm_response)
-        initial = parse_initial(llm_response)
-        goal = parse_goal(llm_response)
+                # replace prompt placeholders
+                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+                types_str = "\n".join(types) if types else "No types provided."
+                action_str = self.format_action(actions=actions) if actions else "No actions provided."
 
-        return objects, initial, goal, llm_response
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{types}', types_str)
+                prompt_template = prompt_template.replace('{predicates}', predicate_str)
+                prompt_template = prompt_template.replace('{actions}', action_str)
+                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+                
+                llm_response = model.get_output(prompt=prompt_template)
 
+                # extract respective types from response
+                objects = parse_objects(llm_response)
+                initial = parse_initial(llm_response)
+                goal = parse_goal(llm_response)
 
-    def extract_nl_initial():
-        pass
-    
-    def extract_nl_goal():
-        pass
+                return objects, initial, goal, llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract task.")
 
     def extract_nl_conditions(
         self, 
@@ -155,31 +270,60 @@ class TaskBuilder:
         problem_desc: str,
         domain_desc: str,
         prompt_template: PromptBuilder,
-        type_hierarchy: dict[str,str]=None, 
+        types: dict[str,str]=None, 
         predicates: list[Predicate]=None,
-        objects: dict[str,str]=None) -> str:
-        """Extracts initial and goal states in natural language"""
+        actions: list[Action]=None,
+        objects: dict[str,str]=None,
+        max_retries: int=3
+        ) -> str:
+        """
+        Extracts initial and goal states in natural language
         
-        model.reset_tokens()
+        Args:
+            model (LLM_Chat): LLM
+            problem_desc (str): problem description
+            domain_desc (str): domain description
+            prompt_template (PromptBuilder): prompt template class
+            types (dict[str,str]): current types in model
+            predicates (list[Predicate]): current list of predicates in model
+            actions (list[Action]): current list of Action instances in model
+            objects (dict[str,str]): current dictionary of task objects in model
+            max_retries (int): max # of retries if failure occurs
 
-        if predicates:
-            predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
-            prompt_template = prompt_template.replace('{predicates}', predicate_str)
-        if type_hierarchy:
-            types_str = "\n".join(type_hierarchy)
-            prompt_template = prompt_template.replace('{type_hierarchy}', types_str)
-        if objects:
-            objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-            prompt_template = prompt_template.replace('{objects}', objects_str)
-
-        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
-
-        llm_response = model.get_output(prompt=prompt_template)
+        Returns:
+            llm_response (str): the raw string LLM response
+        """
         
-        return llm_response
+        # iterate through attempts in case of extraction failure
+        for attempt in range(max_retries):
+            try:
+                model.reset_tokens()
+
+                # replace prompt placeholders
+                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+                types_str = "\n".join(types) if types else "No types provided."
+                objects_str = self.format_objects(objects) if objects else "No objects provided."
+                action_str = self.format_action(actions=actions) if actions else "No actions provided."
+
+                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+                prompt_template = prompt_template.replace('{actions}', action_str)
+                prompt_template = prompt_template.replace('{types}', types_str)
+                prompt_template = prompt_template.replace('{predicates}', predicate_str)
+                prompt_template = prompt_template.replace('{objects}', objects_str)
+
+                llm_response = model.get_output(prompt=prompt_template)
+                
+                return llm_response
+            
+            except Exception as e:
+                print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
+                time.sleep(1) # add a delay before retrying
+                
+        raise RuntimeError("Max retries exceeded. Failed to extract NL task states.")
 
 
+    """Delete function"""
     def delete_objects(self, name):
         self.objects = {var: type_ for var, type_ in self.objects.items() if var != name}
     
@@ -190,6 +334,7 @@ class TaskBuilder:
         self.goal=None
 
 
+    """Set functions"""
     def set_objects(self, objects: dict[str,str]):
         self.set_objects = objects
 
@@ -199,7 +344,7 @@ class TaskBuilder:
     def set_goal(self, goal: str):
         self.goal = goal
 
-
+    """Get functions"""
     def get_objects(self) -> dict[str,str]:
         return self.objects
 
