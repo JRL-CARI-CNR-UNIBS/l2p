@@ -12,9 +12,17 @@ class TaskBuilder:
     def __init__(
         self, 
         objects: dict[str,str]=None, 
-        initial: str=None, 
-        goal: str=None
+        initial: list[dict[str,str]]=None, 
+        goal: list[dict[str,str]]=None
         ):
+        """
+        Initializes a task builder object
+
+        Args:
+            objects (dict[str,str]): current dictionary of task objects in model
+            initial (list[dict[str,str]]): current initial states in model
+            goal (list[dict[str,str]]): current goal states in model
+        """
         
         self.objects=objects
         self.initial=initial
@@ -325,13 +333,16 @@ class TaskBuilder:
 
     """Delete function"""
     def delete_objects(self, name):
-        self.objects = {var: type_ for var, type_ in self.objects.items() if var != name}
+        if self.objects is not None:
+            self.objects = {var: type_ for var, type_ in self.objects.items() if var != name}
     
-    def delete_initial_state(self):
-        self.initial=None
-    
-    def delete_goal_state(self):
-        self.goal=None
+    def delete_initial_state(self, state: dict[str, str]):
+        if self.initial is not None:
+            self.initial = [s for s in self.initial if s != state]
+        
+    def delete_goal_state(self, state: dict[str, str]):
+        if self.goal is not None:
+            self.goal = [s for s in self.goal if s != state]
 
 
     """Set functions"""

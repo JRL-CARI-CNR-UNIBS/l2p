@@ -551,19 +551,23 @@ class DomainBuilder:
     """Delete functions"""
     def delete_type(self, name: str):
         """Deletes specific type from current model"""
-        self.types = {type_: desc for type_, desc in self.types.items() if type_ != name}
+        if self.types is not None:
+            self.types = {type_: desc for type_, desc in self.types.items() if type_ != name}
 
     def delete_nl_action(self, name: str):
         """Deletes specific NL action from current model"""
-        self.nl_actions = {action_name: action_desc for action_name, action_desc in self.nl_actions.items() if action_name != name}
+        if self.nl_actions is not None:
+            self.nl_actions = {action_name: action_desc for action_name, action_desc in self.nl_actions.items() if action_name != name}
 
     def delete_pddl_action(self, name: str):
         """Deletes specific PDDL action from current model"""
-        self.pddl_actions = [action for action in self.pddl_actions if action['name'] != name]
+        if self.pddl_actions is not None:
+            self.pddl_actions = [action for action in self.pddl_actions if action['name'] != name]
 
     def delete_predicates(self, name: str):
         """Deletes specific predicate from current model"""
-        self.predicates = [predicate for predicate in self.predicates if predicate['name'] != name]
+        if self.predicates is not None:
+            self.predicates = [predicate for predicate in self.predicates if predicate['name'] != name]
 
 
     """Set functions"""
