@@ -60,7 +60,7 @@ if __name__ == "__main__":
         
     
     
-    domain_file_path = 'paper_reconstructions/llm+dm/results/domain.pddl'
+    domain_file_path = 'paper_reconstructions/nl2plan/results/domain.pddl'
     problem_file_path = 'data/problem_1.pddl'
     
     pddl_domain = check_parse_domain(domain_file_path)

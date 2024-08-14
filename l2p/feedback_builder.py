@@ -3,13 +3,10 @@ This file contains collection of functions for PDDL feedback generation purposes
 """
 
 from .llm_builder import LLM_Chat
-from .utils.pddl_parser import convert_to_dict, parse_action, parse_new_predicates, parse_objects, parse_initial, parse_goal, parse_params
+from .utils.pddl_parser import convert_to_dict, parse_action, parse_new_predicates, parse_objects, parse_initial, parse_goal, parse_params, format_dict, format_predicates
 from .utils.pddl_types import Action, Predicate
 from collections import OrderedDict
-from textwrap import dedent
 import json
-
-INSTRUCTION = "Make suggestions / changes if there are any checks that you deem are insufficient, if not, respond with 'no feedback' (once) at the end of your whole response. You either return a suggestion/feedback or you respond with 'no feedback' not both.'\n Do not respond with 'no feedback' in between each check. \nDo not add anything new other than what is focused on the specific PDDL aspect at hand.\n\n"
 
 def format_json_output(data):
         return json.dumps(data, indent=4)
@@ -27,28 +24,25 @@ class FeedbackBuilder:
             ) -> tuple[dict[str,str], str]:
         """Makes LLM call using feedback prompt, then parses it into type format"""
 
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES (to be analysed):\n" + format_json_output(types)
+        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        feedback_template = feedback_template.replace('{types}', format_dict(types))
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
         
-        example = dedent("""START OF EXAMPLE:
-        ## OUTPUT
-        {
-            "location": "Locations can be visited and travelled between.",
-            "house": "Constructed by the company. Are a type of location."
-        }
-        END OF EXAMPLE
-        """)
+        example = """START OF EXAMPLE:
+## OUTPUT
+{
+    "location": "Locations can be visited and travelled between.",
+    "house": "Constructed by the company. Are a type of location."
+}
+END OF EXAMPLE
+"""
         
-        prompt = "ROLE:\nYou are a PDDL expert and your task is to evaluate if a set of types are correct and sufficent for modelling a given domain." + INSTRUCTION
-        prompt += feedback_template
-
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -56,8 +50,6 @@ class FeedbackBuilder:
             feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
-        
-        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -86,8 +78,9 @@ class FeedbackBuilder:
             ) -> tuple[dict[str,str], str]:
         """Makes LLM call using feedback prompt, then parses it into type hierarchy format"""
 
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
+        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        feedback_template = feedback_template.replace('{types}', format_dict(type_hierarchy))
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
         
         example = """START OF EXAMPLE:
 ## OUTPUT
@@ -98,16 +91,12 @@ class FeedbackBuilder:
 END OF EXAMPLE
 """
         
-        feedback_template += "\n\nORIGINAL TYPE HIERARCHY (to be analysed):\n" + format_json_output(type_hierarchy)
-        prompt = "ROLE:\nYour task is to evaluate if a type hierarchy is defined in the best way. You can suggest changing of the structure or adding types. Note that everything is always supposed to be a subtype of the 'object' class. You shouldn't suggest any new types except those needed for organisation of the provided types. " + INSTRUCTION
-        prompt += feedback_template
-        
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -115,8 +104,6 @@ END OF EXAMPLE
             feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
-        
-        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -141,13 +128,15 @@ END OF EXAMPLE
             feedback_template: str,
             feedback_type: str,
             nl_actions: dict[str,str], 
-            llm_response: str=""
+            llm_response: str="",
+            type_hierarchy: dict[str,str]=None,
             ) -> tuple[dict[str,str], str]:
         """Makes LLM call using feedback prompt, then parses it into format"""
 
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL NATURAL LANGUAGE ACTIONS (to be analysed):\n" + format_json_output(nl_actions)
+        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(type_hierarchy))
+        feedback_template = feedback_template.replace('{nl_actions}', format_json_output(nl_actions))
         
         example = """START OF EXAMPLE:
 ## OUTPUT
@@ -155,16 +144,13 @@ END OF EXAMPLE
     'build_floor: 'A worker performs an order to build a floor. Requires the worker to be there and for a build_floor_order for the house to exist. Example: worker_1 builds a floor at house_1 given that a build_floor_order for it exists.'
 }   
 """
-        
-        prompt = "ROLE:\nYou will be given a set of which are used for a PDDL domain. You should evaluate if they make up all the actions necessary for the given domain, or if any new actions have to be created or existing actions removed. Describe your thought process and comments your suggestions. Focus only on the actions currently, predicates will be specified at a later date. Be careful not to over complicate any domains, adding actions simply for complexity/completeness when they're not needed for the domain should be avoided, we're making a simplified model. Any actions involving 'checking' should not be considered an action, because that is a predicate in PDDL. Only suggest actions that cannot be described by a predicate. Keep the essentials. " + INSTRUCTION
-        prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -172,29 +158,22 @@ END OF EXAMPLE
             feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
-        
-        # print("FEEDBACK MESSAGE:\n", feedback_msg)
-        
-        llm_feedback = model.get_output(prompt=prompt)
 
-        if 'no feedback' in llm_feedback.lower() or len(llm_feedback.strip()) == 0:
-            return None, llm_feedback
+        if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
+            return None, feedback_msg
         else:
-            llm_feedback = "## Feedback" + llm_feedback + "\nRe-iterate an updated version of the suggested natural language actions. Only follow what the suggestions made. Your end response must format in a Python dictionary under header '## OUTPUT' as so:\n\n" + example
-            llm_feedback += "\n\n## Response\n"
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the suggested natural language actions. Only follow what the suggestions made. Your end response must format in a Python dictionary under header '## OUTPUT' as so:\n\n" + example
+            feedback_msg += "\n\n## Response\n"
         
         messages = [
             {'role': 'assistant', 'content': llm_response},
-            {'role': 'user', 'content': llm_feedback}
+            {'role': 'user', 'content': feedback_msg}
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
 
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
-
         new_nl_actions = convert_to_dict(llm_response=llm_feedback_response)
         return new_nl_actions, llm_feedback_response
-
 
     def pddl_action_feedback(
             self, 
@@ -209,17 +188,17 @@ END OF EXAMPLE
             ) -> tuple[Action, list[Predicate], str]:
         """Makes LLM call using feedback prompt, then parses it into format"""
 
-        predicate_str = ", ".join([pred["clean"].replace(":", " ; ") for pred in predicates])
+        predicate_str = format_predicates(predicates)
         param_str = ", ".join([f"{name} - {type}" for name, type in action['parameters'].items()]) 
         
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + format_json_output(types)
-        feedback_template += "\n\nPDDL LIST OF PREDICATES: " + predicate_str
-        feedback_template += "\n\nPDDL ACTION NAME: " + action['name']
-        feedback_template += "\n\nPDDL ACTION PARAMETERS (to be analysed):" + param_str
-        feedback_template += "\n\nPDDL ACTION PRECONDITIONS (to be analysed):\n" + action['preconditions']
-        feedback_template += "\n\nPDDL ACTION EFFECTS (to be analysed):\n" + action['effects']
+        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(types))
+        feedback_template = feedback_template.replace('{predicates}', predicate_str)
+        feedback_template = feedback_template.replace('{action_name}', action['name'])
+        feedback_template = feedback_template.replace('{parameters}', param_str)
+        feedback_template = feedback_template.replace('{action_preconditions}', action['preconditions'])
+        feedback_template = feedback_template.replace('{action_effects}', action['effects'])
 
         example = """START OF EXAMPLE:
 ### Action Parameters
@@ -247,16 +226,13 @@ END OF EXAMPLE
 ``` 
 END OF EXAMPLE
         """
-    
-        prompt = "You are a PDDL expert and will be given a set of PDDL actions to correct and give feedback and advice on. Consider not only if the actions are technically correct, but also whether they are defined following good standards such as flexibility and clarity. Overly specifying types by use of 'is-type' predicates should generally be avoided. Remember that the preconditions should make sure that only valid objects are passed to the action, we can't assume anything except the provided types. Don't assume any restrictions beyond those specified by the domain itself.  Don't unnecessarily overcomplicate the actions. Note that creating new options isn't possible. " + INSTRUCTION
-        prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -264,13 +240,11 @@ END OF EXAMPLE
             feedback_msg = feedback_template
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
-        
-        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, feedback_msg
         else:
-            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL action and new predicates if added. Your end response must format the Action Parameters, Preconditions, and Effects, and New Predicates with ''' ''' comment blocks in PDDL as so:\n\n" + example
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL action and new predicates if added. Follow exact example syntax. Your end response must format the Action Parameters, Preconditions, and Effects, and New Predicates with ''' ''' comment blocks in PDDL as so:\n\n" + example
             feedback_msg += "\n\n## Response\n"
         
         messages = [
@@ -279,8 +253,6 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         action = parse_action(llm_response=llm_feedback_response, action_name=action['name'])
         new_predicates = parse_new_predicates(llm_feedback_response)
@@ -303,13 +275,15 @@ END OF EXAMPLE
         """Makes LLM call using feedback prompt, then parses it into precondition format"""
 
         param_str = "\n".join([f"{name} - {type}" for name, type in parameter.items()])
-
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + format_json_output(types)
-        feedback_template += "\n\nPDDL ACTION NAME: " + action_name
-        feedback_template += "\n\nPDDL ACTION DESCRIPTION: " + action_desc
-        feedback_template += "\n\nPDDL ACTION PARAMETERS (to be analysed):" + param_str
+        
+        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(types))
+        feedback_template = feedback_template.replace('{action_name}', action_name)
+        feedback_template = feedback_template.replace('{action_desc}', action_desc)
+        feedback_template = feedback_template.replace('{parameters}', param_str)
+        
+        print(feedback_template)
 
         example = """START OF EXAMPLE:
 ### Action Parameters
@@ -319,15 +293,12 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given parameters. " + INSTRUCTION
-        prompt += feedback_template
-
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -336,7 +307,7 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        # print("FEEDBACK MESSAGE:\n", feedback_msg)
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, feedback_msg
@@ -350,7 +321,8 @@ END OF EXAMPLE
         ]
 
         llm_feedback_response = model.get_output(messages=messages)
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        
+        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         parameter = parse_params(llm_output=llm_feedback_response)
         return parameter, llm_feedback_response
@@ -372,20 +344,16 @@ END OF EXAMPLE
         """Makes LLM call using feedback prompt, then parses it into precondition format"""
         
         param_str = "\n".join([f"{name} - {type}" for name, type in parameter.items()])
-        predicate_str = (
-            "No predicate has been defined yet."
-            if len(predicates) == 0
-            else "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
-        )
-
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + format_json_output(types)
-        feedback_template += "\n\nPDDL PREDICATES:" + predicate_str
-        feedback_template += "\n\nPDDL ACTION NAME: " + action_name
-        feedback_template += "\n\nPDDL ACTION DESCRIPTION: " + action_desc
-        feedback_template += "\n\nPDDL ACTION PARAMETERS:" + param_str
-        feedback_template += "\n\nORIGINAL PDDL ACTION PRECONDITION (to be analysed):" + preconditions
+        predicate_str = format_predicates(predicates)
+        
+        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(types))
+        feedback_template = feedback_template.replace('{predicates}', predicate_str)
+        feedback_template = feedback_template.replace('{action_name}', action_name)
+        feedback_template = feedback_template.replace('{action_desc}', action_desc)
+        feedback_template = feedback_template.replace('{parameters}', param_str)
+        feedback_template = feedback_template.replace('{action_preconditions}', preconditions)
         
         example = """START OF EXAMPLE:
 ### Action Preconditions
@@ -402,15 +370,15 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given preconditions. " + INSTRUCTION
-        prompt += feedback_template
+        # prompt =  "You are a PDDL feedback analyist that must run the checklist on the given preconditions. " + INSTRUCTION
+        # prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -457,21 +425,17 @@ END OF EXAMPLE
             ):
         """Makes LLM call using feedback prompt, then parses it into effects format"""
         param_str = "\n".join([f"{name} - {type}" for name, type in parameter.items()])
-        predicate_str = (
-            "No predicate has been defined yet."
-            if len(predicates) == 0
-            else "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
-        )
-
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + format_json_output(types)
-        feedback_template += "\n\nPDDL PREDICATES:" + predicate_str
-        feedback_template += "\n\nPDDL ACTION NAME: " + action_name
-        feedback_template += "\n\nPDDL ACTION DESCRIPTION: " + action_desc
-        feedback_template += "\n\nPDDL ACTION PARAMETERS:" + param_str
-        feedback_template += "\n\nPDDL ACTION PRECONDITION:" + preconditions
-        feedback_template += "\n\nORIGINAL PDDL ACTION EFFECTS (to be analysed):" + effects
+        predicate_str = format_predicates(predicates)
+        
+        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(types))
+        feedback_template = feedback_template.replace('{predicates}', predicate_str)
+        feedback_template = feedback_template.replace('{action_name}', action_name)
+        feedback_template = feedback_template.replace('{action_desc}', action_desc)
+        feedback_template = feedback_template.replace('{parameters}', param_str)
+        feedback_template = feedback_template.replace('{action_preconditions}', preconditions)
+        feedback_template = feedback_template.replace('{action_effects}', effects)
         
         example = """START OF EXAMPLE:
 ### Action Effects
@@ -488,15 +452,15 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL feedback analyist that must run the checklist on the given effects. " + INSTRUCTION
-        prompt += feedback_template
+        # prompt =  "You are a PDDL feedback analyist that must run the checklist on the given effects. " + INSTRUCTION
+        # prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -536,21 +500,33 @@ END OF EXAMPLE
             predicates: list[Predicate], 
             types: dict[str,str], 
             objects: dict[str,str], 
-            initial: str, 
-            goal: str, 
+            initial: list[dict[str,str]], 
+            goal: list[dict[str,str]], 
             llm_response: str=""
             ) -> tuple[dict[str,str],str,str,str]:
         
-        predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
+        predicate_str = format_predicates(predicates)
         objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+        inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in initial] # The main part of each predicate
+        full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(initial, inner_str)] # Add the `not` if needed
+        initial_state_str = "\n".join(full_str) # Combine the states into a single string
+        goal_state_str = "(AND \n"
+        for item in goal:
+            # extract the name and parameters from the dictionary
+            name = item['name']
+            params = " ".join(item['params'])
+            goal_state_str += f"   ({name} {params}) \n" # append the predicate in the desired format
+        goal_state_str += ")"
         
-        feedback_template += "\n\nPROBLEM DESCRIPTION:\n" + problem_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + format_json_output(types)
-        feedback_template += "\n\nPDDL LIST OF PREDICATES: " + predicate_str
-        feedback_template += "\n\nPDDL OBJECTS: " + objects_str
-        feedback_template += "\n\nPDDL INITIAL STATE:" + initial
-        feedback_template += "\n\nPDDL GOAL STATE:\n" + goal
+        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(types))
+        feedback_template = feedback_template.replace('{predicates}', predicate_str)
+        feedback_template = feedback_template.replace('{objects}', objects_str)
+        feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
+        feedback_template = feedback_template.replace('{goal_state}', goal_state_str)
+
+        print(feedback_template)
 
         example = """START OF EXAMPLE:    
 ## OBJECTS
@@ -564,7 +540,6 @@ truck1 - the first truck at the Chicago depot
 ```
 
 ## GOAL
-For the goal, we remove the "truck1" location predicate, but still check that all the houses are finalised. 
 ```
 (AND
    (finalised house1) ; house 1 is done
@@ -573,15 +548,15 @@ For the goal, we remove the "truck1" location predicate, but still check that al
 END OF EXAMPLE
         """
 
-        prompt = "You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. " + INSTRUCTION
-        prompt += feedback_template
+        # prompt = "You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. " + INSTRUCTION
+        # prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg += self.human_feedback(response)
         elif feedback_type.lower() == "validator":
@@ -589,12 +564,12 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        # print("FEEDBACK MESSAGE:\n", feedback_msg)
+        print("FEEDBACK MESSAGE:\n", feedback_msg)
 
         if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return None, None, None, feedback_msg
         else:
-            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL task. End your response underneath the capitalized headers '## OBJECTS', '## INITIAL', and '## GOAL' as so:\n\n" + example
+            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL task. Follow exact example syntax. End your response underneath the capitalized headers '## OBJECTS', '## INITIAL', and '## GOAL' as so:\n\n" + example
             feedback_msg += "\n\n## Response\n"
         
         messages = [
@@ -604,7 +579,7 @@ END OF EXAMPLE
 
         llm_feedback_response = model.get_output(messages=messages)
 
-        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
         objects = parse_objects(llm_feedback_response)
         initial = parse_initial(llm_feedback_response)
@@ -616,7 +591,6 @@ END OF EXAMPLE
         self, 
         model: LLM_Chat, 
         problem_desc: str,
-        domain_desc: str, 
         feedback_template: str, 
         feedback_type: str, 
         type_hierarchy: dict[str,str], 
@@ -628,14 +602,12 @@ END OF EXAMPLE
         
         predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
         objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-        types_str = "\n".join(type_hierarchy)
         
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nPROBLEM DESCRIPTION:\n" + problem_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + types_str
-        feedback_template += "\n\nPDDL PREDICATES:" + predicate_str
-        feedback_template += "\n\nORIGINAL PDDL OBJECT INSTANCES (to be analysed):" + objects_str
+        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(type_hierarchy))
+        feedback_template = feedback_template.replace('{predicates}', predicate_str)
+        feedback_template = feedback_template.replace('{objects}', objects_str)
         
         example = """START OF EXAMPLE:
 ## OUTPUT
@@ -645,15 +617,15 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given object instances. " + INSTRUCTION
-        prompt += feedback_template
+        # prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given object instances. " + INSTRUCTION
+        # prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -690,28 +662,28 @@ END OF EXAMPLE
         self, 
         model: LLM_Chat, 
         problem_desc: str,
-        domain_desc: str, 
         feedback_template: str, 
         feedback_type: str, 
         type_hierarchy: dict[str,str], 
         predicates: list[Predicate],
         objects: dict[str,str],
-        initial: str,
+        initial: list[dict[str,str]],
         llm_response: str
         ) -> tuple[str, str]:
         """Makes LLM call using feedback prompt, then parses it into format"""
         
         predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
         objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-        types_str = "\n".join(type_hierarchy)
+        inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in initial] # The main part of each predicate
+        full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(initial, inner_str)] # Add the `not` if needed
+        initial_state_str = "\n".join(full_str) # Combine the states into a single string
         
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nPROBLEM DESCRIPTION:\n" + problem_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + types_str
-        feedback_template += "\n\nPDDL PREDICATES:" + predicate_str
-        feedback_template += "\n\nPDDL OBJECT INSTANCES:" + objects_str
-        feedback_template += "\n\nORIGINAL PDDL INITIAL STATE (to be analysed):" + initial
+        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(type_hierarchy))
+        feedback_template = feedback_template.replace('{predicates}', predicate_str)
+        feedback_template = feedback_template.replace('{objects}', objects_str)
+        feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
         
         example = """START OF EXAMPLE:
 ## OUTPUT
@@ -721,15 +693,15 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given initial state. " + INSTRUCTION
-        prompt += feedback_template
+        # prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given initial state. " + INSTRUCTION
+        # prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -774,24 +746,32 @@ END OF EXAMPLE
         type_hierarchy: dict[str,str], 
         predicates: list[Predicate],
         objects: dict[str,str],
-        initial: str,
-        goal: str,
+        initial: list[dict[str,str]],
+        goal: list[dict[str,str]],
         llm_response: str
         ) -> tuple[str, str]:
         """Makes LLM call using feedback prompt, then parses it into format"""
         
         predicate_str = "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
         objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-        types_str = "\n".join(type_hierarchy)
+        inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in initial] # The main part of each predicate
+        full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(initial, inner_str)] # Add the `not` if needed
+        initial_state_str = "\n".join(full_str) # Combine the states into a single string
+        goal_state_str = "(AND \n"
+        for item in goal:
+            # extract the name and parameters from the dictionary
+            name = item['name']
+            params = " ".join(item['params'])
+            goal_state_str += f"   ({name} {params}) \n" # append the predicate in the desired format
+        goal_state_str += ")"
         
-        feedback_template += "\n\nDOMAIN DESCRIPTION:\n" + domain_desc
-        feedback_template += "\n\nPROBLEM DESCRIPTION:\n" + problem_desc
-        feedback_template += "\n\nORIGINAL LLM OUTPUT:\n" + llm_response
-        feedback_template += "\n\nORIGINAL TYPES:\n" + types_str
-        feedback_template += "\n\nPDDL PREDICATES:" + predicate_str
-        feedback_template += "\n\nPDDL OBJECT INSTANCES:" + objects_str
-        feedback_template += "\n\nPDDL INITIAL STATE:" + initial
-        feedback_template += "\n\nORIGINAL PDDL GOAL STATE (to be analysed):" + goal
+        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
+        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace('{types}', format_dict(type_hierarchy))
+        feedback_template = feedback_template.replace('{predicates}', predicate_str)
+        feedback_template = feedback_template.replace('{objects}', objects_str)
+        feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
+        feedback_template = feedback_template.replace('{initial_state}', goal_state_str)
         
         example = """START OF EXAMPLE:
 ## OUTPUT
@@ -801,15 +781,15 @@ END OF EXAMPLE
 END OF EXAMPLE
 """
 
-        prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given goal state. " + INSTRUCTION
-        prompt += feedback_template
+        # prompt =  "You are a PDDL problem file feedback analyist that must run the checklist on the given goal state. " + INSTRUCTION
+        # prompt += feedback_template
 
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=prompt)
+            feedback_msg = model.get_output(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)

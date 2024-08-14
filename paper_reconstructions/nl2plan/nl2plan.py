@@ -25,8 +25,8 @@ def format_json_output(data):
         return json.dumps(data, indent=4)
 
 # engine = "gpt-4o"
-# engine = "gpt-3.5-turbo-0125"
-engine = "gpt-4o-mini"
+engine = "gpt-3.5-turbo-0125"
+# engine = "gpt-4o-mini"
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
 model = GPT_Chat(client=client, engine=engine)
@@ -80,7 +80,13 @@ if __name__ == "__main__":
     domain_builder.set_types(types)
 
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/type_extraction/feedback.txt')
-    new_types, feedback_response = feedback_builder.type_feedback(model, domain_desc, feedback_template, "llm", types, response)
+    new_types, feedback_response = feedback_builder.type_feedback(
+        model=model, 
+        domain_desc=domain_desc, 
+        feedback_template=feedback_template, 
+        feedback_type="llm", 
+        types=domain_builder.get_types(), 
+        llm_response=response)
     if new_types != None: 
         domain_builder.set_types(new_types)
         
@@ -104,7 +110,7 @@ if __name__ == "__main__":
     domain_builder.set_nl_actions(nl_actions)
 
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/feedback.txt')
-    new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model, domain_desc, feedback_template, "llm", nl_actions, response)
+    new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model, domain_desc, feedback_template, "llm", nl_actions, response, domain_builder.get_type_hierarchy())
     if new_nl_actions != None:
         domain_builder.set_nl_actions(new_nl_actions)
 
@@ -116,7 +122,7 @@ if __name__ == "__main__":
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/action_construction/feedback.txt')
 
     predicates = []
-    max_iters = 3
+    max_iters = 1
     for _ in range(max_iters):
 
         actions = []
@@ -195,8 +201,6 @@ if __name__ == "__main__":
         predicates,
         actions
         )
-    
-    print(llm_response)
 
     max_iters = 2
     for _ in range(max_iters):
@@ -220,7 +224,10 @@ if __name__ == "__main__":
         else:
             break
 
-    objects = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+    objects = task_builder.format_objects(objects)
+    initial = task_builder.format_initial(initial)
+    goal = task_builder.format_goal(goal)
+    
     pddl_problem = task_builder.generate_task("test_domain", objects, initial, goal)
 
     problem_file = "paper_reconstructions/nl2plan/results/problem.pddl"

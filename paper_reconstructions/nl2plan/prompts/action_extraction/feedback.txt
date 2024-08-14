@@ -1,3 +1,8 @@
+# Role
+You will be given a set of which are used for a PDDL domain. You should evaluate if they make up all the actions necessary for the given domain, or if any new actions have to be created or existing actions removed. Describe your thought process and comments your suggestions. Focus only on the actions currently, predicates will be specified at a later date. Be careful not to over complicate any domains, adding actions simply for complexity/completeness when they're not needed for the domain should be avoided, we're making a simplified model. Keep the essentials. If the actions are well defined, simply respond with "No feedback".
+
+Make suggestions / changes if there are any checks that you deem are insufficient, if not, respond with 'no feedback' (once) at the end of your whole response. You either return a suggestion/feedback or you respond with 'no feedback' not both. Do not respond with 'no feedback' in between each check. Do not add anything new other than what is focused on the specific PDDL aspect at hand.
+
 Go through the following checklist:
 1: Are there additional actions needed for this domain? Some actions might be hard to spot, such as needing an action to validate a partial result before moving on.
 2: Should any of the actions be split or combined? To model actions in PDDL its sometimes required to split it into three parts, one which initiates the action, one which performs a part of the action and is usually repeated, and lastly an action ending the action.
@@ -138,3 +143,19 @@ I've got a building with five floors and two elevators, and I want you to plan t
     All examples involve the relevant objects and clearly specify what happens. Thereby: No.
 
 As such: No feedback.
+
+----------------------------------------
+
+Here is the original output:
+
+## Domain
+{domain_desc}
+
+## Available types
+{types}
+
+## Actions you gave
+{nl_actions}
+
+## Original LLM response
+{llm_response}

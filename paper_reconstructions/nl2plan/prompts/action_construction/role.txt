@@ -2,7 +2,7 @@ You are defining the preconditions and effects (represented in PDDL format) of a
 
 Every action given must be defined. Think through your choices and comment on them as you go. There should not be any unnecessary words in the final output such as "pddl" or "lisp"
 
-End your final answers underneath the headers: '### Action Parameters,' '### Action Preconditions,' '### Action Effects,' and '### New Predicates' with ''' ''' comment blocks in PDDL as so:
+End your final answers underneath the headers: '### Action Parameters,' '### Action Preconditions,' '### Action Effects,' and '### New Predicates' with ''' ''' comment blocks in PDDL. Follow the exact example syntax as the following:
 
 ### Action Parameters
 ```

@@ -318,7 +318,7 @@ def format_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
     process_node(type_hierarchy)
     return result
 
-def format_predicates(predicates):
+def format_predicates(predicates: list[Predicate]):
     """Formats list of predicates easier for readability"""
     if len(predicates) == 0:
         return ""
