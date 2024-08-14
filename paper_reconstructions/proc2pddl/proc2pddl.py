@@ -11,11 +11,9 @@ from l2p.prompt_builder import PromptBuilder
 from l2p.domain_builder import DomainBuilder
 from l2p.task_builder import TaskBuilder
 from l2p.feedback_builder import FeedbackBuilder
-from l2p.utils.pddl_parser import format_dict, format_predicates, extract_types
+from l2p.utils.pddl_parser import format_dict, format_predicates, format_types
 from tests.planner import FastDownward
-from tests.setup import check_parse_domain, check_parse_problem
-from pddl.parser.domain import DomainParser
-
+from tests.setup import check_parse_domain
 
 def open_file(file_path):
     with open(file_path, 'r') as file:
@@ -72,16 +70,7 @@ types = {
         },
         {
             "direction": "", 
-            "children": [
-                {"in": "", "children": []},
-                {"out": "", "children": []},
-                {"north": "", "children": []},
-                {"south": "", "children": []},
-                {"east": "", "children": []},
-                {"west": "", "children": []},
-                {"up": "", "children": []},
-                {"down": "", "children": []}
-            ]
+            "children": []
         }
     ]
 }
@@ -158,7 +147,7 @@ if __name__ == "__main__":
         types=types
         )
 
-    types = extract_types(types) # retrieve types
+    types = format_types(types) # retrieve types
     pruned_types = {name: description for name, description in types.items() if name not in unsupported_keywords} # remove unsupported words
     
     # format strings
@@ -169,7 +158,7 @@ if __name__ == "__main__":
 
     # generate domain
     pddl_domain = domain_builder.generate_domain(
-        domain="test_domain", 
+        domain="survive_deserted_island", 
         requirements=requirements,
         types=types_str,
         predicates=predicate_str,
@@ -179,6 +168,14 @@ if __name__ == "__main__":
     domain_file = "paper_reconstructions/proc2pddl/results/domain.pddl"
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
+        
+    # parse PDDL files
+    pddl_domain = check_parse_domain(domain_file)
+    with open(domain_file, "w") as f:
+        f.write(pddl_domain)
     
+    problem_file = open_file("paper_reconstructions/proc2pddl/results/problems/problem-catch_cook_fish.pddl")
     
+    # run planner
+    planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)
     
