@@ -91,18 +91,20 @@ print("FEEDBACK:\n", feedback_response)
 
 
 ## Installation and Setup
+Currently, this repo has been tested for Python 3.12.2.
+
 You can set up a Python environment using either [Conda](https://conda.io) or [venv](https://docs.python.org/3/library/venv.html) and install the dependencies via the following steps.
 
 **Conda**
 ```
-conda create -n L2P python=3.10
+conda create -n L2P python=3.12.2
 conda activate L2P
 pip install -r requirements.txt
 ```
 
 **venv**
 ```
-python3.10 -m venv env
+python3.12.2 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 ``` 
@@ -117,7 +119,11 @@ L2P requires access to an LLM. Currently, it only supports OpenAI's GPT-series m
 export OPENAI_API_KEY='YOUR-KEY' # e.g. OPENAI_API_KEY='sk-123456'
 ```
 
+Refer to [here](https://platform.openai.com/docs/quickstart) for more information.
+
 ## Current Works Reconstructed Using L2P
+The following are papers that have been reconstructed so far. This list will be updated in the future.
+
 - [x] `NL2Plan`
 - [x] `LLM+DM` 
 - [x] `LLM+P`
@@ -126,6 +132,16 @@ export OPENAI_API_KEY='YOUR-KEY' # e.g. OPENAI_API_KEY='sk-123456'
 - [ ] `LLM+consistency`
 
 ## Current Model Construction Works
+This section provides a taxonomy of research within Model Construction. For more detailed overview, visit our [paper](https://puginarug.com).
+
+**Model Generation**
+- **""** et al. (year) [paper]() [code]()
+
+**Model Editing**
+- **""** et al. (year) [paper]() [code]()
+
+**Other NL-PDDL Translation Tasks**
+- **""** et al. (year) [paper]() [code]()
 
 ## Contact
 Please contact `20mt1@queensu.ca` for questions, comments, or feedback about the L2P library.
