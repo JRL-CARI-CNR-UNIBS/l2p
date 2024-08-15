@@ -39,7 +39,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat, 
         domain_desc: str, 
-        prompt_template: PromptBuilder,
+        prompt_template: str,
         types: dict[str,str]=None,
         max_retries: int=3
         ) -> tuple[dict[str,str], str]:
@@ -49,7 +49,7 @@ class DomainBuilder:
         Args:
             model (LLM_Chat): LLM
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template
             types (dict[str,str]): current types in model
             max_retries (int): max # of retries if failure occurs
 
@@ -86,7 +86,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat, 
         domain_desc: str,
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         types: dict[str,str]=None,
         max_retries: int=3
         ) -> tuple[dict[str,str], str]:
@@ -96,7 +96,7 @@ class DomainBuilder:
         Args:
             model (LLM_Chat): LLM
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template
             types (dict[str,str]): current types in model
             max_retries (int): max # of retries if failure occurs
 
@@ -134,7 +134,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat,
         domain_desc: str, 
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         types: dict[str,str]=None,
         nl_actions: dict[str,str]=None,
         max_retries: int=3
@@ -145,7 +145,7 @@ class DomainBuilder:
         Args:
             model (LLM_Chat): LLM
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template
             types (dict[str,str]): current types in model
             nl_actions (dict[str, str]): NL actions currently in model
             max_retries (int): max # of retries if failure occurs
@@ -186,7 +186,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat, 
         domain_desc: str,
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         action_name: str,
         action_desc: str,
         action_list: dict[str,str]=None,
@@ -251,7 +251,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat, 
         domain_desc: str,
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         nl_actions: dict[str,str]=None,
         predicates: list[Predicate]=None,
         types: dict[str,str]=None
@@ -323,7 +323,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat, 
         domain_desc: str,
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         action_name: str, 
         action_desc: str, 
         types: dict[str,str]=None,
@@ -335,7 +335,7 @@ class DomainBuilder:
         Args:
             model (LLM_Chat): LLM
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template
             action_name (str): action name
             action_desc (str): action description
             types (dict[str,str]): current types in model
@@ -377,7 +377,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat, 
         domain_desc: str,
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         action_name: str, 
         action_desc: str, 
         params: list[str], 
@@ -390,7 +390,7 @@ class DomainBuilder:
         Args:
             model (LLM_Chat): LLM
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template
             action_name (str): action name
             action_desc (str): action description
             params (list[str]): list of parameters from action
@@ -435,7 +435,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat, 
         domain_desc: str,
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         action_name: str, 
         action_desc: str, 
         params: list[str], 
@@ -449,7 +449,7 @@ class DomainBuilder:
         Args:
             model (LLM_Chat): LLM
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template
             action_name (str): action name
             action_desc (str): action description
             params (list[str]): list of parameters from action
@@ -496,7 +496,7 @@ class DomainBuilder:
         self, 
         model: LLM_Chat,
         domain_desc: str,
-        prompt_template: str=PromptBuilder, 
+        prompt_template: str, 
         types: dict[str,str]=None,
         predicates: list[Predicate]=None,
         nl_actions: dict[str,str]=None,
@@ -508,7 +508,7 @@ class DomainBuilder:
         Args:
             model (LLM_Chat): LLM
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template
             types (dict[str,str]): current types in model
             predicates (list[Predicate]): list of current predicates in model
             nl_actions (dict[str, str]): NL actions currently in model

@@ -11,7 +11,7 @@
 {parameters}
 
 ## Precondition
-{precondition}
+{preconditions}
 
 ### Available Predicates
-{predicate_list}
+{predicates}

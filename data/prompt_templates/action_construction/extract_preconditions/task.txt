@@ -4,11 +4,11 @@
 ## Action Name
 {action_name}
 
-## Corresponding Action Description
+## Action Description
 {action_desc}
 
 ## Parameters
 {parameters}
 
 ### Available Predicates
-{predicate_list}
+{predicates}

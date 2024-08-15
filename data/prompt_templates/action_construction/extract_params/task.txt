@@ -2,10 +2,10 @@
 {domain_desc}
 
 ## Types 
-{type_hierarchy}
+{types}
 
 ## Action Name
 {action_name}
 
-## Corresponding Action Description
+## Action Description
 {action_desc}
