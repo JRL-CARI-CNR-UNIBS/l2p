@@ -11,8 +11,6 @@ This is the general setup to build domain predicates:
 import os
 from openai import OpenAI
 from l2p.domain_builder import DomainBuilder
-from l2p.task_builder import TaskBuilder
-from l2p.feedback_builder import FeedbackBuilder
 from l2p.llm_builder import GPT_Chat
 from l2p.utils.pddl_parser import prune_predicates, format_types
 
