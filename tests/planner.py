@@ -160,16 +160,7 @@ class FastDownward:
 if __name__ == "__main__":
     
     planner = FastDownward()
-    
-    # domain_file_path = "tests/domain.pddl"
-    # problem_file_path_1 = "tests/problem_1.pddl"
-    # problem_file_path_2 = "tests/problem_2.pddl"
-    # problem_file_path_3 = "tests/problem_3.pddl"
-    
-    # run_fast_downward(domain_file_path, problem_file_path_1)
-    # run_fast_downward(domain_file_path, problem_file_path_2)
-    # run_fast_downward(domain_file_path, problem_file_path_3)
-    
+   
     domain = "paper_reconstructions/proc2pddl/results/domain.pddl"
     problem = "paper_reconstructions/proc2pddl/results/problems/problem-start-fire.pddl"
     planner.run_fast_downward(domain, problem)

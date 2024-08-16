@@ -532,6 +532,8 @@ class DomainBuilder:
                 prompt_template = prompt_template.replace('{types}', types_str)
                 prompt_template = prompt_template.replace('{predicates}', predicates_str)
                 prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
+
+                print(prompt_template)
                 
                 llm_response = model.get_output(prompt=prompt_template) # prompt model
                 

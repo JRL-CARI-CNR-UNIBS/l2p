@@ -5,6 +5,7 @@ from l2p.task_builder import TaskBuilder
 from l2p.feedback_builder import FeedbackBuilder
 from l2p.llm_builder import GPT_Chat
 from l2p.utils.pddl_parser import prune_predicates, format_types
+from tests.setup import check_parse_domain
 
 def load_file(file_path):
     with open(file_path, 'r') as file:
@@ -18,20 +19,23 @@ domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
 feedback_builder = FeedbackBuilder()
 
+# engine = "gpt-4o"
+# engine = "gpt-3.5-turbo-0125"
+engine = "gpt-4o-mini"
+
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
-model = GPT_Chat(client=client, engine='gpt-4o-mini') # LLM to prompt to
+model = GPT_Chat(client=client, engine=engine) # LLM to prompt to
 
 # load in assumptions
-domain_desc = load_file(rr'tests\usage\prompts\blocksworld_domain.txt')
-extract_predicates_prompt = load_file(rr'tests\usage\prompts\extract_predicates.txt')
-extract_parameters_prompt = load_file(rr'tests\usage\prompts\extract_parameters.txt')
-extract_preconditions_prompt = load_file(rr'tests\usage\prompts\extract_preconditions.txt')
-extract_effects_prompt = load_file(rr'tests\usage\prompts\extract_effects.txt')
-types = load_json(rr'tests\usage\prompts\types.json')
-action = load_json(rr'tests\usage\prompts\action.json')
+domain_desc = load_file('tests/usage/prompts/blocksworld_domain.txt')
+extract_predicates_prompt = load_file('tests/usage/prompts/extract_predicates.txt')
+extract_parameters_prompt = load_file('tests/usage/prompts/extract_parameters.txt')
+extract_preconditions_prompt = load_file('tests/usage/prompts/extract_preconditions.txt')
+extract_effects_prompt = load_file('tests/usage/prompts/extract_effects.txt')
+types = load_json('tests/usage/prompts/types.json')
+action = load_json('tests/usage/prompts/action.json')
 action_name = action['action_name']
 action_desc = action['action_desc']
-
 
 unsupported_keywords = ['object', 'pddl', 'lisp']
 
@@ -111,4 +115,13 @@ pddl_domain = domain_builder.generate_domain(
     actions=[action]
     )
 
-print(pddl_domain)
+domain_file_path = 'tests/usage/results/domain.pddl'
+
+with open(domain_file_path, "w") as f:
+        f.write(pddl_domain)
+
+pddl_domain = check_parse_domain(domain_file_path)
+print("PDDL domain:\n", pddl_domain)
+
+with open(domain_file_path, "w") as f:
+    f.write(pddl_domain)

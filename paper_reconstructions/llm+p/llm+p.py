@@ -63,14 +63,11 @@ if __name__ == "__main__":
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
 
-    # parse PDDL files
-    pddl_domain = check_parse_domain(domain_file)
-    with open(domain_file, "w") as f:
-        f.write(pddl_domain)
-
     pddl_problem = check_parse_problem(problem_file)
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
+
+    print("PDDL problem:\n", pddl_problem)
 
     # run planner
     planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)

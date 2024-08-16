@@ -31,39 +31,6 @@ def check_parse_problem(file_path):
 
 if __name__ == "__main__":
     
-    # domain_file_path = 'tests/domain.pddl'
-    # pddl_domain = check_parse_domain(domain_file_path)
-    # print("PDDL domain:\n", pddl_domain)
-    
-    # with open(domain_file_path, "w") as f:
-    #     f.write(pddl_domain)
-
-    # print("------------------")
-
-    # problem_file_path_1 = 'tests/problem_1.pddl'
-    # problem_file_path_2 = 'tests/problem_2.pddl'
-    # problem_file_path_3 = 'tests/problem_3.pddl'
-    
-    # pddl_problem = check_parse_problem(problem_file_path_1)
-    # print("PDDL Problem:\n", pddl_problem)
-
-    # with open(problem_file_path_1, "w") as f:
-    #     f.write(pddl_problem)
-        
-    # pddl_problem = check_parse_problem(problem_file_path_2)
-    # print("PDDL Problem:\n", pddl_problem)
-
-    # with open(problem_file_path_2, "w") as f:
-    #     f.write(pddl_problem)
-        
-    # pddl_problem = check_parse_problem(problem_file_path_3)
-    # print("PDDL Problem:\n", pddl_problem)
-
-    # with open(problem_file_path_3, "w") as f:
-    #     f.write(pddl_problem)
-        
-    
-    
     domain_file_path = 'paper_reconstructions/llm+dm/results/domain.pddl'
     problem_file_path = 'data/problem_1.pddl'
     
@@ -72,18 +39,3 @@ if __name__ == "__main__":
     
     with open(domain_file_path, "w") as f:
         f.write(pddl_domain)
-
-    # print("------------------")
-    
-    # pddl_problem = check_parse_problem(problem_file_path)
-    # print("PDDL Problem:\n", pddl_problem)
-
-    # with open(problem_file_path, "w") as f:
-    #     f.write(pddl_problem)
-        
-        
-    
-    # domain = parse_domain(domain_file_path)
-    # problem = parse_problem(problem_file_path)
-    
-    # problem.check(domain)
