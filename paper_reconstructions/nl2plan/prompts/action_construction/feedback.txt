@@ -36,9 +36,10 @@ guard_location
 A ranger guards a location from poachers. The ranger has to be at the location. Example: ranger_3 guards plain_2.
 
 #### Action Parameters
-1. ?r - ranger: The ranger who will guard the location.
-2. ?l - location: The location to guard.
-
+```
+- ?r - ranger: The ranger who will guard the location.
+- ?l - location: The location to guard.
+```
 
 #### Action Preconditions
 ```
@@ -117,9 +118,11 @@ drive
 A truck driver from point A to point B. They need to be connected by a road and the truck has to be at the starting position. Example: truck_1 moves from house_1 to depot_1. 
 
 #### Action Parameters
-1. ?t - truck: the vehicle which is driven
-2. ?from - location: the location the vehicle is travelling from
-3. ?to - location: the location the vehicle is travelling to
+```
+- ?t - truck: the vehicle which is driven
+- ?from - location: the location the vehicle is travelling from
+- ?to - location: the location the vehicle is travelling to
+```
 
 #### Action Preconditions
 ```
@@ -135,6 +138,7 @@ A truck driver from point A to point B. They need to be connected by a road and 
     (at ?t ?to)
 )
 ```
+
 
 ### Feedback
 1: Are any necessary precondition checks missing?
@@ -187,9 +191,11 @@ pick_up
 An elevator picks up a person at a floor where they both are. Example: elevator_1 picks up person_1 at floor_1.
 
 #### Action Parameters
-1. ?p - person: The person being picked up
-2. ?e - elevator: The elevator picking them up
-3. ?f - floor: The floor both the elevator and person are on
+```
+- ?p - person: The person being picked up
+- ?e - elevator: The elevator picking them up
+- ?f - floor: The floor both the elevator and person are on
+```
 
 #### Action Preconditions
 ```
@@ -232,8 +238,8 @@ Therefore: No feedback.
 
 Here is the original output:
 
-## Problem
-{problem_desc}
+## Domain
+{domain_desc}
 
 ## Available types
 {types}

@@ -188,7 +188,7 @@ class DomainBuilder:
         domain_desc: str,
         prompt_template: str, 
         action_name: str,
-        action_desc: str,
+        action_desc: str=None,
         action_list: dict[str,str]=None,
         predicates: list[Predicate]=None,
         types: dict[str,str]=None,
@@ -228,7 +228,7 @@ class DomainBuilder:
                 prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
                 prompt_template = prompt_template.replace('{action_list}', action_list_str)
                 prompt_template = prompt_template.replace('{action_name}', action_name)
-                prompt_template = prompt_template.replace('{action_desc}', action_desc)
+                prompt_template = prompt_template.replace('{action_desc}', action_desc if action_desc else "No description available.")
                 prompt_template = prompt_template.replace('{types}', types_str)
                 prompt_template = prompt_template.replace('{predicates}', predicates_str)
                 
@@ -237,7 +237,6 @@ class DomainBuilder:
                 # extract respective types from response
                 action = parse_action(llm_response=llm_response, action_name=action_name)
                 new_predicates = parse_new_predicates(llm_response)
-                new_predicates = [pred for pred in new_predicates if pred['name'] not in [p["name"] for p in predicates]] # remove re-defined predicates
 
                 return action, new_predicates, llm_response
             

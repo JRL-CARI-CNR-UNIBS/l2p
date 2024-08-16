@@ -109,7 +109,7 @@ class FeedbackBuilder:
             predicates: list[Predicate], 
             types: dict[str,str], 
             llm_response: str=""
-            ) -> tuple[bool, str]:
+            ) -> tuple[Action, list[Predicate], str]:
         """Makes LLM call using feedback prompt, then parses it into format"""
 
         predicate_str = format_predicates(predicates)
@@ -124,7 +124,16 @@ class FeedbackBuilder:
         feedback_template = feedback_template.replace('{action_preconditions}', action['preconditions'])
         feedback_template = feedback_template.replace('{action_effects}', action['effects'])
 
-        return self.get_feedback(model, feedback_template, feedback_type, llm_response)
+        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
+    
+        if not no_fb:
+            prompt = (
+                f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
+                f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
+            )
+
+            action, predicates, _ = domain_builder.extract_pddl_action(model, domain_desc, prompt, action['name'])
+        return action, predicates, fb_msg
 
     def parameter_feedback(
             self, 
