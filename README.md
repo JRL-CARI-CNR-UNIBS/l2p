@@ -8,7 +8,7 @@ L2P is an offline, NL to PDDL system that supports domain-agnostic planning. It 
 
 This is the general setup to build domain predicates:
 ```python
-import os
+import os, json
 from openai import OpenAI
 from l2p.domain_builder import DomainBuilder
 from l2p.llm_builder import GPT_Chat
@@ -26,10 +26,10 @@ client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH Y
 model = GPT_Chat(client=client, engine="gpt-4o-mini") # LLM to prompt to
 
 # load in assumptions
-domain_desc = load_file("tests\usage\prompts\blocksworld_domain.txt")
-extract_predicates_prompt = load_file("tests\usage\prompts\extract_predicates.txt")
-types = load_file('tests\usage\prompts\types.json')
-action = load_file('tests\usage\prompts\action.json')
+domain_desc = load_file(r'tests\usage\prompts\blocksworld_domain.txt')
+extract_predicates_prompt = load_file(r'tests\usage\prompts\extract_predicates.txt')
+types = load_file(r'tests\usage\prompts\types.json')
+action = load_file(r'tests\usage\prompts\action.json')
 
 # extract predicates
 predicates, llm_output = domain_builder.extract_predicates(

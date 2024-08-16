@@ -1,2 +1,5 @@
 python
 pip install --upgrade openai
+pip install tiktoken
+pip install retry
+pip install pddl

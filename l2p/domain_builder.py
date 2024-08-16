@@ -328,7 +328,7 @@ class DomainBuilder:
         action_desc: str, 
         types: dict[str,str]=None,
         max_retries: int=3
-        ) -> tuple[OrderedDict, str]:
+        ) -> tuple[OrderedDict, list, str]:
         """
         Extracts parameters from single action description via LLM
 
@@ -616,7 +616,7 @@ class DomainBuilder:
         # Main function to generate the domain description
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += f"(:requirements\n  {" ".join(requirements)}\n)\n"
+        desc += f"(:requirements\n  {' '.join(requirements)}\n)\n"
         desc += f"   (:types \n{types}\n   )\n\n"
         desc += f"   (:predicates \n{predicates}\n   )"
         desc += self.action_descs(actions)

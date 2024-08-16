@@ -32,8 +32,7 @@ class TaskBuilder:
     def extract_objects(self, 
         model: LLM_Chat, 
         problem_desc: str,
-        domain_desc: str, 
-        prompt_template: PromptBuilder,
+        prompt_template: str,
         types: dict[str,str], 
         predicates: list[Predicate],
         max_retries: int=3
@@ -64,7 +63,6 @@ class TaskBuilder:
                 predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
                 types_str = "\n".join(types) if types else "No types provided."
 
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
                 prompt_template = prompt_template.replace('{types}', types_str)
                 prompt_template = prompt_template.replace('{predicates}', predicate_str)
                 prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
@@ -86,8 +84,7 @@ class TaskBuilder:
         self, 
         model: LLM_Chat, 
         problem_desc: str,
-        domain_desc: str,
-        prompt_template: PromptBuilder,
+        prompt_template: str,
         types: dict[str,str]=None, 
         predicates: list[Predicate]=None,
         objects: dict[str,str]=None,
@@ -125,7 +122,6 @@ class TaskBuilder:
                 types_str = "\n".join(types) if types else "No types provided."
                 objects_str = self.format_objects(objects) if objects else "No objects provided."
 
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
                 prompt_template = prompt_template.replace('{types}', types_str)
                 prompt_template = prompt_template.replace('{predicates}', predicate_str)
                 prompt_template = prompt_template.replace('{objects}', objects_str)
@@ -150,8 +146,7 @@ class TaskBuilder:
         self, 
         model: LLM_Chat, 
         problem_desc: str,
-        domain_desc: str,
-        prompt_template: PromptBuilder,
+        prompt_template: str,
         types: dict[str,str]=None, 
         predicates: list[Predicate]=None,
         objects: dict[str,str]=None,
@@ -189,7 +184,6 @@ class TaskBuilder:
                 types_str = "\n".join(types) if types else "No types provided."
                 objects_str = self.format_objects(objects) if objects else "No objects provided."
 
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
                 prompt_template = prompt_template.replace('{types}', types_str)
                 prompt_template = prompt_template.replace('{predicates}', predicate_str)
                 prompt_template = prompt_template.replace('{objects}', objects_str)
@@ -214,8 +208,7 @@ class TaskBuilder:
         self, 
         model: LLM_Chat, 
         problem_desc: str,
-        domain_desc: str, 
-        prompt_template: PromptBuilder, 
+        prompt_template: str, 
         types: dict[str,str]=None, 
         predicates: list[Predicate]=None,
         actions: list[Action]=None,
@@ -251,7 +244,6 @@ class TaskBuilder:
                 types_str = "\n".join(types) if types else "No types provided."
                 action_str = self.format_action(actions=actions) if actions else "No actions provided."
 
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
                 prompt_template = prompt_template.replace('{types}', types_str)
                 prompt_template = prompt_template.replace('{predicates}', predicate_str)
                 prompt_template = prompt_template.replace('{actions}', action_str)
@@ -276,7 +268,6 @@ class TaskBuilder:
         self, 
         model: LLM_Chat, 
         problem_desc: str,
-        domain_desc: str,
         prompt_template: PromptBuilder,
         types: dict[str,str]=None, 
         predicates: list[Predicate]=None,
@@ -313,7 +304,6 @@ class TaskBuilder:
                 objects_str = self.format_objects(objects) if objects else "No objects provided."
                 action_str = self.format_action(actions=actions) if actions else "No actions provided."
 
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
                 prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
                 prompt_template = prompt_template.replace('{actions}', action_str)
                 prompt_template = prompt_template.replace('{types}', types_str)
