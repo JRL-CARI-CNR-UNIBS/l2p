@@ -134,9 +134,9 @@ class SyntaxValidator:
         ) -> tuple[bool, str]:
         """
         This function checks three types of errors:
-            - check if the num of params given matches the num of params in predicate definition
-            - check if there is any param that is not listed under `Parameters:`
-            - check if the param type matches that in the predicate definition
+            - (i) check if the num of params given matches the num of params in predicate definition
+            - (ii) check if there is any param that is not listed under `Parameters:`
+            - (iii) check if the param type matches that in the predicate definition
         """
         def get_ordinal_suffix(_num):
             return {1: 'st', 2: 'nd', 3: 'rd'}.get(_num % 10, 'th') if _num not in (11, 12, 13) else 'th'
@@ -158,24 +158,25 @@ class SyntaxValidator:
                     while idx < len(pddl_elems) and pddl_elems[idx] != ')':
                         curr_pred_params.append(pddl_elems[idx])
                         idx += 1
-                    # check if the num of params are correct
+                    # (i) check if the num of params are correct
                     n_expected_param = len(target_pred_info['params'])
                     if n_expected_param != len(curr_pred_params):
 
                         feedback_msg = f'In the {part}, the predicate `{curr_pred_name}` requires {n_expected_param} parameters but {len(curr_pred_params)} parameters were provided. Object type should not be declared in the {part}, but just the variable. For example, "(drive ?a ?from)" does not contain its object types, just variables. Do not change the predicates. Please revise the PDDL model to fix this error.'
                         return False, feedback_msg
                     
-                    # check if there is any unknown param
+                    # (ii) check if there is any unknown param
                     for curr_param in curr_pred_params:
                         
-                        if curr_param not in action_params:
+                        if curr_param not in action_params[0]:
                             feedback_msg = f'In the {part} and in the predicate `{curr_pred_name}`, there is an unknown parameter `{curr_param}`. You should define all parameters (i.e., name and type) under the `### Action Parameters` list. Please revise the PDDL model to fix this error (and other potentially similar errors).'
                             return False, feedback_msg
-                    # check if the object types are correct
+                        
+                    # (iii) check if the object types are correct
                     target_param_types = [target_pred_info['params'][t_p] for t_p in target_pred_info['params']]
                     for param_idx, target_type in enumerate(target_param_types):
                         curr_param = curr_pred_params[param_idx]
-                        claimed_type = action_params[curr_param]
+                        claimed_type = action_params[0][curr_param]
 
                         if not self.validate_type(target_type, claimed_type, types):
                             feedback_msg = f'There is a syntax error in the {part.lower()}, the {param_idx+1}-{get_ordinal_suffix(param_idx+1)} parameter of `{curr_pred_name}` should be a `{target_type}` but a `{claimed_type}` was given. Please use the correct predicate or devise new one(s) if needed (but note that you should use existing predicates as much as possible).'

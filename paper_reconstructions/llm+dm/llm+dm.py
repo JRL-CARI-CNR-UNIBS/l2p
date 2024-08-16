@@ -18,7 +18,7 @@ from l2p.llm_builder import GPT_Chat
 from l2p.domain_builder import DomainBuilder
 from l2p.feedback_builder import FeedbackBuilder
 from l2p.utils.pddl_validator import SyntaxValidator
-from l2p.utils.pddl_parser import parse_new_predicates, prune_predicates
+from l2p.utils.pddl_parser import parse_new_predicates, prune_predicates, format_predicates
 from l2p.utils.pddl_types import Action, Predicate
 from tests.setup import check_parse_domain
 
@@ -35,7 +35,7 @@ def open_json(file_path):
 
 def construct_action_model(
     domain_desc, 
-    action_predicate_prompt, 
+    prompt_template, 
     action_name, 
     action_desc, 
     predicate_list, 
@@ -64,7 +64,7 @@ def construct_action_model(
         pddl_action, new_predicates, llm_response = domain_builder.extract_pddl_action(
             model=model, 
             domain_desc=domain_desc,
-            prompt_template=action_predicate_prompt, 
+            prompt_template=prompt_template, 
             action_name=action_name,
             action_desc=action_desc,
             predicates=predicate_list,
@@ -79,22 +79,21 @@ def construct_action_model(
         
             # if there is syntax error, run through feedback mechanism to retrieve new action model
             if no_syntax_error == False:
-                
-                # run feedback mechanic (set on 'validator' mode)
-                feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
-                    model, 
-                    domain_desc, 
-                    feedback_msg, 
-                    "validator", 
-                    pddl_action, 
-                    predicate_list, 
-                    hierarchy_requirements["hierarchy"], 
-                    llm_response
-                    )
-            
-                if feedback_action != None:
-                    pddl_action=feedback_action
-                    new_predicates=feedback_predicates
+
+                prompt_template += "\n\nHere is the PDDL action you outputted:\n" + str(pddl_action)
+                if len(new_predicates) > 0:
+                    prompt_template += "\n\nHere is the predicates you created from that action:\n" + format_predicates(new_predicates)
+                prompt_template += "\n\nHere is the feedback you outputted:\n" + feedback_msg
+
+                pddl_action, new_predicates, llm_response = domain_builder.extract_pddl_action(
+                model=model, 
+                domain_desc=domain_desc,
+                prompt_template=prompt_template, 
+                action_name=action_name,
+                action_desc=action_desc,
+                predicates=predicate_list,
+                types=hierarchy_requirements["hierarchy"]
+                )
         
     new_predicates = parse_new_predicates(llm_response)
     predicate_list.extend(new_predicates)
@@ -135,8 +134,6 @@ if __name__ == "__main__":
         new predicates are added to the list. This is an action model refinement algorithm, that refines itself by a growing predicate list.
     """
     
-    action_predicate_prompt = ""
-    
     # iterate however many times
     for i_iter in range(max_iterations):
         prev_predicate_list = deepcopy(predicate_list)
@@ -146,27 +143,22 @@ if __name__ == "__main__":
         # iterate through each action
         for i_action, action in enumerate(actions):
             
-            action_desc_prompt = action_model[action]['desc']
-            action_prompt = str(prompt_template)
-            
-            action_predicate_prompt = f'{action_prompt}'
-            
             # replace prompt with dynamic predicate list
             if len(predicate_list) == 0:
                 # if no predicates in list
-                action_predicate_prompt = action_predicate_prompt.replace('{predicates}', '\nNo predicate has been defined yet')
+                prompt_template = prompt_template.replace('{predicates}', '\nNo predicate has been defined yet')
             else:
                 # replace with current predicates
                 readable_results = ""
                 for i, p in enumerate(predicate_list):
                     readable_results += f'\n{i + 1}. {p["raw"]}'
                     
-                action_predicate_prompt = action_predicate_prompt.replace('{predicates}', readable_results)
+                prompt_template = prompt_template.replace('{predicates}', readable_results)
             
             # construct action model
             pddl_action, predicate_list, llm_output = construct_action_model(
                 domain_desc, 
-                action_predicate_prompt, 
+                prompt_template, 
                 action, 
                 action_model[action]['desc'], 
                 predicate_list, 
@@ -174,11 +166,9 @@ if __name__ == "__main__":
                 syntax_validator=syntax_validator
                 )
             action_list.append(pddl_action)
-            predicate_list = prune_predicates(predicates=predicate_list, actions=action_list)
-            
             
     # at the end of the action-by-action algorithm, clean predicates, types, and build parse PDDL domain
-    # predicates = prune_predicates(predicates=predicate_list, actions=action_list)
+    predicate_list = prune_predicates(predicates=predicate_list, actions=action_list)
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicate_list])
     
     # prune types if not found in action interfaces

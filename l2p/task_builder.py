@@ -44,7 +44,7 @@ class TaskBuilder:
             model (LLM_Chat): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template class
             types (dict[str,str]): current types in model
             predicates (list[Predicate]): list of predicates in current model
             max_retries (int): max # of retries if failure occurs
@@ -99,7 +99,7 @@ class TaskBuilder:
             model (LLM_Chat): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template class
             types (dict[str,str]): current types in model
             predicates (list[Predicate]): current list of predicates in model
             objects (dict[str,str]): current dictionary of task objects in model
@@ -161,7 +161,7 @@ class TaskBuilder:
             model (LLM_Chat): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template class
             types (dict[str,str]): current types in model
             predicates (list[Predicate]): current list of predicates in model
             objects (dict[str,str]): current dictionary of task objects in model
@@ -221,7 +221,7 @@ class TaskBuilder:
             model (LLM_Chat): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template class
             types (dict[str,str]): current types in model
             predicates (list[Predicate]): current list of predicates in model
             actions (list[Action]): current list of Action instances in model
@@ -282,7 +282,7 @@ class TaskBuilder:
             model (LLM_Chat): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
-            prompt_template (PromptBuilder): prompt template class
+            prompt_template (str): prompt template class
             types (dict[str,str]): current types in model
             predicates (list[Predicate]): current list of predicates in model
             actions (list[Action]): current list of Action instances in model

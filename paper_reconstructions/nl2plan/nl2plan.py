@@ -25,8 +25,8 @@ def format_json_output(data):
         return json.dumps(data, indent=4)
 
 # engine = "gpt-4o"
-engine = "gpt-3.5-turbo-0125"
-# engine = "gpt-4o-mini"
+# engine = "gpt-3.5-turbo-0125"
+engine = "gpt-4o-mini"
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
 model = GPT_Chat(client=client, engine=engine)
@@ -143,21 +143,21 @@ if __name__ == "__main__":
                 type_hierarchy
             )
 
-            # RUN FEEDBACK
-            feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
-                model, 
-                domain_desc, 
-                feedback_template, 
-                "llm",
-                action, 
-                predicates, 
-                types, 
-                llm_response
-                )
+            # # RUN FEEDBACK
+            # feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
+            #     model, 
+            #     domain_desc, 
+            #     feedback_template, 
+            #     "llm",
+            #     action, 
+            #     predicates, 
+            #     types, 
+            #     llm_response
+            #     )
             
-            if feedback_action != None:
-                action=feedback_action
-                new_predicates=feedback_predicates
+            # if feedback_action != None:
+            #     action=feedback_action
+            #     new_predicates=feedback_predicates
 
             actions.append(action)
             predicates.extend(new_predicates)
@@ -193,36 +193,13 @@ if __name__ == "__main__":
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/feedback.txt')
 
     objects, initial, goal, llm_response = task_builder.extract_task(
-        model,
-        problem_desc,
-        domain_desc,
-        task_extraction_prompt.generate_prompt(),
-        types,
-        predicates,
-        actions
+        model=model,
+        problem_desc=problem_desc,
+        prompt_template=task_extraction_prompt.generate_prompt(),
+        types=types,
+        predicates=predicates,
+        actions=actions
         )
-
-    max_iters = 2
-    for _ in range(max_iters):
-        feedback_objects, feedback_initial, feedback_goal, llm_feedback_response = feedback_builder.task_feedback(
-            model, 
-            problem_desc, 
-            feedback_template,
-            "llm",
-            predicates,
-            types,
-            objects,
-            initial,
-            goal,
-            llm_response
-            )
-
-        if feedback_objects != None:
-                objects=feedback_objects
-                initial=feedback_initial
-                goal=feedback_goal
-        else:
-            break
 
     objects = task_builder.format_objects(objects)
     initial = task_builder.format_initial(initial)

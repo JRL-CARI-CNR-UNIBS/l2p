@@ -564,28 +564,30 @@ END OF EXAMPLE
         else:
             raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
         
-        print("FEEDBACK MESSAGE:\n", feedback_msg)
-
-        if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
-            return None, None, None, feedback_msg
-        else:
-            feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL task. Follow exact example syntax. End your response underneath the capitalized headers '## OBJECTS', '## INITIAL', and '## GOAL' as so:\n\n" + example
-            feedback_msg += "\n\n## Response\n"
+        return None, None, None, feedback_msg
         
-        messages = [
-            {'role': 'assistant', 'content': llm_response},
-            {'role': 'user', 'content': feedback_msg}
-        ]
+        # print("FEEDBACK MESSAGE:\n", feedback_msg)
 
-        llm_feedback_response = model.get_output(messages=messages)
+        # if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
+        #     return None, None, None, feedback_msg
+        # else:
+        #     feedback_msg = "## Feedback" + feedback_msg + "\nRe-iterate an updated version of the PDDL task. Follow exact example syntax. End your response underneath the capitalized headers '## OBJECTS', '## INITIAL', and '## GOAL' as so:\n\n" + example
+        #     feedback_msg += "\n\n## Response\n"
+        
+        # messages = [
+        #     {'role': 'assistant', 'content': llm_response},
+        #     {'role': 'user', 'content': feedback_msg}
+        # ]
 
-        print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
+        # llm_feedback_response = model.get_output(messages=messages)
 
-        objects = parse_objects(llm_feedback_response)
-        initial = parse_initial(llm_feedback_response)
-        goal = parse_goal(llm_feedback_response)
+        # print("\n\nLLM FEEDBACK RESPONSE:\n", llm_feedback_response)
 
-        return objects, initial, goal, llm_feedback_response
+        # objects = parse_objects(llm_feedback_response)
+        # initial = parse_initial(llm_feedback_response)
+        # goal = parse_goal(llm_feedback_response)
+
+        # return objects, initial, goal, llm_feedback_response
 
     def objects_feedback(
         self, 
