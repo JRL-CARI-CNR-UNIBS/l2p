@@ -6,7 +6,7 @@ It is extremely crucial that an action term is not considered a type, so it shou
 
 End your final answer starting with "## OUTPUT" and then the Python dictionary pair '{'name':'description'}' as so:
 
-## OUTPUT
+## OUTPUT (example)
 {
     "object": "Object is always root, everything is an object",
     "children": [

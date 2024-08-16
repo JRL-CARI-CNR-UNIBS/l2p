@@ -6,12 +6,14 @@ Run: python3 -m paper_reconstructions.nl2plan.nl2plan
 
 import os, json
 from openai import OpenAI
-from l2p.llm_builder import GPT_Chat
+from l2p.llm_builder import LLM_Chat, GPT_Chat
 from l2p.prompt_builder import PromptBuilder
 from l2p.domain_builder import DomainBuilder
 from l2p.task_builder import TaskBuilder
 from l2p.feedback_builder import FeedbackBuilder
-from l2p.utils.pddl_parser import prune_predicates, prune_types, format_types
+from l2p.utils.pddl_parser import prune_predicates, prune_types, format_types, format_predicates
+from l2p.utils.pddl_validator import SyntaxValidator
+from l2p.utils.pddl_types import Action, Predicate
 from tests.planner import FastDownward
 from tests.setup import check_parse_domain, check_parse_problem
 
@@ -50,13 +52,13 @@ type_hierarchy_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=
 role_desc = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/role.txt')
 tech_desc = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/technique.txt')
 task_desc = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/task.txt')
-nl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
 # open and create PDDL action prompt builder class
 role_desc = open_file('paper_reconstructions/nl2plan/prompts/action_construction/role.txt')
 tech_desc = open_file('paper_reconstructions/nl2plan/prompts/action_construction/technique.txt')
 task_desc = open_file('paper_reconstructions/nl2plan/prompts/action_construction/task.txt')
-pddl_action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+action_construction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
 
 # open and create compact action prompt builder class
 role_desc = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/role.txt')
@@ -67,19 +69,17 @@ task_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task
 domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
 feedback_builder = FeedbackBuilder()
+syntax_validator = SyntaxValidator()
 planner = FastDownward()
 
+unsupported_keywords = ['object', 'pddl', 'lisp']
 
-
-if __name__ == "__main__":
-    
-    unsupported_keywords = ['object', 'pddl', 'lisp']
-    
+def type_extraction(model: LLM_Chat, domain_desc: str, type_extraction_prompt: PromptBuilder) -> dict[str,str]:
     # STEP ONE: type extraction
     types, response = domain_builder.extract_type(model, domain_desc, type_extraction_prompt.generate_prompt())
 
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/type_extraction/feedback.txt')
-    types, feedback_response = feedback_builder.type_feedback(
+    types, _ = feedback_builder.type_feedback(
         model=model, 
         domain_desc=domain_desc, 
         feedback_template=feedback_template, 
@@ -87,56 +87,54 @@ if __name__ == "__main__":
         types=types, 
         llm_response=response)
 
-    domain_builder.set_types(types)
-        
-    print("Types:", format_json_output(domain_builder.get_types()))
+    print("Types:", format_json_output(types))
+    return types
 
-
+def hierarchy_construction(model, domain_desc, type_hierarchy_prompt, types) -> dict[str,str]: 
     # STEP TWO: type hierarchy extraction
     type_hierarchy, response = domain_builder.extract_type_hierarchy(
          model, 
          domain_desc, 
          type_hierarchy_prompt.generate_prompt(), 
-         domain_builder.get_types())
+         types)
 
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/hierarchy_construction/feedback.txt')
-    type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(
+    type_hierarchy, _ = feedback_builder.type_hierarchy_feedback(
          model, 
          domain_desc, 
          feedback_template, 
          "llm", 
          type_hierarchy, 
          response)
-        
-    domain_builder.set_type_hierarchy(type_hierarchy)
-        
-    print("Type Hierarchy", format_json_output(domain_builder.get_type_hierarchy()))
 
+    print("Type Hierarchy", format_json_output(type_hierarchy))
+    return type_hierarchy
 
+def action_extraction(model, domain_desc, action_extraction_prompt, type_hierarchy) -> dict[str,str]:
     # STEP THREE: action extraction
-    nl_actions, response = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_type_hierarchy())
+    nl_actions, response = domain_builder.extract_nl_actions(
+        model, domain_desc, action_extraction_prompt.generate_prompt(), type_hierarchy)
 
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/action_extraction/feedback.txt')
-    nl_actions, feedback_response = feedback_builder.nl_action_feedback(
+    nl_actions, _ = feedback_builder.nl_action_feedback(
         model, 
         domain_desc, 
         feedback_template, 
         "llm", 
         nl_actions, 
         response, 
-        domain_builder.get_type_hierarchy())
-        
-    domain_builder.set_nl_actions(nl_actions)
+        type_hierarchy)
 
     print("Natural Language Actions")    
     for i in nl_actions: print(i)
+    return nl_actions
 
-
+def action_construction(model, domain_desc, action_construction_prompt, nl_actions, type_hierarchy) -> tuple[list[Action], list[Predicate]]:
     # STEP FOUR: action construction
     feedback_template = open_file('paper_reconstructions/nl2plan/prompts/action_construction/feedback.txt')
 
     predicates = []
-    max_iters = 1
+    max_iters = 2
     for _ in range(max_iters):
 
         actions = []
@@ -150,7 +148,7 @@ if __name__ == "__main__":
             action, new_predicates, llm_response = domain_builder.extract_pddl_action(
                 model,
                 domain_desc,
-                pddl_action_extraction_prompt.generate_prompt(),
+                action_construction_prompt.generate_prompt(),
                 action_name,
                 action_desc,
                 action_list,
@@ -158,8 +156,14 @@ if __name__ == "__main__":
                 type_hierarchy
             )
 
+            # perform syntax check on action model
+            is_valid, feedback_msg = syntax_validator.validate_usage_predicates(llm_response, predicates, type_hierarchy)
+            # if there is syntax error, run through feedback mechanism to retrieve new action model
+            if is_valid == False:
+                feedback_template += "\n\nThe following is a syntax error with your response:\n" + feedback_msg
+
             # RUN FEEDBACK
-            action, new_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
+            action, new_predicates, _ = feedback_builder.pddl_action_feedback(
                 model, 
                 domain_desc, 
                 feedback_template, 
@@ -177,59 +181,109 @@ if __name__ == "__main__":
             print("No new predicates created. Stopping action construction.")
             break
 
-    predicates = prune_predicates(predicates=predicates, actions=actions) # discard predicates not found in action models + duplicates
-    types = format_types(type_hierarchy) # retrieve types
-    pruned_types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
-    pruned_types = {name: description for name, description in pruned_types.items() if name not in unsupported_keywords} # remove unsupported words
-    
-    predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
-    types_str = "\n".join(pruned_types)
+    # discard predicates not found in action models + duplicates
+    predicates = prune_predicates(predicates=predicates, actions=actions)
 
-    requirements = [':strips',':typing',':equality',':negative-preconditions',':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
+    return actions, predicates
 
-    pddl_domain = domain_builder.generate_domain(
-        domain="test_domain", 
-        requirements=requirements,
-        types=types_str,
-        predicates=predicate_str,
+def task_extraction(model, problem_desc, task_extraction_prompt, types, predicates, actions
+                    ) -> tuple[dict[str,str], list[dict[str,str]], list[dict[str,str]]]:
+    # STEP FIVE: task extraction
+    feedback_template = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/feedback.txt')
+
+    objects, initial, goal, llm_response = task_builder.extract_task(
+        model=model,
+        problem_desc=problem_desc,
+        prompt_template=task_extraction_prompt.generate_prompt(),
+        types=types,
+        predicates=predicates,
         actions=actions
         )
+    
+    feedback_msgs = []
+    all_valid = True
 
+    # List of validation checks
+    validation_checks = [
+        (syntax_validator.validate_task_objects, (objects, pruned_types)),
+        (syntax_validator.validate_task_states, (initial, objects, predicates, "initial")),
+        (syntax_validator.validate_task_states, (goal, objects, predicates, "goal")),
+    ]
+
+    # Perform each validation check
+    for validator, args in validation_checks:
+        is_valid, feedback_msg = validator(*args)
+        if not is_valid:
+            all_valid = False
+            feedback_msgs.append(feedback_msg)
+
+    # If any check fails, append feedback messages
+    if not all_valid:
+        feedback_template += "\n\nThe following is a syntax error with your response:" + "\n".join(feedback_msgs)
+
+    objects, initial, goal, _ = feedback_builder.task_feedback(model, problem_desc, feedback_template, "llm", 
+        predicates, types, objects, initial, goal, llm_response)
+
+    objects = task_builder.format_objects(objects)
+    initial = task_builder.format_initial(initial)
+    goal = task_builder.format_goal(goal)
+
+    print("Objects:\n", objects)
+    print("Initial States:\n", initial)
+    print("Goal States:\n", goal)
+
+    return objects, initial, goal
+
+if __name__ == "__main__":
+    
+    # STEP ONE: type extraction
+    types = type_extraction(model, domain_desc, type_extraction_prompt)
+
+    # STEP TWO: hierarchy construction
+    type_hierarchy = hierarchy_construction(model, domain_desc, type_hierarchy_prompt, types)
+
+    # STEP THREE: action extraction
+    nl_actions = action_extraction(model, domain_desc, action_extraction_prompt, type_hierarchy)
+
+    # STEP FOUR: action construction
+    actions, predicates = action_construction(model, domain_desc, action_construction_prompt, 
+                                                 nl_actions,type_hierarchy)
+
+    types = format_types(type_hierarchy) # retrieve types
+    types = prune_types(types=types, predicates=predicates, actions=actions) # discard types not in predicates / actions + duplicates
+    types = {name: description for name, description in types.items() if name not in unsupported_keywords} # remove unsupported words
+
+    # STEP FIVE: task extraction
+    objects, initial, goal = task_extraction(model, problem_desc, 
+                                             task_extraction_prompt, types, predicates, actions)
+    
+    # format strings
+    predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
+    types_str = "\n".join(types)
+
+    requirements = [':strips',':typing',':equality',':negative-preconditions',
+                    ':disjunctive-preconditions',':universal-preconditions',':conditional-effects']
+    
+    # generate PDDL specifications
+    pddl_domain = domain_builder.generate_domain("test_domain", requirements, types_str, predicate_str, actions)
+    pddl_problem = task_builder.generate_task("test_domain", objects, initial, goal)
+
+    # write files
     domain_file = "paper_reconstructions/nl2plan/results/domain.pddl"
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
-
-
-    # # STEP FIVE: task extraction
-    # feedback_template = open_file('paper_reconstructions/nl2plan/prompts/task_extraction/feedback.txt')
-
-    # objects, initial, goal, llm_response = task_builder.extract_task(
-    #     model=model,
-    #     problem_desc=problem_desc,
-    #     prompt_template=task_extraction_prompt.generate_prompt(),
-    #     types=types,
-    #     predicates=predicates,
-    #     actions=actions
-    #     )
-
-    # objects = task_builder.format_objects(objects)
-    # initial = task_builder.format_initial(initial)
-    # goal = task_builder.format_goal(goal)
-    
-    # pddl_problem = task_builder.generate_task("test_domain", objects, initial, goal)
-
-    # problem_file = "paper_reconstructions/nl2plan/results/problem.pddl"
-    # with open(problem_file, "w") as f:
-    #     f.write(pddl_problem)
+    problem_file = "paper_reconstructions/nl2plan/results/problem.pddl"
+    with open(problem_file, "w") as f:
+        f.write(pddl_problem)
         
-    # # parse PDDL files
-    # pddl_domain = check_parse_domain(domain_file)
-    # with open(domain_file, "w") as f:
-    #     f.write(pddl_domain)
+    # parse PDDL files
+    pddl_domain = check_parse_domain(domain_file)
+    with open(domain_file, "w") as f:
+        f.write(pddl_domain)
 
-    # pddl_problem = check_parse_problem(problem_file)
-    # with open(problem_file, "w") as f:
-    #     f.write(pddl_problem)
+    pddl_problem = check_parse_problem(problem_file)
+    with open(problem_file, "w") as f:
+        f.write(pddl_problem)
         
-    # # run planner
-    # planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)
+    # run planner
+    planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)

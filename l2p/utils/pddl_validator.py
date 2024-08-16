@@ -253,6 +253,8 @@ class SyntaxValidator:
         
         for obj_name, obj_type in objects.items():
             obj_type_found = False
+
+            print(types)
             
             for type_key in types.keys():
                 current_type, parent_type = type_key.split(" - ")
@@ -335,29 +337,12 @@ class SyntaxValidator:
                         matched_params = True
                 
                 if matched_params == False:
-                    feedback_msgs.append(f"ERROR: In the {state_type} state, '({state['name']} {' '.join(state['params'])})' contains parameter '{state_p} not found in '{objects.keys()}'.")
+                    feedback_msgs.append(f"ERROR: In the {state_type} state, '({state['name']} {' '.join(state['params'])})' contains parameter '{state_p}' not found in '{objects.keys()}'.")
                     valid = False
 
         feedback_msg = "\n".join(feedback_msgs) if not valid else "PASS: all objects are valid."
             
         return valid, feedback_msg
-                    
-
-    def validate_goal_state(self, goal_states: list[dict[str,str]], parameters: OrderedDict, types: dict[str,str]): 
-        """
-        Parameters:
-            - goal_states (list[dict[str,str]]): a list of dictionaries of the goal states.
-            - parameters (OrderedDict): parameters of the current action
-            - types (dict[str,str]): a dictionary of the domain types.
-        
-        Returns:
-            - check, feedback_msg (bool, str)
-        
-        Checks following cases: 
-            (i) if predicates in states are found in predicates in domain
-            (ii) if object types in states are found in the action parameter
-        """
-        pass
     
     
     def validate_header(self, llm_response: str):

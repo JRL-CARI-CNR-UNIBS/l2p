@@ -80,7 +80,7 @@ class FeedbackBuilder:
             nl_actions: dict[str,str], 
             llm_response: str="",
             type_hierarchy: dict[str,str]=None,
-            ) -> tuple[bool, str]:
+            ) -> tuple[dict[str,str], str]:
         """Makes LLM call using feedback prompt, then parses it into format"""
 
         feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
@@ -257,7 +257,19 @@ class FeedbackBuilder:
         feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
         feedback_template = feedback_template.replace('{goal_state}', goal_state_str)
 
-        return self.get_feedback(model, feedback_template, feedback_type, llm_response)
+        print(feedback_template)
+    
+        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
+    
+        if not no_fb:
+            prompt = (
+                f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
+                f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
+            )
+
+            objects, initial, goal, _ = task_builder.extract_task(model, problem_desc, prompt)
+
+        return objects, initial, goal, fb_msg
 
 
     def objects_feedback(

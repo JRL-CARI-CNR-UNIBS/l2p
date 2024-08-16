@@ -69,9 +69,8 @@ class PromptBuilder:
 
             prompt += "------------------------------------------------\n"
 
-        # REMOVE TASK AND PUT IT APPEND IT TO PROMPT IN DOMAIN_BUILDER FUNCTIONS
         if self.task:
-            prompt += f"[TASK]: {self.task}\n\n"
+            prompt += f"[TASK]:\nHere is the task to solve:\n{self.task}\n\n"
 
         return prompt.strip()
     
