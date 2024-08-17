@@ -71,29 +71,36 @@ def construct_action_model(
             types=hierarchy_requirements["hierarchy"]
             )
         
+        
         # if syntax validator check is set on
         if syntax_validator is not None:
 
-            # perform syntax check on action model
-            no_syntax_error, feedback_msg = syntax_validator.validate_usage_predicates(llm_response, predicate_list, hierarchy_requirements["hierarchy"])
-        
-            # if there is syntax error, run through feedback mechanism to retrieve new action model
-            if no_syntax_error == False:
+            syntax_valid = False
 
-                prompt_template += "\n\nHere is the PDDL action you outputted:\n" + str(pddl_action)
-                if len(new_predicates) > 0:
-                    prompt_template += "\n\nHere is the predicates you created from that action:\n" + format_predicates(new_predicates)
-                prompt_template += "\n\nHere is the feedback you outputted:\n" + feedback_msg
+            while not syntax_valid:
+                    # perform syntax check on action model
+                    no_syntax_error, feedback_msg = syntax_validator.validate_usage_predicates(llm_response, predicate_list, hierarchy_requirements["hierarchy"])
+                    
+                    # if there is syntax error, run through feedback mechanism to retrieve new action model
+                    if no_syntax_error is False:
+                        # Update the prompt with the feedback
+                        prompt_template += "\n\nHere is the PDDL action you outputted:\n" + str(pddl_action)
+                        if len(new_predicates) > 0:
+                            prompt_template += "\n\nHere are the predicates you created from that action:\n" + format_predicates(new_predicates)
+                        prompt_template += "\n\nHere is the feedback you outputted:\n" + feedback_msg
 
-                pddl_action, new_predicates, llm_response = domain_builder.extract_pddl_action(
-                model=model, 
-                domain_desc=domain_desc,
-                prompt_template=prompt_template, 
-                action_name=action_name,
-                action_desc=action_desc,
-                predicates=predicate_list,
-                types=hierarchy_requirements["hierarchy"]
-                )
+                        # Generate a new PDDL action model based on the feedback
+                        pddl_action, new_predicates, llm_response = domain_builder.extract_pddl_action(
+                            model=model, 
+                            domain_desc=domain_desc,
+                            prompt_template=prompt_template, 
+                            action_name=action_name,
+                            action_desc=action_desc,
+                            predicates=predicate_list,
+                            types=hierarchy_requirements["hierarchy"]
+                        )
+                    else:
+                        syntax_valid = True
         
     new_predicates = parse_new_predicates(llm_response)
     predicate_list.extend(new_predicates)

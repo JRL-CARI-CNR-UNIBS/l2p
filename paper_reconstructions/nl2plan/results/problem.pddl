@@ -1,6 +1,31 @@
-(define (problem test_domain_problem)
-    (:domain test_domain)
-    (:objects arm1 - arm blue_block green_block red_block yellow_block - block table1 - table)
-    (:init (at green_block table1) (at yellow_block table1) (clear green_block) (clear yellow_block) (empty arm1) (not (clear blue_block)) (not (clear red_block)) (on blue_block red_block) (on red_block yellow_block))
-    (:goal (on red_block green_block))
+(define
+   (problem test_domain_problem)
+   (:domain test_domain)
+
+   (:objects 
+blue_block - block
+red_block - block
+yellow_block - block
+green_block - block
+   )
+
+   (:init
+(at blue_block red_block)
+(at red_block yellow_block)
+(at yellow_block table)
+(at green_block table)
+(clear yellow_block)
+(clear green_block)
+(exists blue_block)
+(exists red_block)
+(exists yellow_block)
+(exists green_block)
+   )
+
+   (:goal
+(and 
+   (at red_block green_block) 
+)
+   )
+
 )

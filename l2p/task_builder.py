@@ -33,8 +33,8 @@ class TaskBuilder:
         model: LLM_Chat, 
         problem_desc: str,
         prompt_template: str,
-        types: dict[str,str], 
-        predicates: list[Predicate],
+        types: dict[str,str]=None, 
+        predicates: list[Predicate]=None,
         max_retries: int=3
         ) -> tuple[dict[str,str], str]:
         """
@@ -53,19 +53,19 @@ class TaskBuilder:
             objects (dict[str,str]): dictionary of object types {name:description}
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-
-                # replace prompt placeholders
-                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-                types_str = "\n".join(types) if types else "No types provided."
-
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{predicates}', predicate_str)
-                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM response
                 
@@ -111,23 +111,25 @@ class TaskBuilder:
             initial (list[dict[str,str]]): list of dictionary of initial states [{predicate,params,neg}]
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+        objects_str = self.format_objects(objects) if objects else "No objects provided."
+        initial_str = self.format_initial(initial) if initial else "No initial state provided."
+        goal_str = self.format_goal(goal) if goal else "No goal state provided."
+
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{objects}', objects_str)
+        prompt_template = prompt_template.replace('{initial_state}', initial_str)
+        prompt_template = prompt_template.replace('{goal_state}', goal_str)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-
-                # replace prompt placeholders
-                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-                types_str = "\n".join(types) if types else "No types provided."
-                objects_str = self.format_objects(objects) if objects else "No objects provided."
-
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{predicates}', predicate_str)
-                prompt_template = prompt_template.replace('{objects}', objects_str)
-                prompt_template = prompt_template.replace('{initial_state}', self.format_initial(initial) if initial else "No initial state provided.")
-                prompt_template = prompt_template.replace('{goal_state}', self.format_goal(goal) if goal else "No goal state provided.")
-                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
                 llm_response = model.get_output(prompt=prompt_template)
 
@@ -173,23 +175,25 @@ class TaskBuilder:
             goal (list[dict[str,str]]): list of dictionary of goal states [{predicate,params,neg}]
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+        objects_str = self.format_objects(objects) if objects else "No objects provided."
+        initial_str = self.format_initial(initial) if initial else "No initial state provided."
+        goal_str = self.format_goal(goal) if goal else "No goal state provided."
+
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{objects}', objects_str)
+        prompt_template = prompt_template.replace('{initial_state}', initial_str)
+        prompt_template = prompt_template.replace('{goal_state}', goal_str)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-
-                # replace prompt placeholders
-                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-                types_str = "\n".join(types) if types else "No types provided."
-                objects_str = self.format_objects(objects) if objects else "No objects provided."
-
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{predicates}', predicate_str)
-                prompt_template = prompt_template.replace('{objects}', objects_str)
-                prompt_template = prompt_template.replace('{initial_state}', self.format_initial(initial) if initial else "No initial state provided.")
-                prompt_template = prompt_template.replace('{goal_state}', self.format_goal(goal) if goal else "No goal state provided.")
-                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
 
                 llm_response = model.get_output(prompt=prompt_template)
 
@@ -233,21 +237,23 @@ class TaskBuilder:
             goal (list[dict[str,str]]): list of dictionary of goal states [{predicate,params,neg}]
             llm_response (str): the raw string LLM response
         """
+
+        model.reset_tokens()
+
+        # replace prompt placeholders
+        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+        action_str = self.format_action(actions=actions) if actions else "No actions provided."
+
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{actions}', action_str)
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-
-                # replace prompt placeholders
-                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-                types_str = "\n".join(types) if types else "No types provided."
-                action_str = self.format_action(actions=actions) if actions else "No actions provided."
-
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{predicates}', predicate_str)
-                prompt_template = prompt_template.replace('{actions}', action_str)
-                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
                 
                 llm_response = model.get_output(prompt=prompt_template)
 
@@ -292,23 +298,23 @@ class TaskBuilder:
         Returns:
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
+        types_str = "\n".join(types) if types else "No types provided."
+        objects_str = self.format_objects(objects) if objects else "No objects provided."
+        action_str = self.format_action(actions=actions) if actions else "No actions provided."
+
+        prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
+        prompt_template = prompt_template.replace('{actions}', action_str)
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicate_str)
+        prompt_template = prompt_template.replace('{objects}', objects_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-
-                # replace prompt placeholders
-                predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-                types_str = "\n".join(types) if types else "No types provided."
-                objects_str = self.format_objects(objects) if objects else "No objects provided."
-                action_str = self.format_action(actions=actions) if actions else "No actions provided."
-
-                prompt_template = prompt_template.replace('{problem_desc}', problem_desc)
-                prompt_template = prompt_template.replace('{actions}', action_str)
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{predicates}', predicate_str)
-                prompt_template = prompt_template.replace('{objects}', objects_str)
 
                 llm_response = model.get_output(prompt=prompt_template)
                 

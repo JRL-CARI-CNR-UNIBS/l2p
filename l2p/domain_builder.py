@@ -57,17 +57,17 @@ class DomainBuilder:
             type_dict (dict[str,str]): dictionary of types with (name:description) pair
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        types_str = format_dict(types) if types else "No types provided."
+        
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-                
-                # replace prompt placeholders
-                types_str = format_dict(types) if types else "No types provided."
-                
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{types}', types_str)
 
                 llm_response = model.get_output(prompt=prompt_template) # prompt model
 
@@ -104,18 +104,18 @@ class DomainBuilder:
             type_hierarchy (dict[str,str]): dictionary of type hierarchy
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        types_str = format_dict(types) if types else "No types provided."
+        
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
 
                 model.reset_tokens()
-
-                # replace prompt placeholders
-                types_str = format_dict(types) if types else "No types provided."
-                
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{types}', types_str)
 
                 llm_response = model.get_output(prompt=prompt_template)
 
@@ -154,20 +154,20 @@ class DomainBuilder:
             nl_actions (dict[str, str]): a dictionary of extracted actions {action name: action description}
             llm_response (str): the raw string LLM response
         """
+        
+        # replace prompt placeholders
+        types_str = format_dict(types) if types else "No types provided."
+        nl_actions_str = "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else "No actions provided."
+        
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
 
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
 
                 model.reset_tokens()
-                
-                # replace prompt placeholders
-                types_str = format_dict(types) if types else "No types provided."
-                nl_actions_str = "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else "No actions provided."
-                
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
                 
@@ -213,24 +213,24 @@ class DomainBuilder:
             new_predicates (list[Predicate]): a list of new predicates
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        types_str = format_dict(types) if types else "No types provided."
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
+        action_list_str = str(action_list) if action_list else "No other actions provided"
+        
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_list}', action_list_str)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc if action_desc else "No description available.")
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicates_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
 
                 model.reset_tokens()
-                
-                # replace prompt placeholders
-                types_str = format_dict(types) if types else "No types provided."
-                predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
-                action_list_str = str(action_list) if action_list else "No other actions provided"
-                
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{action_list}', action_list_str)
-                prompt_template = prompt_template.replace('{action_name}', action_name)
-                prompt_template = prompt_template.replace('{action_desc}', action_desc if action_desc else "No description available.")
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{predicates}', predicates_str)
                 
                 llm_response = model.get_output(prompt=prompt_template)
 
@@ -345,19 +345,19 @@ class DomainBuilder:
             param_raw (list()): list of raw parameters
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        types_str = format_dict(types) if types else "No types provided."
+        
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-                
-                # replace prompt placeholders
-                types_str = format_dict(types) if types else "No types provided."
-                
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{action_name}', action_name)
-                prompt_template = prompt_template.replace('{action_desc}', action_desc)
-                prompt_template = prompt_template.replace('{types}', types_str)
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM response
                 
@@ -379,7 +379,7 @@ class DomainBuilder:
         prompt_template: str, 
         action_name: str, 
         action_desc: str, 
-        params: list[str], 
+        params: list[str]=None, 
         predicates: list[Predicate]=None,
         max_retries: int=3
         ) -> tuple[str, list[Predicate], str]:
@@ -401,20 +401,21 @@ class DomainBuilder:
             new_predicates (list[Predicate]): a list of new predicates
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
+        params_str = "\n".join(params) if params else "No parameters provided."
+
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
+        prompt_template = prompt_template.replace('{parameters}', params_str)
+        prompt_template = prompt_template.replace('{predicates}', predicates_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-                
-                # replace prompt placeholders
-                predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
-
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{action_name}', action_name)
-                prompt_template = prompt_template.replace('{action_desc}', action_desc)
-                prompt_template = prompt_template.replace('{parameters}', "\n".join(params))
-                prompt_template = prompt_template.replace('{predicates}', predicates_str)
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM response
                 
@@ -437,7 +438,7 @@ class DomainBuilder:
         prompt_template: str, 
         action_name: str, 
         action_desc: str, 
-        params: list[str], 
+        params: list[str]=None, 
         precondition: str=None,
         predicates: list[Predicate]=None,
         max_retries: int=3
@@ -461,21 +462,22 @@ class DomainBuilder:
             new_predicates (list[Predicate]): a list of new predicates
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
+        params_str = "\n".join(params) if params else "No parameters provided."
+        
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{action_name}', action_name)
+        prompt_template = prompt_template.replace('{action_desc}', action_desc)
+        prompt_template = prompt_template.replace('{parameters}', params_str)
+        prompt_template = prompt_template.replace('{preconditions}', precondition)
+        prompt_template = prompt_template.replace('{predicates}', predicates_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-                
-                # replace prompt placeholders
-                predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
-                
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{action_name}', action_name)
-                prompt_template = prompt_template.replace('{action_desc}', action_desc)
-                prompt_template = prompt_template.replace('{parameters}', "\n".join(params))
-                prompt_template = prompt_template.replace('{preconditions}', precondition)
-                prompt_template = prompt_template.replace('{predicates}', predicates_str)
 
                 llm_response = model.get_output(prompt=prompt_template) # get LLM response
                 
@@ -517,23 +519,21 @@ class DomainBuilder:
             new_predicates (list[Predicate]): a list of new predicates
             llm_response (str): the raw string LLM response
         """
+
+        # replace prompt placeholders
+        types_str = format_dict(types) if types else "No types provided."
+        predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
+        nl_actions_str = "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else "No actions provided."
+        
+        prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
+        prompt_template = prompt_template.replace('{types}', types_str)
+        prompt_template = prompt_template.replace('{predicates}', predicates_str)
+        prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
         
         # iterate through attempts in case of extraction failure
         for attempt in range(max_retries):
             try:
                 model.reset_tokens()
-                
-                # replace prompt placeholders
-                types_str = format_dict(types) if types else "No types provided."
-                predicates_str = format_predicates(predicates) if predicates else "No predicates provided."
-                nl_actions_str = "\n".join(f"{name}: {desc}" for name, desc in nl_actions.items()) if nl_actions else "No actions provided."
-                
-                prompt_template = prompt_template.replace('{domain_desc}', domain_desc)
-                prompt_template = prompt_template.replace('{types}', types_str)
-                prompt_template = prompt_template.replace('{predicates}', predicates_str)
-                prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
-
-                print(prompt_template)
                 
                 llm_response = model.get_output(prompt=prompt_template) # prompt model
                 

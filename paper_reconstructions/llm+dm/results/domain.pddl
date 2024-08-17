@@ -1,7 +1,7 @@
 (define (domain logistics)
     (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
     (:types city location package plane truck)
-    (:predicates (airplane-at ?a - plane ?l - location)  (airplane-full ?a - plane)  (airplane-has-package ?a - plane ?p - package)  (airplane-holding ?a - plane ?p - package)  (at-airplane ?a - plane ?l - location)  (at-airport ?a - plane ?l - location)  (connected-cities ?from_city - city ?to_city - city)  (location-connected ?from - location ?to - location ?c - city)  (package-at ?p - package ?l - location)  (plane-holding ?a - plane ?p - package)  (truck-at ?t - truck ?l - location)  (truck-has-package ?t - truck ?p - package)  (truck-has-space ?t - truck)  (truck-holding ?t - truck ?p - package))
+    (:predicates (airplane-at-airport ?a - plane)  (at-airport ?a - plane ?l - location)  (connected-cities ?from_city - city ?to_city - city)  (location-clear ?l - location)  (location-connected ?from - location ?to - location ?c - city)  (package-at ?p - package ?l - location)  (package-at-location ?p - package ?l - location)  (package-clear ?p - package)  (package-in-airplane ?p - package ?a - plane)  (package-on-plane ?p - package ?a - plane)  (plane-holding ?a - plane ?p - package)  (truck-at ?t - truck ?l - location)  (truck-has-space ?t - truck)  (truck-holding ?t - truck ?p - package))
     (:action drive_truck
         :parameters (?t - truck ?from - location ?to - location ?c - city)
         :precondition (and (truck-at ?t ?from ?c) (location-connected ?from ?to ?c))
@@ -13,19 +13,19 @@
         :effect (and (not (at-airport ?plane ?from_city)) (at-airport ?plane ?to_city))
     )
      (:action load_airplane
-        :parameters (?p - package ?a - plane ?l - location)
-        :precondition (and (package-at ?p ?l) (airplane-at ?a ?l) (not (airplane-full ?a)))
-        :effect (and (not (package-at ?p ?l)) (airplane-has-package ?a ?p))
+        :parameters (?p - package ?a - plane)
+        :precondition (and (package-in-airplane ?p ?a) (airplane-at-airport ?a) (package-clear ?p))
+        :effect (and (not (package-clear ?p)) (package-in-airplane ?p ?a))
     )
      (:action load_truck
         :parameters (?p - package ?t - truck ?l - location)
-        :precondition (and (package-at ?p ?l) (truck-at ?t ?l) (truck-has-space ?t))
-        :effect (and (not (package-at ?p ?l)) (truck-has-package ?t ?p))
+        :precondition (and (truck-at ?t ?l) (package-at ?p ?l) (truck-has-space ?t))
+        :effect (and (not (package-at ?p ?l)) (truck-holding ?t ?p))
     )
      (:action unload_airplane
         :parameters (?p - package ?a - plane ?l - location)
-        :precondition (and (airplane-holding ?a ?p) (at-airplane ?a ?l))
-        :effect (and (not (airplane-holding ?a ?p)) (package-at ?p ?l))
+        :precondition (and (plane-holding ?a) (package-on-plane ?p ?a) (location-clear ?l))
+        :effect (and (not (package-on-plane ?p ?a)) (not (location-clear ?l)) (package-at-location ?p ?l))
     )
      (:action unload_truck
         :parameters (?p - package ?t - truck ?l - location)

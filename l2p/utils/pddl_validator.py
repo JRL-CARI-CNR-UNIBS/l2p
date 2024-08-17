@@ -253,8 +253,6 @@ class SyntaxValidator:
         
         for obj_name, obj_type in objects.items():
             obj_type_found = False
-
-            print(types)
             
             for type_key in types.keys():
                 current_type, parent_type = type_key.split(" - ")
