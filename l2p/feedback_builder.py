@@ -230,24 +230,16 @@ class FeedbackBuilder:
             feedback_type: str,
             predicates: list[Predicate], 
             types: dict[str,str], 
-            objects: dict[str,str], 
-            initial: list[dict[str,str]], 
-            goal: list[dict[str,str]], 
+            objects: dict[str,str]=None, 
+            initial: list[dict[str,str]]=None, 
+            goal: list[dict[str,str]]=None, 
             llm_response: str=""
             ) -> tuple[bool,str]:
         
         predicate_str = format_predicates(predicates)
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
-        inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in initial] # The main part of each predicate
-        full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(initial, inner_str)] # Add the `not` if needed
-        initial_state_str = "\n".join(full_str) # Combine the states into a single string
-        goal_state_str = "(AND \n"
-        for item in goal:
-            # extract the name and parameters from the dictionary
-            name = item['name']
-            params = " ".join(item['params'])
-            goal_state_str += f"   ({name} {params}) \n" # append the predicate in the desired format
-        goal_state_str += ")"
+        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else ""
+        initial_state_str = task_builder.format_initial(initial) if initial else ""
+        goal_state_str = task_builder.format_goal(objects) if goal else ""
         
         feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
         feedback_template = feedback_template.replace('{llm_response}', llm_response)
@@ -256,8 +248,6 @@ class FeedbackBuilder:
         feedback_template = feedback_template.replace('{objects}', objects_str)
         feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
         feedback_template = feedback_template.replace('{goal_state}', goal_state_str)
-
-        print(feedback_template)
     
         no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
     

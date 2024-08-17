@@ -1,7 +1,9 @@
-# Role
+[ROLE]
 You are a PDDL expert and will be given the parts of a PDDL problem file to give feedback on. Consider your response and that the domain should be correctly initiated and that the goal should be accurate based on the domain description. It's impossible to create new predicates, you can only use what's already available. Think through your feedback step by step. If the action is well defined, respond with "No feedback".
 
 Make suggestions / changes if there are any checks that you deem are insufficient, if not, respond with 'no feedback' (once) at the end of your whole response. You either return a suggestion/feedback or you respond with 'no feedback' not both. Do not respond with 'no feedback' in between each check. Do not add anything new other than what is focused on the specific PDDL aspect at hand.
+
+The feedback you are to extract from is under the header '[TASK]'
 
 Use the following checklist:
 1. Are any necessary objects missing? Keep in mind that a type might have to be included even if it isn't mentioned.
@@ -128,118 +130,6 @@ My concrete suggestions are the following:
 
 ## Example 2
 ### Domain
-In this domain, the AI agent is a wildlife conservation management system. It monitors animal populations within a reserve, tracks their movements using GPS collars, guides anti-poaching patrols, and generates relocation strategies for animals in overpopulated areas to ensure ecological balance.
-
-There are four habitats currently, one centered and three around it. The surrounding ones contain our deers. However, there have been poachers seen recently so I'd like to centralize all the deer and make sure that all the outer areas are protected by some of our rangers.
-
-### Types
-- object: Object is always root, everything is an object
-    - location: Places which can be travelled between.
-        - habitat: Habitats are a type of location.
-    - animal: The animals living in the park.
-    - ranger: A worker protecting the animals.
-
-### Predicates
-The following are the available predicates which can be used:
-1. (at ?o - object ?l - location): true if the object ?o (animal or ranger) is at the location ?l
-2. (guarding ?r - ranger): true if the ranger ?r is guarding its current location
-3. (guaded ?l - location): true if the location ?l is guarded by any ranger
-
-### State
-This is the state to give feedback on based on the domain and predicates above.
-
-#### Objects
-outer1 - habitat: The first outer habitat
-outer2 - habitat: The second outer habitat
-outer3 - habitat: The third outer habitat
-outer4 - habitat: The fourth outer habitat
-center - habitat: The central habitat
-base - location: The location where the rangers currently are
-deer1 - animal: The animal living in outer1
-deer2 - animal: The animal living in outer2
-deer3 - animal: The animal living in outer3
-deer4 - animal: The animal living in outer4
-ranger1 - ranger: One of the available rangers
-ranger2 - ranger: One of the available rangers
-
-#### Initial state
-(at deer1 outer1)
-(at deer2 outer2)
-(at deer3 outer3)
-(at deer4 outer4)
-(at ranger1 base)
-(at ranger2 base)
-(protected base)
-
-#### Goal State
-```
-(AND ; all the following should be done
-    (AND ; all the deer should be centered
-        (at deer1 center) ; deer1 is at center
-        (at deer2 center) ; deer2 is at center
-        (at deer3 center) ; deer3 is at center
-        (at deer4 center) ; deer4 is at center
-    )
-    (AND ; all the outer locations should be protected
-        (protected outer1) ; outer1 is protected
-        (protected outer2) ; outer2 is protected
-        (protected outer3) ; outer3 is protected
-        (protected outer4) ; outer4 is protected
-    )
-)
-```
-
-### Feedback
-1. Are any necessary objects missing?
-    The description doesn't explicitly state how many rangers are available. However, looking at the predicates it's clear that a ranger can only protect a single location at a time. 
-    Since there are three locations to protect (specified by the domain, a fourth has been incorrectly added, see below) we evidently need at least three rangers. This has to be added. Hence: Yes.
-
-2. Are any unnecessary objects included?
-    There are only three outer domains described in the domain, but there are four "outerX" locations. Clearly, one too much has been added. Connected to this, there is also a deer ("deer4") too much.
-    Both the "deer4" and "outer4" objects should be removed from the domain. The "base" location is likely added since the start for rangers is unclear, so placing them somewhere is needed. This should probably be kept.
-    Thereby: Yes.
-
-3. Are any objects defined with the wrong type?
-    All the deer are correctly animals and the rangers are rangers. Furthermore, "base" has been correctly modelled as a raw "loction" instead of a "habitat" which ought to be correct. So: No.  
-
-4. Are any needed or expected predicates missing from the initial state?
-    All the predicates which are needed (where everything starts) are specified, so: No.
-
-5. Are any unnecessary or incorrect predicates declared?
-    It's specified that "base" is protected. While this is perhaps a reasonable assumption the domain then also requires a ranger to be there guarding it, and no one is set to be guarding. Furthermore, guarding the base isn't requested. Therefore, this should probably be removed and as such: Yes.
-
-6. Is anything missing from the goal state?
-    The request is to move the deers, which is checked, and to guard the outer locations, which is checked. Hence: No.
-
-7. Is anything unnecessary included in the goal description?
-    Since "outer4" and "deer4" are removed from the domain, they also need to be removed from the goal. So, with that perspective: Yes.
-
-8. Should any predicate be used in a symmetrical manner?
-    While the "at" predicate could accept two locations, this is clearly not the intent. Hence: No.
-
-My concrete suggestions are the following:
-    - Remove the "deer4" and "outer4" objects from the domain entirely. They're incorrectly included.
-    - Add at least one more ranger object. For example, "ranger3" could be added an initalized like this:
-        - (at ranger3 base)
-    - Remove the specification that base is protected ("(protected base)").
-    - The updated goal state with outer4 and deer4 removed should be:
-        ```
-        (AND ; all the following should be done
-            (AND ; all the deer should be centered
-                (at deer1 center) ; deer1 is at center
-                (at deer2 center) ; deer2 is at center
-                (at deer3 center) ; deer3 is at center
-            )
-            (AND ; all the outer locations should be protected
-                (protected outer1) ; outer1 is protected
-                (protected outer2) ; outer2 is protected
-                (protected outer3) ; outer3 is protected
-            )
-        )
-        ```
-
-## Example 3
-### Domain
 I've got a building with five floors and two elevators, and I want you to plan the elevator trips for Bob and Sally to both go to floor 5 in a climate friendly way.
 
 ### Types
@@ -308,7 +198,8 @@ Based on this, the response is: No feedback.
 
 ----------------------------------------
 
-Here is the original output:
+[TASK]
+Here is the info to extract feedback from:
 
 ## Problem
 {problem_desc}
@@ -319,18 +210,6 @@ Here is the original output:
 ## Predicates
 The following are the available predicates which can be used:
 {predicates}
-
-## State
-This is the state to give feedback on based on the domain and predicates above.
-
-## Objects
-{objects}
-
-## Initial State
-{initial_state}
-
-## Goal State
-{goal_state}
 
 ## Original LLM response
 {llm_response}

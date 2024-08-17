@@ -1,51 +1,82 @@
-from pddl.parser.domain import DomainParser
-from textwrap import dedent
+import os, json
+from openai import OpenAI
+from l2p.domain_builder import DomainBuilder
+from l2p.llm_builder import GPT_Chat
+from l2p.utils.pddl_parser import prune_predicates, format_types
 
-def test_hierarchical_types() -> None:
-    """Test correct parsing of hierarchical types (see https://github.com/AI-Planning/pddl/issues/70)."""
-    domain_str = dedent(
-        """
-    (define (domain test_domain)
-    (:requirements :conditional-effects :disjunctive-preconditions :equality :negative-preconditions :strips :typing :universal-preconditions)
-    (:types arm block table - object)
-    (:predicates (arm_empty ?a - arm)  (clear ?b - block)  (holding ?a - arm ?b - block)  (on ?b1 - block ?b2 - block)  (on_table ?b - block))
-    (:action pickup
-        :parameters (?a - arm ?b - block)
-        :precondition (and (clear ?b) (on_table ?b) (arm_empty ?a))
-        :effect (and (not (on_table ?b)) (not (clear ?b)) (not (arm_empty ?a)) (holding ?a ?b))
-    )
-     (:action putdown
-        :parameters (?a - arm ?b - block)
-        :precondition (holding ?a ?b)
-        :effect (and (not (holding ?a ?b)) (arm_empty ?a) (on_table ?b) (clear ?b))
-    )
-     (:action stack
-        :parameters (?a - arm ?b1 - block ?b2 - block)
-        :precondition (and (holding ?a ?b1) (clear ?b2) (not (= ?b1 ?b2)))
-        :effect (and (not (holding ?a ?b1)) (arm_empty ?a) (on ?b1 ?b2) (not (clear ?b2)) (clear ?b1))
-    )
-     (:action unstack
-        :parameters (?a - arm ?b1 - block ?b2 - block)
-        :precondition (and (clear ?b1) (on ?b1 ?b2) (arm_empty ?a) (not (= ?b1 ?b2)))
-        :effect (and (holding ?a ?b1) (not (on ?b1 ?b2)) (clear ?b2) (not (clear ?b1)) (not (arm_empty ?a)))
-    )
-)
-    """
-    )
-    
-    domain = DomainParser()(domain_str)
+def load_file(file_path):
+    _, ext = os.path.splitext(file_path)
+    with open(file_path, 'r') as file:
+        if ext == '.json': return json.load(file)
+        else: return file.read().strip()
 
-    requirements = domain.requirements
-    types = domain.types
-    predicates = domain.predicates
-    actions = domain.actions
-    
-    
-    print(requirements, "\n")
-    print(types, "\n")
-    print(predicates, "\n")
-    print(actions, "\n")
-    
-    
-if __name__ == "__main__":
-    test_hierarchical_types()
+domain_builder = DomainBuilder()
+
+client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
+model = GPT_Chat(client=client, engine="gpt-4o-mini")
+
+# load in assumptions
+domain_desc = load_file(r'tests\usage\prompts\domain\blocksworld_domain.txt')
+extract_predicates_prompt = load_file(r'tests\usage\prompts\domain\extract_predicates.txt')
+types = load_file(r'tests\usage\prompts\domain\types.json')
+action = load_file(r'tests\usage\prompts\domain\action.json')
+
+# extract predicates via LLM
+predicates, llm_output = domain_builder.extract_predicates(
+    model=model,
+    domain_desc=domain_desc,
+    prompt_template=extract_predicates_prompt,
+    types=types,
+    nl_actions={action['action_name']: action['action_desc']}
+    )
+
+# format key info into PDDL strings
+predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
+
+print(f"PDDL domain predicates:\n{predicate_str}")
+
+
+from l2p.task_builder import TaskBuilder
+
+task_builder = TaskBuilder()
+
+# load in assumptions
+problem_desc= load_file(r'tests\usage\prompts\problem\blocksworld_problem.txt')
+extract_task_prompt = load_file(r'tests\usage\prompts\problem\extract_task.txt')
+
+# extract PDDL task specifications via LLM
+objects, initial_states, goal_states, llm_response = task_builder.extract_task(
+    model=model,
+    problem_desc=problem_desc,
+    prompt_template=extract_task_prompt,
+    types=types,
+    predicates=predicates
+    )
+
+# format key info into PDDL strings
+objects_str = task_builder.format_objects(objects)
+initial_str = task_builder.format_initial(initial_states)
+goal_str = task_builder.format_goal(goal_states)
+
+# generate task file
+pddl_problem = task_builder.generate_task("blocksworld_problem", objects_str, initial_str, goal_str)
+
+print(f"PDDL problem: {pddl_problem}")
+
+
+from l2p.feedback_builder import FeedbackBuilder
+
+feedback_builder = FeedbackBuilder()
+
+feedback_template = load_file(r'tests\usage\prompts\problem\feedback.txt')
+
+objects, initial, goal, feedback_response = feedback_builder.task_feedback(
+    model=model, 
+    problem_desc=problem_desc, 
+    feedback_template=feedback_template, 
+    feedback_type="llm", 
+    predicates=predicates,
+    types=types, 
+    llm_response=llm_response)
+
+print("FEEDBACK:\n", feedback_response)
