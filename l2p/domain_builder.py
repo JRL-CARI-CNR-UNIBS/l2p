@@ -565,7 +565,7 @@ class DomainBuilder:
         if self.pddl_actions is not None:
             self.pddl_actions = [action for action in self.pddl_actions if action['name'] != name]
 
-    def delete_predicates(self, name: str):
+    def delete_predicate(self, name: str):
         """Deletes specific predicate from current model"""
         if self.predicates is not None:
             self.predicates = [predicate for predicate in self.predicates if predicate['name'] != name]
@@ -604,6 +604,9 @@ class DomainBuilder:
 
     def get_pddl_actions(self):
         return self.pddl_actions
+
+    def get_predicates(self):
+        return self.predicates
 
     def generate_domain(
             self, 

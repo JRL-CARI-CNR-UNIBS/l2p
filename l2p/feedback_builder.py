@@ -269,7 +269,7 @@ class FeedbackBuilder:
                                                                     domain_desc, prompt, action_name, action_desc)
         return preconditions, new_predicates, llm_response
 
-    def effects_feedback(
+    def effect_feedback(
             self, 
             model: LLM_Chat, 
             domain_desc: str, 
