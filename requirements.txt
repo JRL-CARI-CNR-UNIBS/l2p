@@ -1,5 +1,4 @@
-python
---upgrade openai
+openai
 tiktoken
 retry
 pddl
