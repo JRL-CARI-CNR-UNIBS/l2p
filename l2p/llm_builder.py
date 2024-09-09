@@ -116,8 +116,8 @@ class GPT_Chat(LLM_Chat):
         self.out_tokens = 0
 
 class HF_Chat(LLM_Chat):
-    def __init__(self, model_name, api_key, max_tokens=4069, temperature=0.2):
-        self.model_name = model_name
+    def __init__(self, engine, api_key, max_tokens=4069, temperature=0.2):
+        self.model_name = engine
         self.api_key = api_key
         self.max_tokens = max_tokens
         self.temperature = temperature
