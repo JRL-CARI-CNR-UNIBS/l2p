@@ -6,7 +6,6 @@ from collections import OrderedDict
 from .utils.pddl_parser import parse_params, parse_new_predicates, parse_action, convert_to_dict, format_dict, format_predicates
 from .utils.pddl_types import Predicate, Action
 from .llm_builder import LLM_Chat
-from .prompt_builder import PromptBuilder
 import re, time
 
 class DomainBuilder:

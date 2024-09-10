@@ -1,8 +1,6 @@
 import os, json
 from openai import OpenAI
-from l2p.domain_builder import DomainBuilder
-from l2p.llm_builder import GPT_Chat
-from l2p.utils.pddl_parser import prune_predicates, format_types
+from l2p import DomainBuilder, TaskBuilder, FeedbackBuilder, GPT_Chat
 
 def load_file(file_path):
     _, ext = os.path.splitext(file_path)
@@ -16,10 +14,10 @@ client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH Y
 model = GPT_Chat(client=client, engine="gpt-4o-mini")
 
 # load in assumptions
-domain_desc = load_file(r'tests\usage\prompts\domain\blocksworld_domain.txt')
-extract_predicates_prompt = load_file(r'tests\usage\prompts\domain\extract_predicates.txt')
-types = load_file(r'tests\usage\prompts\domain\types.json')
-action = load_file(r'tests\usage\prompts\domain\action.json')
+domain_desc = load_file(r'tests/usage/prompts/domain/blocksworld_domain.txt')
+extract_predicates_prompt = load_file(r'tests/usage/prompts/domain/extract_predicates.txt')
+types = load_file(r'tests/usage/prompts/domain/types.json')
+action = load_file(r'tests/usage/prompts/domain/action.json')
 
 # extract predicates via LLM
 predicates, llm_output = domain_builder.extract_predicates(
@@ -35,14 +33,11 @@ predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predica
 
 print(f"PDDL domain predicates:\n{predicate_str}")
 
-
-from l2p.task_builder import TaskBuilder
-
 task_builder = TaskBuilder()
 
 # load in assumptions
-problem_desc= load_file(r'tests\usage\prompts\problem\blocksworld_problem.txt')
-extract_task_prompt = load_file(r'tests\usage\prompts\problem\extract_task.txt')
+problem_desc= load_file(r'tests/usage/prompts/problem/blocksworld_problem.txt')
+extract_task_prompt = load_file(r'tests/usage/prompts/problem/extract_task.txt')
 
 # extract PDDL task specifications via LLM
 objects, initial_states, goal_states, llm_response = task_builder.extract_task(
@@ -63,12 +58,9 @@ pddl_problem = task_builder.generate_task("blocksworld_problem", objects_str, in
 
 print(f"PDDL problem: {pddl_problem}")
 
-
-from l2p.feedback_builder import FeedbackBuilder
-
 feedback_builder = FeedbackBuilder()
 
-feedback_template = load_file(r'tests\usage\prompts\problem\feedback.txt')
+feedback_template = load_file(r'tests/usage/prompts/problem/feedback.txt')
 
 objects, initial, goal, feedback_response = feedback_builder.task_feedback(
     model=model, 
