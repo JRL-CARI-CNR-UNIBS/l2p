@@ -1,6 +1,6 @@
 import os, json
 from openai import OpenAI
-from l2p import DomainBuilder, TaskBuilder, FeedbackBuilder, GPT_Chat
+from l2p import *
 
 def load_file(file_path):
     _, ext = os.path.splitext(file_path)
@@ -11,7 +11,7 @@ def load_file(file_path):
 domain_builder = DomainBuilder()
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
-model = GPT_Chat(client=client, engine="gpt-4o-mini")
+model = get_llm(engine="gpt", model="gpt-4o-mini", client=client)
 
 # load in assumptions
 domain_desc = load_file(r'tests/usage/prompts/domain/blocksworld_domain.txt')

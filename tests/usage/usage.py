@@ -1,10 +1,6 @@
 import os, json
 from openai import OpenAI
-from l2p.domain_builder import DomainBuilder
-from l2p.task_builder import TaskBuilder
-from l2p.feedback_builder import FeedbackBuilder
-from l2p.llm_builder import GPT_Chat
-from l2p.utils.pddl_parser import prune_predicates, format_types
+from l2p import *
 from tests.setup import check_parse_domain
 
 def load_file(file_path):
@@ -16,24 +12,18 @@ def load_json(file_path):
         return json.load(file)
 
 domain_builder = DomainBuilder()
-task_builder = TaskBuilder()
-feedback_builder = FeedbackBuilder()
-
-# engine = "gpt-4o"
-# engine = "gpt-3.5-turbo-0125"
-engine = "gpt-4o-mini"
 
 client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
-model = GPT_Chat(client=client, engine=engine) # LLM to prompt to
+model = get_llm(engine="gpt", model="gpt-4o-mini", client=client)
 
 # load in assumptions
-domain_desc = load_file('tests/usage/prompts/blocksworld_domain.txt')
-extract_predicates_prompt = load_file('tests/usage/prompts/extract_predicates.txt')
-extract_parameters_prompt = load_file('tests/usage/prompts/extract_parameters.txt')
-extract_preconditions_prompt = load_file('tests/usage/prompts/extract_preconditions.txt')
-extract_effects_prompt = load_file('tests/usage/prompts/extract_effects.txt')
-types = load_json('tests/usage/prompts/types.json')
-action = load_json('tests/usage/prompts/action.json')
+domain_desc = load_file('tests/usage/prompts/domain/blocksworld_domain.txt')
+extract_predicates_prompt = load_file('tests/usage/prompts/domain/extract_predicates.txt')
+extract_parameters_prompt = load_file('tests/usage/prompts/domain/extract_parameters.txt')
+extract_preconditions_prompt = load_file('tests/usage/prompts/domain/extract_preconditions.txt')
+extract_effects_prompt = load_file('tests/usage/prompts/domain/extract_effects.txt')
+types = load_json('tests/usage/prompts/domain/types.json')
+action = load_json('tests/usage/prompts/domain/action.json')
 action_name = action['action_name']
 action_desc = action['action_desc']
 
