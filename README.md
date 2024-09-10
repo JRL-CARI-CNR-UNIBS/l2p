@@ -142,6 +142,7 @@ The following are papers that have been reconstructed so far. This list will be 
 This section provides a taxonomy of research within Model Construction. For more detailed overview, visit our [paper](https://puginarug.com).
 
 **Model Generation**
+
 ***Task Translation Frameworks***
 - **"Structured, flexible, and robust: benchmarking and improving large language models towards more human-like behaviour in out-of-distribution reasoning tasks"** Collins et al. (2022) [paper](https://arxiv.org/abs/2205.05718) [code](https://github.com/collinskatie/structured_flexible_and_robust)
 - **"Translating natural language to planning goals with large-language models"** Xie et al. (2023) [paper](https://arxiv.org/abs/2302.05128) [code](https://github.com/clear-nus/gpt-pddl)
@@ -155,14 +156,21 @@ This section provides a taxonomy of research within Model Construction. For more
 - **"Learning adaptive planning representations with natural language guidance"** Wong et al. (2023) [paper](https://arxiv.org/abs/2312.08566) [code](N/A)
 - **"Leveraging Pre-trained Large Language Models to Construct and Utilize World Models for Model-based Task Planning"** Guan et al. (2023) [paper](https://arxiv.org/abs/2305.14909) [code](https://github.com/GuanSuns/LLMs-World-Models-for-Planning)
 - **"PROC2PDDL: Open-Domain Planning Representations from Texts"** Zhang et al. (2024) [paper](https://arxiv.org/abs/2403.00092) [code](https://github.com/zharry29/proc2pddl)
+
+***Hybrid Translation Frameworks***
 - **"There and Back Again: Extracting Formal Domains for Controllable Neurosymbolic Story Authoring"** Kelly et al. (2023) [paper](https://ojs.aaai.org/index.php/AIIDE/article/view/27502/27275) [code](https://github.com/alex-calderwood/there-and-back)
-- **"DELTA: Decomposed Efficient Long-Term Robot Task Planning using Large Language Models"** Liu et al. (year) [paper]() [code]()
+- **"DELTA: Decomposed Efficient Long-Term Robot Task Planning using Large Language Models"** Liu et al. (2024) [paper](https://arxiv.org/abs/2404.03275) [code](N/A)
+- **"ISR-LLM: Iterative Self-Refined Large Language Model for Long-Horizon Sequential Task Planning"** Zhou et al. (2023) [paper](https://arxiv.org/abs/2308.13724) [code](https://github.com/ma-labo/ISR-LLM)
+- **"Consolidating Trees of Robotic Plans Generated Using Large Language Models to Improve Reliability"** Sakib and Sun (2024) [paper](https://arxiv.org/abs/2401.07868) [code](N/A)
+- **"NL2Plan: Robust LLM-Driven Planning from Minimal Text Descriptions"** Gestrin et al. (2024) [paper](https://arxiv.org/abs/2405.04215) [code](https://github.com/mrlab-ai/NL2Plan)
+- **"Leveraging Environment Interaction for Automated PDDL Generation and Planning with Large Language Models"** Mahdavi et al. (2024) [paper](https://arxiv.org/abs/2407.12979) [code]()
+- **"Generating consistent PDDL domains with Large Language Models"** Smirnov et al. (2024) [paper](https://arxiv.org/abs/2404.07751) [code](N/A)
 
-**Model Editing**
-- **""** et al. (year) [paper]() [code]()
-
-**Other NL-PDDL Translation Tasks**
-- **""** et al. (year) [paper]() [code]()
+**Model Editing and Benchmarking**
+- **"Exploring the limitations of using large language models to fix planning tasks"** Gragera and Pozanco (2023) [paper](https://icaps23.icaps-conference.org/program/workshops/keps/KEPS-23_paper_3645.pdf) [code](N/A)
+- **"Can LLMs Fix Issues with Reasoning Models? Towards More Likely Models for AI Planning"** Caglar et al. (2024) [paper](https://arxiv.org/abs/2311.13720) [code](N/A)
+- **"Large Language Models as Planning Domain Generators"** Oswald et al. (2024) [paper](https://arxiv.org/abs/2405.06650) [code](https://github.com/IBM/NL2PDDL)
+- **"Planetarium: A Rigorous Benchmark for Translating Text to Structured Planning Languages"** Zuo et al. (2024) [paper](https://arxiv.org/abs/2407.03321) [code](https://github.com/batsresearch/planetarium)
 
 ## Contact
 Please contact `20mt1@queensu.ca` for questions, comments, or feedback about the L2P library.
