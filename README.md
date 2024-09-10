@@ -142,7 +142,8 @@ The following are papers that have been reconstructed so far. This list will be 
 This section provides a taxonomy of research within Model Construction. For more detailed overview, visit our [paper](https://puginarug.com).
 
 **Model Generation**
-- **""** et al. (year) [paper]() [code]()
+- **"Structured, flexible, and robust: benchmarking and improving large language models towards more human-like behaviour in out-of-distribution reasoning tasks"** Collins et al. (2022) [paper](https://arxiv.org/abs/2205.05718) [code](https://github.com/collinskatie/structured_flexible_and_robust)
+- - **"Translating natural language to planning goals with large-language models"** Xie et al. (year) [paper](https://arxiv.org/abs/2302.05128) [code](https://github.com/clear-nus/gpt-pddl)
 
 **Model Editing**
 - **""** et al. (year) [paper]() [code]()
