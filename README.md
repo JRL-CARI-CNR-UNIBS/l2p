@@ -142,8 +142,21 @@ The following are papers that have been reconstructed so far. This list will be 
 This section provides a taxonomy of research within Model Construction. For more detailed overview, visit our [paper](https://puginarug.com).
 
 **Model Generation**
+***Task Translation Frameworks***
 - **"Structured, flexible, and robust: benchmarking and improving large language models towards more human-like behaviour in out-of-distribution reasoning tasks"** Collins et al. (2022) [paper](https://arxiv.org/abs/2205.05718) [code](https://github.com/collinskatie/structured_flexible_and_robust)
 - **"Translating natural language to planning goals with large-language models"** Xie et al. (2023) [paper](https://arxiv.org/abs/2302.05128) [code](https://github.com/clear-nus/gpt-pddl)
+- **"Faithful Chain-of-Thought Reasoning"** Lyu et al. (2023) [paper](https://arxiv.org/abs/2301.13379) [code](https://github.com/veronica320/faithful-cot)
+- **"LLM+P: Empowering Large Language Models with Optimal Planning Proficiency"** Liu et al. (2023) [paper](https://arxiv.org/abs/2304.11477) [code](https://github.com/Cranial-XIX/llm-pddl)
+- **"Dynamic Planning with a LLM"** Dagan et al. (2023) [paper](https://arxiv.org/abs/2308.06391) [code](https://github.com/itl-ed/llm-dp)
+- **"TIC: Translate-Infer-Compile for accurate 'text to plan' using LLMs and logical intermediate representations"** Agarwal and Sreepathy (2024) [paper](https://arxiv.org/abs/2402.06608) [code](N/A)
+- **"PDDLEGO: Iterative Planning in Textual Environments"** Zhang et al. (2024) [paper](https://arxiv.org/abs/2405.19793) [code](https://github.com/zharry29/nl-to-pddl)
+
+***Domain Translation Frameworks***
+- **"Learning adaptive planning representations with natural language guidance"** Wong et al. (2023) [paper](https://arxiv.org/abs/2312.08566) [code](N/A)
+- **"Leveraging Pre-trained Large Language Models to Construct and Utilize World Models for Model-based Task Planning"** Guan et al. (2023) [paper](https://arxiv.org/abs/2305.14909) [code](https://github.com/GuanSuns/LLMs-World-Models-for-Planning)
+- **"PROC2PDDL: Open-Domain Planning Representations from Texts"** Zhang et al. (2024) [paper](https://arxiv.org/abs/2403.00092) [code](https://github.com/zharry29/proc2pddl)
+- **"There and Back Again: Extracting Formal Domains for Controllable Neurosymbolic Story Authoring"** Kelly et al. (2023) [paper](https://ojs.aaai.org/index.php/AIIDE/article/view/27502/27275) [code](https://github.com/alex-calderwood/there-and-back)
+- **"DELTA: Decomposed Efficient Long-Term Robot Task Planning using Large Language Models"** Liu et al. (year) [paper]() [code]()
 
 **Model Editing**
 - **""** et al. (year) [paper]() [code]()
