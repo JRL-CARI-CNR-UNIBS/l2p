@@ -5,6 +5,7 @@ This file contains collection of functions for PDDL domain generation purposes
 from collections import OrderedDict
 from .utils.pddl_parser import parse_params, parse_new_predicates, parse_action, convert_to_dict, format_dict, format_predicates
 from .utils.pddl_types import Predicate, Action
+from .utils.documentor import Documentor
 from .llm_builder import LLM_Chat
 import re, time
 
@@ -500,7 +501,7 @@ class DomainBuilder:
         types: dict[str,str]=None,
         predicates: list[Predicate]=None,
         nl_actions: dict[str,str]=None,
-        max_retries: int=3
+        max_retries: int=3,
         ) -> tuple[list[Predicate], str]: 
         """
         Extracts predicates via LLM

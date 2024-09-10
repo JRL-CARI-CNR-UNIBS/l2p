@@ -29,6 +29,18 @@ action_desc = action['action_desc']
 
 unsupported_keywords = ['object', 'pddl', 'lisp']
 
+# set up documentation method
+results_dir = "tests/results"
+domain = "Blocksworld"
+
+Documentor = DocumentClass()
+Documentor.initiate(
+    results_dir=results_dir,
+    domain=domain, 
+    domain_description=domain_desc,
+    engine="OpenAI",
+    model="gpt-4o-mini"
+    )
 
 # extract predicates
 predicates, llm_output = domain_builder.extract_predicates(
@@ -38,6 +50,8 @@ predicates, llm_output = domain_builder.extract_predicates(
     types=types,
     nl_actions={action_name:action_desc}
     )
+
+Documentor.document(llm_output)
 
 # extract parameters
 params, params_raw, llm_output = domain_builder.extract_parameters(
@@ -49,6 +63,8 @@ params, params_raw, llm_output = domain_builder.extract_parameters(
     types=types
     )
 
+Documentor.document(llm_output)
+
 # extract preconditions
 preconditions, new_predicates, llm_output = domain_builder.extract_preconditions(
     model=model,
@@ -59,6 +75,8 @@ preconditions, new_predicates, llm_output = domain_builder.extract_preconditions
     params=params_raw,
     predicates=predicates
     )
+
+Documentor.document(llm_output)
 
 predicates.extend(new_predicates) # add new predicates
 
@@ -73,6 +91,8 @@ effects, new_predicates, llm_output = domain_builder.extract_effects(
     precondition=preconditions,
     predicates=predicates
     )
+
+Documentor.document(llm_output)
 
 predicates.extend(new_predicates) # add new predicates
 
@@ -104,6 +124,8 @@ pddl_domain = domain_builder.generate_domain(
     predicates=predicate_str,
     actions=[action]
     )
+
+Documentor.document(pddl_domain)
 
 domain_file_path = 'tests/usage/results/domain.pddl'
 

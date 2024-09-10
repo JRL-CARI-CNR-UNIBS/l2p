@@ -14,12 +14,7 @@ Assumes the following:
 import os, json
 from copy import deepcopy
 from openai import OpenAI
-from l2p.llm_builder import GPT_Chat
-from l2p.domain_builder import DomainBuilder
-from l2p.feedback_builder import FeedbackBuilder
-from l2p.utils.pddl_validator import SyntaxValidator
-from l2p.utils.pddl_parser import parse_new_predicates, prune_predicates, format_predicates
-from l2p.utils.pddl_types import Action, Predicate
+from l2p import *
 from tests.setup import check_parse_domain
 
 def open_txt(file_path):
@@ -117,13 +112,11 @@ if __name__ == "__main__":
     prompt_template = open_txt('paper_reconstructions/llm+dm/prompts/pddl_prompt.txt')
 
     # setup LLM engine
-    engine = "gpt-4o-mini"
     client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-    model = GPT_Chat(client=client, engine=engine)
+    model = get_llm(engine="gpt", model="gpt-4o-mini", client=client)
 
     # setup L2P libraries
     domain_builder = DomainBuilder()
-    feedback_builder = FeedbackBuilder()
     syntax_validator = SyntaxValidator()
 
     domain = 'logistics' # using logistics domain for this example
