@@ -13,7 +13,6 @@ Assumes the following:
 
 import os, json
 from copy import deepcopy
-from openai import OpenAI
 from l2p import *
 from tests.setup import check_parse_domain
 
@@ -57,7 +56,7 @@ def construct_action_model(
         
         # generate action model
         pddl_action, new_predicates, llm_response = domain_builder.extract_pddl_action(
-            model=model, 
+            model=openai_llm, 
             domain_desc=domain_desc,
             prompt_template=prompt_template, 
             action_name=action_name,
@@ -86,7 +85,7 @@ def construct_action_model(
 
                         # Generate a new PDDL action model based on the feedback
                         pddl_action, new_predicates, llm_response = domain_builder.extract_pddl_action(
-                            model=model, 
+                            model=openai_llm, 
                             domain_desc=domain_desc,
                             prompt_template=prompt_template, 
                             action_name=action_name,
@@ -112,8 +111,9 @@ if __name__ == "__main__":
     prompt_template = open_txt('paper_reconstructions/llm+dm/prompts/pddl_prompt.txt')
 
     # setup LLM engine
-    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-    model = get_llm(engine="gpt", model="gpt-4o-mini", client=client)
+    engine = "gpt-4o-mini"
+    api_key = os.environ.get('OPENAI_API_KEY')
+    openai_llm = OPENAI(model=engine, api_key=api_key)
 
     # setup L2P libraries
     domain_builder = DomainBuilder()

@@ -5,13 +5,7 @@ Run: python3 -m paper_reconstructions.proc2pddl.proc2pddl
 """
 
 import os, json
-from openai import OpenAI
-from l2p.llm_builder import GPT_Chat
-from l2p.prompt_builder import PromptBuilder
-from l2p.domain_builder import DomainBuilder
-from l2p.task_builder import TaskBuilder
-from l2p.feedback_builder import FeedbackBuilder
-from l2p.utils.pddl_parser import format_dict, format_predicates, format_types
+from l2p import *
 from tests.planner import FastDownward
 from tests.setup import check_parse_domain
 
@@ -23,12 +17,9 @@ def load_json(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
-# engine = "gpt-4o"
-# engine = "gpt-3.5-turbo-0125"
 engine = "gpt-4o-mini"
-
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-model = GPT_Chat(client=client, engine=engine)
+api_key = os.environ.get('OPENAI_API_KEY')
+openai_llm = OPENAI(model=engine, api_key=api_key)
 
 domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
@@ -57,7 +48,7 @@ if __name__ == "__main__":
     ZPD_prompt = PromptBuilder(role=role, technique=technique, examples=[example], task=task)
 
     # (1) query LLM for ZPD information
-    action_descriptions = model.get_output(prompt=ZPD_prompt.generate_prompt())
+    action_descriptions = openai_llm.query(prompt=ZPD_prompt.generate_prompt())
     
     # PDDL extraction prompt
     role = load_file('paper_reconstructions/proc2pddl/prompts/pddl_translate_prompt/role.txt')
@@ -68,7 +59,7 @@ if __name__ == "__main__":
     
     # (2) extract PDDL requirements
     actions, _, llm_response = domain_builder.extract_pddl_actions(
-        model=model,
+        model=openai_llm,
         domain_desc=domain_desc,
         prompt_template=pddl_extract_prompt.generate_prompt(),
         nl_actions=nl_actions,

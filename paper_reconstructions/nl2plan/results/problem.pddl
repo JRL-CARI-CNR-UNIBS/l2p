@@ -10,10 +10,11 @@ green_block - block
    )
 
    (:init
-(at blue_block red_block)
-(at red_block yellow_block)
-(at yellow_block table)
-(at green_block table)
+(on blue_block red_block)
+(on red_block yellow_block)
+(on yellow_block table)
+(on green_block table)
+(clear blue_block)
 (clear yellow_block)
 (clear green_block)
 (exists blue_block)
@@ -24,7 +25,7 @@ green_block - block
 
    (:goal
 (and 
-   (at red_block green_block) 
+   (on red_block green_block) 
 )
    )
 

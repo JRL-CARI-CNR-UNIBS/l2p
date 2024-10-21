@@ -5,15 +5,7 @@ Run: python3 -m paper_reconstructions.nl2plan.nl2plan
 """
 
 import os, json
-from openai import OpenAI
-from l2p.llm_builder import LLM_Chat, GPT_Chat
-from l2p.prompt_builder import PromptBuilder
-from l2p.domain_builder import DomainBuilder
-from l2p.task_builder import TaskBuilder
-from l2p.feedback_builder import FeedbackBuilder
-from l2p.utils.pddl_parser import prune_predicates, prune_types, format_types, format_predicates
-from l2p.utils.pddl_validator import SyntaxValidator
-from l2p.utils.pddl_types import Action, Predicate
+from l2p import *
 from tests.planner import FastDownward
 from tests.setup import check_parse_domain, check_parse_problem
 
@@ -26,12 +18,9 @@ def open_file(file_path):
 def format_json_output(data):
         return json.dumps(data, indent=4)
 
-# engine = "gpt-4o"
-# engine = "gpt-3.5-turbo-0125"
 engine = "gpt-4o-mini"
-
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-model = GPT_Chat(client=client, engine=engine)
+api_key = os.environ.get('OPENAI_API_KEY')
+openai_llm = OPENAI(model=engine, api_key=api_key)
 
 domain_desc = open_file('data/domains/blocksworld.txt')
 problem_desc = open_file("data/problems/blocksworld_p1.txt")
@@ -68,13 +57,13 @@ task_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task
 
 domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
-feedback_builder = FeedbackBuilder()
 syntax_validator = SyntaxValidator()
 planner = FastDownward()
+feedback_builder = FeedbackBuilder()
 
 unsupported_keywords = ['object', 'pddl', 'lisp']
 
-def type_extraction(model: LLM_Chat, domain_desc: str, type_extraction_prompt: PromptBuilder) -> dict[str,str]:
+def type_extraction(model: LLM, domain_desc: str, type_extraction_prompt: PromptBuilder) -> dict[str,str]:
     # STEP ONE: type extraction
     types, response = domain_builder.extract_type(model, domain_desc, type_extraction_prompt.generate_prompt())
 
@@ -250,22 +239,22 @@ def task_extraction(model, problem_desc, task_extraction_prompt, types, predicat
 if __name__ == "__main__":
     
     # STEP ONE: type extraction
-    types = type_extraction(model, domain_desc, type_extraction_prompt)
+    types = type_extraction(openai_llm, domain_desc, type_extraction_prompt)
 
     print("END OF STEP ONE")
 
     # STEP TWO: hierarchy construction
-    type_hierarchy = hierarchy_construction(model, domain_desc, type_hierarchy_prompt, types)
+    type_hierarchy = hierarchy_construction(openai_llm, domain_desc, type_hierarchy_prompt, types)
 
     print("END OF STEP TWO")
 
     # STEP THREE: action extraction
-    nl_actions = action_extraction(model, domain_desc, action_extraction_prompt, type_hierarchy)
+    nl_actions = action_extraction(openai_llm, domain_desc, action_extraction_prompt, type_hierarchy)
 
     print("END OF STEP THREE")
 
     # STEP FOUR: action construction
-    actions, predicates = action_construction(model, domain_desc, action_construction_prompt, 
+    actions, predicates = action_construction(openai_llm, domain_desc, action_construction_prompt, 
                                                  nl_actions,type_hierarchy)
 
     print("END OF STEP FOUR")
@@ -275,7 +264,7 @@ if __name__ == "__main__":
     types = {name: description for name, description in types.items() if name not in unsupported_keywords} # remove unsupported words
 
     # STEP FIVE: task extraction
-    objects, initial, goal = task_extraction(model, problem_desc, 
+    objects, initial, goal = task_extraction(openai_llm, problem_desc, 
                                              task_extraction_prompt, types, predicates, actions)
     
     print("END OF STEP FIVE")

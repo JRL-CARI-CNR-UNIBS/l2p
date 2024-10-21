@@ -5,8 +5,7 @@ This file contains collection of functions for PDDL domain generation purposes
 from collections import OrderedDict
 from .utils.pddl_parser import parse_params, parse_new_predicates, parse_action, convert_to_dict, format_dict, format_predicates
 from .utils.pddl_types import Predicate, Action
-from .utils.documentor import Documentor
-from .llm_builder import LLM_Chat
+from .llm_builder import LLM
 import re, time
 
 class DomainBuilder:
@@ -37,7 +36,7 @@ class DomainBuilder:
     """Extract functions"""
     def extract_type(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         domain_desc: str, 
         prompt_template: str,
         types: dict[str,str]=None,
@@ -47,7 +46,7 @@ class DomainBuilder:
         Extracts types with domain given
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): prompt template
             types (dict[str,str]): current types in model
@@ -69,7 +68,7 @@ class DomainBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template) # prompt model
+                llm_response = model.query(prompt=prompt_template) # prompt model
 
                 # extract respective types from response
                 types = convert_to_dict(llm_response=llm_response)
@@ -84,7 +83,7 @@ class DomainBuilder:
     
     def extract_type_hierarchy(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         domain_desc: str,
         prompt_template: str, 
         types: dict[str,str]=None,
@@ -94,7 +93,7 @@ class DomainBuilder:
         Extracts type hierarchy from types list and domain given
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): prompt template
             types (dict[str,str]): current types in model
@@ -117,7 +116,7 @@ class DomainBuilder:
 
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.query(prompt=prompt_template)
 
                 # extract respective types from response
                 type_hierarchy = convert_to_dict(llm_response=llm_response)
@@ -132,7 +131,7 @@ class DomainBuilder:
             
     def extract_nl_actions(
         self, 
-        model: LLM_Chat,
+        model: LLM,
         domain_desc: str, 
         prompt_template: str, 
         types: dict[str,str]=None,
@@ -143,7 +142,7 @@ class DomainBuilder:
         Extract actions in natural language given domain description using LLM.
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): prompt template
             types (dict[str,str]): current types in model
@@ -169,7 +168,7 @@ class DomainBuilder:
 
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template) # get LLM llm_response
+                llm_response = model.query(prompt=prompt_template) # get LLM llm_response
                 
                 # extract respective types from response
                 nl_actions = convert_to_dict(llm_response=llm_response)
@@ -184,7 +183,7 @@ class DomainBuilder:
     
     def extract_pddl_action(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         domain_desc: str,
         prompt_template: str, 
         action_name: str,
@@ -198,7 +197,7 @@ class DomainBuilder:
         Extract an action and predicates from a given action description using LLM
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): action construction prompt
             action_name (str): action name
@@ -232,7 +231,7 @@ class DomainBuilder:
 
                 model.reset_tokens()
                 
-                llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.query(prompt=prompt_template)
 
                 # extract respective types from response
                 action = parse_action(llm_response=llm_response, action_name=action_name)
@@ -248,7 +247,7 @@ class DomainBuilder:
  
     def extract_pddl_actions(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         domain_desc: str,
         prompt_template: str, 
         nl_actions: dict[str,str]=None,
@@ -259,7 +258,7 @@ class DomainBuilder:
         Extract all actions from a given action description using LLM
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): action construction prompt
             nl_actions (dict[str, str]): NL actions currently in model
@@ -284,7 +283,7 @@ class DomainBuilder:
         prompt_template = prompt_template.replace('{predicates}', predicates_str)
         prompt_template = prompt_template.replace('{nl_actions}', nl_actions_str)
 
-        llm_response = model.get_output(prompt=prompt_template)
+        llm_response = model.query(prompt=prompt_template)
         
         # extract respective types from response
         raw_actions = llm_response.split('## NEXT ACTION')
@@ -320,7 +319,7 @@ class DomainBuilder:
         
     def extract_parameters(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         domain_desc: str,
         prompt_template: str, 
         action_name: str, 
@@ -332,7 +331,7 @@ class DomainBuilder:
         Extracts parameters from single action description via LLM
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): prompt template
             action_name (str): action name
@@ -359,7 +358,7 @@ class DomainBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template) # get LLM response
+                llm_response = model.query(prompt=prompt_template) # get LLM response
                 
                 # extract respective types from response
                 param, param_raw = parse_params(llm_output=llm_response)
@@ -374,7 +373,7 @@ class DomainBuilder:
     
     def extract_preconditions(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         domain_desc: str,
         prompt_template: str, 
         action_name: str, 
@@ -387,7 +386,7 @@ class DomainBuilder:
         Extracts preconditions from single action description via LLM
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): prompt template
             action_name (str): action name
@@ -417,7 +416,7 @@ class DomainBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template) # get LLM response
+                llm_response = model.query(prompt=prompt_template) # get LLM response
                 
                 # extract respective types from response
                 preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
@@ -433,7 +432,7 @@ class DomainBuilder:
 
     def extract_effects(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         domain_desc: str,
         prompt_template: str, 
         action_name: str, 
@@ -447,7 +446,7 @@ class DomainBuilder:
         Extracts effects from single action description via LLM
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): prompt template
             action_name (str): action name
@@ -479,7 +478,7 @@ class DomainBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template) # get LLM response
+                llm_response = model.query(prompt=prompt_template) # get LLM response
                 
                 # extract respective types from response
                 effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
@@ -495,7 +494,7 @@ class DomainBuilder:
         
     def extract_predicates(
         self, 
-        model: LLM_Chat,
+        model: LLM,
         domain_desc: str,
         prompt_template: str, 
         types: dict[str,str]=None,
@@ -507,7 +506,7 @@ class DomainBuilder:
         Extracts predicates via LLM
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             domain_desc (str): domain description
             prompt_template (str): prompt template
             types (dict[str,str]): current types in model
@@ -535,7 +534,7 @@ class DomainBuilder:
             try:
                 model.reset_tokens()
                 
-                llm_response = model.get_output(prompt=prompt_template) # prompt model
+                llm_response = model.query(prompt=prompt_template) # prompt model
                 
                 # extract respective types from response
                 new_predicates = parse_new_predicates(llm_output=llm_response)

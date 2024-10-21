@@ -2,7 +2,7 @@
 This file contains collection of functions for PDDL feedback generation purposes
 """
 
-from .llm_builder import LLM_Chat
+from .llm_builder import LLM
 from .domain_builder import DomainBuilder
 from .task_builder import TaskBuilder
 from .utils.pddl_parser import convert_to_dict, parse_action, parse_new_predicates, parse_objects, parse_initial, parse_goal, parse_params, format_dict, format_predicates
@@ -16,7 +16,7 @@ class FeedbackBuilder:
 
     def get_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             feedback_template: str, 
             feedback_type: str, 
             llm_response: str
@@ -31,9 +31,9 @@ class FeedbackBuilder:
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
-            feedback_msg = model.get_output(prompt=feedback_template)
+            feedback_msg = model.query(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
-            feedback_msg = model.get_output(prompt=feedback_template)
+            feedback_msg = model.query(prompt=feedback_template)
             response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
@@ -47,7 +47,7 @@ class FeedbackBuilder:
 
     def type_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str,
             llm_response: str,
             feedback_template: str, 
@@ -78,7 +78,7 @@ class FeedbackBuilder:
 
     def type_hierarchy_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str,
             llm_response: str,
             feedback_template: str, 
@@ -108,7 +108,7 @@ class FeedbackBuilder:
 
     def nl_action_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str, 
             llm_response: str,
             feedback_template: str,
@@ -141,7 +141,7 @@ class FeedbackBuilder:
 
     def pddl_action_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str, 
             llm_response: str,
             feedback_template: str, 
@@ -184,7 +184,7 @@ class FeedbackBuilder:
 
     def parameter_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str, 
             llm_response: str,
             feedback_template: str, 
@@ -224,7 +224,7 @@ class FeedbackBuilder:
 
     def precondition_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str, 
             llm_response: str,
             feedback_template: str, 
@@ -271,7 +271,7 @@ class FeedbackBuilder:
 
     def effect_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str, 
             llm_response: str,
             feedback_template: str, 
@@ -321,7 +321,7 @@ class FeedbackBuilder:
 
     def predicate_feedback(
             self,
-            model: LLM_Chat, 
+            model: LLM, 
             domain_desc: str, 
             llm_response: str,
             feedback_template: str, 
@@ -358,7 +358,7 @@ class FeedbackBuilder:
 
     def task_feedback(
             self, 
-            model: LLM_Chat, 
+            model: LLM, 
             problem_desc: str, 
             llm_response: str,
             feedback_template: str, 
@@ -401,7 +401,7 @@ class FeedbackBuilder:
 
     def objects_feedback(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         llm_response: str,
         feedback_template: str, 
@@ -438,7 +438,7 @@ class FeedbackBuilder:
 
     def initial_state_feedback(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         llm_response: str,
         feedback_template: str, 
@@ -478,7 +478,7 @@ class FeedbackBuilder:
 
     def goal_state_feedback(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         llm_response: str,
         feedback_template: str, 

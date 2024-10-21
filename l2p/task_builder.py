@@ -5,7 +5,7 @@ This file contains collection of functions for PDDL task generation purposes
 import time
 from .utils.pddl_types import Predicate, Action
 from .utils.pddl_parser import parse_objects, parse_initial, parse_goal, format_predicates
-from .llm_builder import LLM_Chat
+from .llm_builder import LLM
 from .prompt_builder import PromptBuilder
 
 class TaskBuilder:
@@ -30,7 +30,7 @@ class TaskBuilder:
 
     """Extract functions"""
     def extract_objects(self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         prompt_template: str,
         types: dict[str,str]=None, 
@@ -41,7 +41,7 @@ class TaskBuilder:
         Extracts objects with given predicates in current model
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
             prompt_template (str): prompt template class
@@ -67,7 +67,7 @@ class TaskBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template) # get LLM response
+                llm_response = model.query(prompt=prompt_template) # get LLM response
                 
                 # extract respective types from response
                 objects = parse_objects(llm_response)
@@ -82,7 +82,7 @@ class TaskBuilder:
 
     def extract_initial_state(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         prompt_template: str,
         types: dict[str,str]=None, 
@@ -96,7 +96,7 @@ class TaskBuilder:
         Extracts initial states with given predicates, objects, and states in current model
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
             prompt_template (str): prompt template class
@@ -131,7 +131,7 @@ class TaskBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.query(prompt=prompt_template)
 
                 # extract respective types from response
                 initial = parse_initial(llm_response)
@@ -146,7 +146,7 @@ class TaskBuilder:
         
     def extract_goal_state(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         prompt_template: str,
         types: dict[str,str]=None, 
@@ -160,7 +160,7 @@ class TaskBuilder:
         Extracts goal states with given predicates, objects, and states in current model
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
             prompt_template (str): prompt template class
@@ -195,7 +195,7 @@ class TaskBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.query(prompt=prompt_template)
 
                 # extract respective types from response
                 goal = parse_goal(llm_response)
@@ -210,7 +210,7 @@ class TaskBuilder:
 
     def extract_task(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         prompt_template: str, 
         types: dict[str,str]=None, 
@@ -222,7 +222,7 @@ class TaskBuilder:
         Extracts whole task specification in current model
 
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
             prompt_template (str): prompt template class
@@ -255,7 +255,7 @@ class TaskBuilder:
             try:
                 model.reset_tokens()
                 
-                llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.query(prompt=prompt_template)
 
                 # extract respective types from response
                 objects = parse_objects(llm_response)
@@ -272,7 +272,7 @@ class TaskBuilder:
 
     def extract_nl_conditions(
         self, 
-        model: LLM_Chat, 
+        model: LLM, 
         problem_desc: str,
         prompt_template: PromptBuilder,
         types: dict[str,str]=None, 
@@ -285,7 +285,7 @@ class TaskBuilder:
         Extracts initial and goal states in natural language
         
         Args:
-            model (LLM_Chat): LLM
+            model (LLM): LLM
             problem_desc (str): problem description
             domain_desc (str): domain description
             prompt_template (str): prompt template class
@@ -316,7 +316,7 @@ class TaskBuilder:
             try:
                 model.reset_tokens()
 
-                llm_response = model.get_output(prompt=prompt_template)
+                llm_response = model.query(prompt=prompt_template)
                 
                 return llm_response
             

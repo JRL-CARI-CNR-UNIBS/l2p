@@ -1,17 +1,8 @@
 """
 This file contains run code for test purposes
 """
-
-from l2p.prompt_builder import PromptBuilder
-from l2p.feedback_builder import FeedbackBuilder
-from l2p.domain_builder import DomainBuilder
-from l2p.task_builder import TaskBuilder
-from l2p.llm_builder import LLM_Chat, GPT_Chat
-from l2p.utils.pddl_parser import prune_predicates, prune_types, format_types
-from l2p.utils.pddl_types import Action, Predicate
-from l2p.utils.pddl_validator import SyntaxValidator
-from openai import OpenAI
 import os, json
+from l2p import *
 
 def format_json_output(data):
         return json.dumps(data, indent=4)
@@ -42,7 +33,7 @@ def run_granular_action_pipeline(
 
         for action_name, action_desc in nl_actions.items():
             params, params_raw, llm_response = domain_builder.extract_parameters(
-                model=model,
+                model=openai_llm,
                 domain_desc=domain_desc,
                 prompt_template=param_prompt.generate_prompt(),
                 action_name=action_name,
@@ -53,7 +44,7 @@ def run_granular_action_pipeline(
             # feedback_template = open_file('data/prompt_templates/action_construction/extract_params/feedback.txt')
             
             # feedback_params, feedback_llm_response = feedback_builder.parameter_feedback(
-            #     model=model, 
+            #     model=openai_llm, 
             #     domain_desc=domain_desc, 
             #     feedback_template=feedback_template, 
             #     feedback_type="llm",
@@ -68,7 +59,7 @@ def run_granular_action_pipeline(
             #     params=feedback_params
 
             preconditions, new_predicates, llm_response = domain_builder.extract_preconditions(
-                model=model,
+                model=openai_llm,
                 domain_desc=domain_desc,
                 prompt_template=precondition_prompt.generate_prompt(),
                 action_name=action_name,
@@ -80,7 +71,7 @@ def run_granular_action_pipeline(
             # feedback_template = open_file('data/prompt_templates/action_construction/extract_preconditions/feedback.txt')
             
             # feedback_preconditions, feedback_predicates, feedback_llm_response = feedback_builder.precondition_feedback(
-            #     model=model, 
+            #     model=openai_llm, 
             #     domain_desc=domain_desc, 
             #     feedback_template=feedback_template, 
             #     feedback_type="llm",
@@ -100,7 +91,7 @@ def run_granular_action_pipeline(
             predicates.extend(new_predicates)
 
             effects, new_predicates, llm_response = domain_builder.extract_effects(
-                model=model,
+                model=openai_llm,
                 domain_desc=domain_desc,
                 prompt_template=effects_prompt.generate_prompt(),
                 action_name=action_name,
@@ -113,7 +104,7 @@ def run_granular_action_pipeline(
             # feedback_template = open_file('data/prompt_templates/action_construction/extract_effects/feedback.txt')
             
             # feedback_effects, feedback_predicates, feedback_llm_response = feedback_builder.effects_feedback(
-            #     model=model, 
+            #     model=openai_llm, 
             #     domain_desc=domain_desc, 
             #     feedback_template=feedback_template, 
             #     feedback_type="llm",
@@ -155,7 +146,7 @@ def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builde
         for action_name, action_desc in nl_actions.items():
 
             action, new_predicates, llm_response = domain_builder.extract_pddl_action(
-                model=model,
+                model=openai_llm,
                 domain_desc=domain_desc,
                 prompt_template=prompt.generate_prompt(),
                 action_name=action_name,
@@ -165,7 +156,7 @@ def run_compact_action_pipeline(model: LLM_Chat, domain_desc: str, domain_builde
 
             # RUN FEEDBACK
             # feedback_action, feedback_predicates, llm_feedback_response = feedback_builder.pddl_action_feedback(
-            #     model=model, 
+            #     model=openai_llm, 
             #     domain_desc=domain_desc, 
             #     feedback_template=feedback_template, 
             #     feedback_type="llm",
@@ -202,7 +193,7 @@ def run_granular_task_pipeline(
         ) -> tuple[dict[str,str],list[dict[str,str]],list[dict[str,str]]]:
     
     objects, llm_response = task_builder.extract_objects(
-        model=model,
+        model=openai_llm,
         problem_desc=problem_desc,
         domain_desc=domain_desc,
         prompt_template=object_extraction_prompt.generate_prompt(),
@@ -214,7 +205,7 @@ def run_granular_task_pipeline(
     feedback_template = open_file('data/prompt_templates/task_extraction/extract_objects/feedback.txt')
     
     # feedback_objects, llm_feedback_response = feedback_builder.objects_feedback(
-    #     model=model,
+    #     model=openai_llm,
     #     problem_desc=problem_desc,
     #     domain_desc=domain_desc,
     #     feedback_template=feedback_template,
@@ -229,7 +220,7 @@ def run_granular_task_pipeline(
     #         objects=feedback_objects
 
     initial, llm_response = task_builder.extract_initial_state(
-        model=model,
+        model=openai_llm,
         problem_desc=problem_desc,
         domain_desc=domain_desc,
         prompt_template=initial_extraction_prompt.generate_prompt(),
@@ -241,7 +232,7 @@ def run_granular_task_pipeline(
     # feedback_template = open_file('data/prompt_templates/task_extraction/extract_initial/feedback.txt')
     
     # feedback_initial, llm_feedback_response = feedback_builder.initial_state_feedback(
-    #     model=model,
+    #     model=openai_llm,
     #     problem_desc=problem_desc,
     #     domain_desc=domain_desc,
     #     feedback_template=feedback_template,
@@ -257,7 +248,7 @@ def run_granular_task_pipeline(
     #         initial=feedback_initial
 
     goal, llm_response = task_builder.extract_goal_state(
-        model=model,
+        model=openai_llm,
         problem_desc=problem_desc,
         domain_desc=domain_desc,
         prompt_template=goal_extraction_prompt.generate_prompt(),
@@ -269,7 +260,7 @@ def run_granular_task_pipeline(
     # feedback_template = open_file('data/prompt_templates/task_extraction/extract_goal/feedback.txt')
     
     # feedback_goal, llm_feedback_response = feedback_builder.goal_state_feedback(
-    #     model=model,
+    #     model=openai_llm,
     #     problem_desc=problem_desc,
     #     domain_desc=domain_desc,
     #     feedback_template=feedback_template,
@@ -303,7 +294,7 @@ def run_compact_task_pipeline(
     feedback_template = open_file('data/prompt_templates/task_extraction/extract_task/feedback.txt')
 
     objects, initial, goal, llm_response = task_builder.extract_task(
-        model=model,
+        model=openai_llm,
         problem_desc=problem_desc,
         domain_desc=domain_desc,
         prompt_template=task_extraction_prompt.generate_prompt(),
@@ -314,7 +305,7 @@ def run_compact_task_pipeline(
     
     # for _ in range(1):
     #     feedback_objects, feedback_initial, feedback_goal, llm_feedback_response = feedback_builder.task_feedback(
-    #         model=model, 
+    #         model=openai_llm, 
     #         problem_desc=problem_desc, 
     #         feedback_template=feedback_template,
     #         feedback_type="llm",
@@ -344,14 +335,11 @@ if __name__ == "__main__":
 
     unsupported_keywords = ['object', 'pddl', 'lisp']
     
-    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-
-    # MODELS: 
     # engine = "gpt-4o"
-    engine = "gpt-3.5-turbo-0125"
-    # engine = "gpt-4o-mini"
-    
-    model = GPT_Chat(client=client, engine=engine)
+    engine = "gpt-4o-mini"
+    # engine = "gpt-3.5-turbo-0125"
+    api_key = os.environ.get('OPENAI_API_KEY')
+    openai_llm = OPENAI(model=engine, api_key=api_key)
 
     # instantiate domain builder class
     domain_desc = open_file('data/domains/blocksworld.txt')
@@ -441,12 +429,12 @@ if __name__ == "__main__":
     # extract types
     print("Extracted types output:\n")
     
-    types, response = domain_builder.extract_type(model, domain_desc, type_extraction_prompt.generate_prompt())
+    types, response = domain_builder.extract_type(openai_llm, domain_desc, type_extraction_prompt.generate_prompt())
     domain_builder.set_types(types=types)
     print("Types: ", format_json_output(domain_builder.get_types()))
     
     # feedback_template = open_file('data/prompt_templates/type_extraction/feedback.txt')
-    # new_types, feedback_response = feedback_builder.type_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", types=types, llm_response=response)
+    # new_types, feedback_response = feedback_builder.type_feedback(model=openai_llm, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", types=types, llm_response=response)
     # # print("FEEDBACK:\n", feedback_response)
     # print("\nNEW TYPES:\n", format_json_output(new_types))
 
@@ -456,13 +444,13 @@ if __name__ == "__main__":
     
     # # extract type hierarchy
     print("\n\n---------------------------------\n\nType hierarchy output:\n")
-    type_hierarchy, response = domain_builder.extract_type_hierarchy(model, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
+    type_hierarchy, response = domain_builder.extract_type_hierarchy(openai_llm, domain_desc, type_hierarchy_prompt.generate_prompt(), domain_builder.get_types())
     
     domain_builder.set_type_hierarchy(type_hierarchy=type_hierarchy)
     print(format_json_output(type_hierarchy))
 
     # # # feedback_template = open_file('data/prompt_templates/hierarchy_construction/feedback.txt')
-    # # # new_type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", type_hierarchy=type_hierarchy, llm_response=response)
+    # # # new_type_hierarchy, feedback_response = feedback_builder.type_hierarchy_feedback(model=openai_llm, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", type_hierarchy=type_hierarchy, llm_response=response)
     # # # print("\nFEEDBACK:\n", feedback_response)
     # # # print("\nNEW TYPE HIERARCHY:\n", format_json_output(type_hierarchy))
 
@@ -472,13 +460,13 @@ if __name__ == "__main__":
 
     # # extract NL action descriptions
     print("\n\n---------------------------------\n\nNatural language action output:\n")
-    nl_actions, response = domain_builder.extract_nl_actions(model, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_types())
+    nl_actions, response = domain_builder.extract_nl_actions(openai_llm, domain_desc, nl_action_extraction_prompt.generate_prompt(), domain_builder.get_types())
     
     domain_builder.set_nl_actions(nl_actions)
     for i in domain_builder.get_nl_actions(): print(i)
 
     # # # feedback_template = open_file('data/prompt_templates/action_extraction/feedback.txt')
-    # # # new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model=model, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", nl_actions=nl_actions, llm_response=response)
+    # # # new_nl_actions, feedback_response = feedback_builder.nl_action_feedback(model=openai_llm, domain_desc=domain_desc, feedback_template=feedback_template, feedback_type="llm", nl_actions=nl_actions, llm_response=response)
     # # # print("\nFEEDBACK:\n", feedback_response)
     # # # print("\nNEW NL ACTIONS:\n", format_json_output(new_nl_actions))
 
@@ -491,7 +479,7 @@ if __name__ == "__main__":
 
     # # GRANULAR ACTION EXTRACTION PIPELINE
     # # actions, predicates = run_granular_action_pipeline(
-    # #     model=model, 
+    # #     model=openai_llm, 
     # #     domain_desc=domain_desc, 
     # #     param_prompt=pddl_param_extraction_prompt,
     # #     precondition_prompt=pddl_precondition_extraction_prompt,
@@ -504,7 +492,7 @@ if __name__ == "__main__":
     # # # COMPACT ACTION EXTRACTION PIPELINE
     feedback_template = open_file('data/prompt_templates/action_construction/extract_action/feedback.txt')
     actions, predicates = run_compact_action_pipeline(
-        model=model, 
+        model=openai_llm, 
         domain_desc=domain_desc,
         domain_builder=domain_builder, 
         prompt=pddl_action_extraction_prompt,
@@ -516,7 +504,7 @@ if __name__ == "__main__":
     
     # prompt_template = open_file('data/prompt_templates/action_construction/extract_actions.txt')
     # actions, predicates, llm_response = domain_builder.extract_pddl_actions(
-    #     model=model, 
+    #     model=openai_llm, 
     #     domain_desc=domain_desc, 
     #     prompt_template=prompt_template, 
     #     nl_actions=nl_actions,
@@ -556,7 +544,7 @@ if __name__ == "__main__":
         
     # GRANULAR TASK PIPELINE
     # objects, initial_states, goal_states = run_granular_task_pipeline(
-    #     model=model, 
+    #     model=openai_llm, 
     #     problem_desc=open_file("data/problems/blocksworld_p1.txt"), 
     #     domain_desc=domain_desc, 
     #     object_extraction_prompt=object_extraction_prompt,
@@ -569,7 +557,7 @@ if __name__ == "__main__":
         
     # COMPACT TASK PIPELINE
     objects, initial_states, goal_states = run_compact_task_pipeline(
-        model=model, 
+        model=openai_llm, 
         problem_desc=open_file("data/problems/blocksworld_p1.txt"), 
         domain_desc=domain_desc, 
         task_extraction_prompt=task_extraction_prompt,

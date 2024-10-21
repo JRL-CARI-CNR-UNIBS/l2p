@@ -11,11 +11,8 @@ This library only focuses on model generation, so it is not concerned with the o
 """
 
 import os
-from l2p.task_builder import TaskBuilder
-from l2p.prompt_builder import PromptBuilder
-from l2p.llm_builder import GPT_Chat
+from l2p import *
 from tests.planner import FastDownward
-from openai import OpenAI
 from tests.setup import check_parse_domain, check_parse_problem
 
 def open_file(file_path):
@@ -27,9 +24,8 @@ if __name__ == "__main__":
   
     # setup L2P requirements
     engine = "gpt-4o-mini"
-
-    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None))
-    model = GPT_Chat(client=client, engine=engine)
+    api_key = os.environ.get('OPENAI_API_KEY')
+    openai_llm = OPENAI(model=engine, api_key=api_key)
     planner = FastDownward()
 
     # prompts taken from LLM+P
@@ -46,7 +42,7 @@ if __name__ == "__main__":
 
     # extract PDDL from prompt
     objects, initial, goal, llm_response = task_builder.extract_task(
-        model=model, 
+        model=openai_llm, 
         problem_desc=problem_desc,
         prompt_template=prompt_builder.generate_prompt())
 
