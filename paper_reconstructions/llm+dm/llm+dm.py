@@ -14,7 +14,7 @@ Assumes the following:
 import os, json
 from copy import deepcopy
 from l2p import *
-from tests.setup import check_parse_domain
+from tests.parse import check_parse_domain
 
 def open_txt(file_path):
     with open(file_path, 'r') as file:

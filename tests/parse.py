@@ -1,8 +1,3 @@
-# Activate virtual environment: 
-# MacOS: source env/bin/activate
-
-# Run file
-# Windows: python -m tests.usage.usage
 from pddl.formatter import domain_to_string, problem_to_string
 from pddl import parse_domain, parse_problem
 import sys

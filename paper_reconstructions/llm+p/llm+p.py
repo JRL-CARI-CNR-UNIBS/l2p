@@ -13,7 +13,7 @@ This library only focuses on model generation, so it is not concerned with the o
 import os
 from l2p import *
 from tests.planner import FastDownward
-from tests.setup import check_parse_domain, check_parse_problem
+from tests.parse import check_parse_domain, check_parse_problem
 
 def open_file(file_path):
     with open(file_path, 'r') as file:

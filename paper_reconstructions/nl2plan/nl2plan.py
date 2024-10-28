@@ -7,7 +7,7 @@ Run: python3 -m paper_reconstructions.nl2plan.nl2plan
 import os, json
 from l2p import *
 from tests.planner import FastDownward
-from tests.setup import check_parse_domain, check_parse_problem
+from tests.parse import check_parse_domain, check_parse_problem
 
 
 def open_file(file_path):

@@ -593,18 +593,23 @@ class DomainBuilder:
 
     """Get functions"""
     def get_types(self):
+        """Returns types from current model"""
         return self.types
 
     def get_type_hierarchy(self):
+        """Returns type hierarchy from current model"""
         return self.type_hierarchy
 
     def get_nl_actions(self):
+        """Returns natural language actions from current model"""
         return self.nl_actions
 
     def get_pddl_actions(self):
+        """Returns PDDL actions from current model"""
         return self.pddl_actions
 
     def get_predicates(self):
+        """Returns predicates from current model"""
         return self.predicates
 
     def generate_domain(
@@ -615,8 +620,19 @@ class DomainBuilder:
             actions: list[Action],
             requirements: list[str],
             ) -> str:
-
-        # Main function to generate the domain description
+        """
+        Generates PDDL domain from given information
+        
+        Args:
+            domain (str): domain name
+            types (str): domain types
+            predicates (str): domain predicates
+            actions (list[Action]): domain actions
+            requirements (list[str]): domain requirements
+            
+        Returns:
+            desc (str): PDDL domain
+        """
         desc = ""
         desc += f"(define (domain {domain})\n"
         desc += f"(:requirements\n  {' '.join(requirements)}\n)\n"
@@ -627,8 +643,8 @@ class DomainBuilder:
         desc = desc.replace("AND", "and").replace("OR", "or")  # The python PDDL package can't handle capital AND and OR
         return desc
     
-    # Helper function to format individual action descriptions
     def action_desc(self, action: Action) -> str:
+        """Helper function to format individual action descriptions"""
         param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
         desc = f"(:action {action['name']}\n"
         desc += f"   :parameters (\n{param_str}\n   )\n"
@@ -637,14 +653,15 @@ class DomainBuilder:
         desc += ")"
         return desc
 
-    # Helper function to combine all action descriptions
     def action_descs(self, actions) -> str:
+        """Helper function to combine all action descriptions"""
         desc = ""
         for action in actions:
             desc += "\n\n" + self.action_desc(action)
         return desc
 
     def format_predicates(self, predicates: list[Predicate]) -> str:
+        """Helper function that formats predicate list into string"""
         return "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
 
 if __name__ == "__main__":

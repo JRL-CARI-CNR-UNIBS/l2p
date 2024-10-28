@@ -1,6 +1,6 @@
 import os, json
 from l2p import *
-from tests.setup import check_parse_domain
+from tests.parse import check_parse_domain
 
 def load_file(file_path):
     with open(file_path, 'r') as file:
