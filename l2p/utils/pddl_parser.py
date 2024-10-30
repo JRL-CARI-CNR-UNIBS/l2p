@@ -154,7 +154,15 @@ def parse_objects(llm_response: str) -> dict[str, str]:
     return objects
 
 def parse_initial(llm_response: str) -> list[dict[str,str]]:
-    """Extracts state (PDDL-init) from LLM response and returns it as a string"""
+    """
+    Extracts state (PDDL-init) from LLM response and returns it as a list of dict strings
+    
+    Args:
+        llm_response (str): The LLM output.
+
+    Returns:
+        states (list[dict[str,str]]): list of initial states in dictionaries
+    """
     state_head = extract_heading(llm_response, "INITIAL")
     state_raw = combine_blocks(state_head)
     state_clean = clear_comments(state_raw)
@@ -177,7 +185,15 @@ def parse_initial(llm_response: str) -> list[dict[str,str]]:
     return states
 
 def parse_goal(llm_response: str) -> list[dict[str,str]]:
-    """Extracts goal (PDDL-goal) from LLM response and returns it as a string"""
+    """
+    Extracts goal (PDDL-goal) from LLM response and returns it as a string
+    
+    Args:
+        llm_response (str): The LLM output.
+
+    Returns:
+        states (list[dict[str,str]]): list of goal states in dictionaries
+    """
     goal_head = extract_heading(llm_response, "GOAL")
 
     if goal_head.count("```") != 2:

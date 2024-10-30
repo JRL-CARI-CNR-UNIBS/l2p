@@ -4,9 +4,7 @@ Currently, this builder class contains the generic method to run any LLMs.
 It also offers extension to OpenAI, OLLAMA, and Huggingface.
 """
 
-import os
-import tiktoken
-import requests
+import os, tiktoken, requests
 from retry import retry
 from openai import OpenAI
 from abc import ABC, abstractmethod

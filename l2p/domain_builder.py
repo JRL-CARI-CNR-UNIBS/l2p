@@ -2,10 +2,9 @@
 This file contains collection of functions for PDDL domain generation purposes
 """
 
-from collections import OrderedDict
-from .utils.pddl_parser import parse_params, parse_new_predicates, parse_action, convert_to_dict, format_dict, format_predicates
-from .utils.pddl_types import Predicate, Action
+from .utils import *
 from .llm_builder import LLM
+from collections import OrderedDict
 import re, time
 
 class DomainBuilder:
@@ -635,7 +634,7 @@ class DomainBuilder:
         """
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += f"(:requirements\n  {' '.join(requirements)}\n)\n"
+        desc += self.indent(f"(:requirements\n  {' '.join(requirements)}\n)\n")
         desc += f"   (:types \n{types}\n   )\n\n"
         desc += f"   (:predicates \n{predicates}\n   )"
         desc += self.action_descs(actions)
