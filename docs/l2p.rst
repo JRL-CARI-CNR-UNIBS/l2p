@@ -1,19 +1,31 @@
-.. automodule:: l2p.domain_builder
-      :members:
-      :undoc-members:
-      :show-inheritance:
+L2P
+================
+Below are the in-depth usage of L2P. It is **highly** recommended to use the base template found in :doc:`templates` to properly extract LLM output into the designated Python formats from these methods.
 
-.. automodule:: l2p.task_builder
-      :members:
-      :undoc-members:
-      :show-inheritance:
+DomainBuilder
+-------------
+.. autoclass:: l2p.DomainBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
 
-.. automodule:: l2p.prompt_builder
-      :members:
-      :undoc-members:
-      :show-inheritance:
+TaskBuilder
+-----------
+.. autoclass:: l2p.TaskBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
 
-.. automodule:: l2p.feedback_builder
-      :members:
-      :undoc-members:
-      :show-inheritance:
+FeedbackBuilder
+---------------
+.. autoclass:: l2p.FeedbackBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
+
+PromptBuilder
+-------------
+.. autoclass:: l2p.PromptBuilder
+   :members:
+   :undoc-members:
+   :inherited-members:
