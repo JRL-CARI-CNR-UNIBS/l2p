@@ -1,73 +1,90 @@
-# L2P
-Official documentation for use of functions can be found on our website: [LINK](https://sliding.toys/mystic-square/8-puzzle/daily/) The L2P classes can be split up into the following:
-## domain_builder.py
-This class is responsible for generating PDDL domain information via LLMs. Currently, it supports generating the following (crossed out are supported features):
-- [x] `Types` (PDDL 1.2 and later: Supports defining types for objects, helping to organize and restrict possible object assignments in actions.)
-- [x] `Predicates` (PDDL 1.2 and later: Basic predicates represent the truth values of propositions that can be true or false in the planning domain.)
-- [x] `Natural Language actions` (A modern extension of PDDL, leveraging LLMs to describe actions in natural language form, then automatically converting them into formal PDDL actions.)
-- [x] `Basic Full PDDL action` (PDDL 1.2 and later: Defines a complete action with parameters, preconditions, and effects in a formal, syntactically correct manner.)
-- [x] `Basic Action Parameters` (PDDL 1.2 and later: Defines parameters within actions, specifying which objects or types are involved in each action.)
-- [x] `Basic Action Preconditions` (PDDL 1.2 and later: Specifies the conditions that must hold for an action to be applicable.)
-- [x] `Basic Action Effects` (PDDL 1.2 and later: Defines what changes in the state when an action is executed, including fluent changes and predicate truth values.)
-- [x] `Full set of Basic PDDL actions` (PDDL 1.2 and later: Includes the complete specification of actions in the domain, potentially including actions for movement, object manipulation, and other typical operations.)
-- [ ] `Action Costs` (PDDL 2.1 and later: Allows for specifying the cost of actions, useful in metric or cost-based planning, to optimize goals like minimizing time or resources.)
-- [ ] `Temporal Constraints` (PDDL 2.2 and later: Supports defining temporal planning features, such as specifying time constraints or durations for actions and relationships between actions over time.)
-- [ ] `Disjunctive Preconditions` (PDDL 2.2 and later: Allows for specifying alternative conditions in preconditions using "or", enabling more flexibility in defining the requirements for actions.)
-- [ ] `Derived Predicates` (PDDL 2.1 and later: Defines predicates whose truth value is inferred by the planner from other predicates, typically expressed through rules or axioms.)
-- [ ] `Non-deterministic Actions` (PDDL 2.2 and later: Defines actions that have multiple possible outcomes, useful for modeling uncertainty or probabilistic events in planning.)
-- [ ] `Conditional effects / Quantifications` (PDDL 2.2 and later: Supports conditional effects, where the result of an action depends on certain conditions being met, and also the use of quantifiers like "forall" or "exists" to express more complex relationships in action effects.)
-- [ ] `Mutex Relations` (PDDL 2.2 and later: Defines mutual exclusion relations between actions or predicates, stating that certain actions or predicates cannot hold true simultaneously in the planning domain.)
+# L2P: LLM-Powered PDDL Planning
 
-
-## task_builder.py
-This class is responsible for generating PDDL task information via LLMs. Currently, it supports generating the following (crossed out are supported features):
-- [x] `Objects` (PDDL 1.2 and later: Defines the objects involved in the problem, which can be assigned types and used in actions or predicates.)
-- [x] `Initial State` (PDDL 1.2 and later: Specifies the initial configuration of the world, including the truth values of predicates and the state of objects at the beginning of the plan.)
-- [x] `Goal State` (PDDL 1.2 and later: Defines the conditions or set of predicates that must be satisfied at the end of the planning process to achieve the goal.)
-- [ ] `Action Instances` (PDDL 1.2 and later: Specifies instances of actions that have been applied in the planning process, typically based on the initial state and the actions available in the domain.)
-- [ ] `Quantified Goals` (PDDL 2.2 and later: Allows for defining goals that involve quantification, such as "there exists an object x such that..." or "for all objects y, the following must hold...")
-- [ ] `Negative Goals` (PDDL 2.2 and later: Defines goals where the state of certain predicates must be false at the goal state.)
-- [ ] `Metric Optimization` (PDDL 2.1 and later: Supports optimization of a given metric in the problem, such as minimizing or maximizing a resource like time, cost, or energy used.)
-- [ ] `Timeline Constraints` (PDDL 2.2 and later: Involves specifying constraints that govern the sequence or timing of events, useful for temporal planning.)
-- [ ] `Temporal Goal Definition` (PDDL 2.2 and later: Defines goals that must be achieved within a certain temporal window or sequence of actions, useful for time-sensitive plans.)
-- [ ] `Preferences` (PDDL 3.0 and later: Allows for defining soft goals or preferences that are desirable but not mandatory for achieving the goal state.)
-- [ ] `Resource Constraints` (PDDL 2.1 and later: Defines limitations on resources, such as the number of robots available or the amount of fuel in the system.)
-- [ ] `Durative Goals` (PDDL 2.2 and later: Specifies goals that span over time, requiring a series of actions to be completed in a specific duration or sequence.)
-- [ ] `Conditional Goals` (PDDL 2.2 and later: Defines goals that depend on certain conditions being met, offering more flexibility in expressing complex planning scenarios.)
-
-## feedback_builder.py
-This class is responsible for returning feedback information via LLMs. It contains the following functions:
-
-### General Functions:
-- **get_feedback()**: Retrieves the type of feedback the user requests and returns the feedback message. Takes in either `"human"`, `"llm"`, or `"hybrid"`, which is both.
-- **human_feedback()**: Enables the user to provide human-in-the-loop feedback.
-
-### Domain Feedback:
-- **type_feedback()**: Returns feedback on revised types.
-- **type_hierarchy_feedback()**: Returns feedback on revised type hierarchy.
-- **nl_action_feedback()**: Returns feedback on revised natural language actions.
-- **pddl_action_feedback()**: Returns feedback on revised PDDL actions.
-- **parameter_feedback()**: Returns feedback on revised parameters of a specific action.
-- **precondition_feedback()**: Returns feedback on revised preconditions of a specific action.
-- **effect_feedback()**: Returns feedback on revised effects of a specific action.
-- **predicate_feedback()**: Returns feedback on revised predicates.
-- **task_feedback()**: Returns complete feedback on the revised PDDL task.
-
-### Problem Feedback:
-- **objects_feedback()**: Returns feedback on revised objects.
-- **initial_state_feedback()**: Returns feedback on revised initial states.
-- **goal_state_feedback()**: Returns feedback on revised goal states.
+**Official Documentation:**  
+For detailed function references, visit our website: [Official API Documentation](https://sliding.toys/mystic-square/8-puzzle/daily/).  
+The L2P classes can be divided as follows:
 
 ---
 
-## prompt_builder.py
-This class is responsible for generating prompt templates for LLMs. Users can utilize this class to assemble their prompts in an organized manner and swap between different prompts. Specifically, it consists of:
+## `domain_builder.py`
+This class is responsible for generating PDDL domain information via LLMs.  
+For full API reference, see the [documentation](docs/build/html/modules.html).
+
+### Features Supported:
+- [x] **Types** (PDDL 1.2+): Defines types for objects to organize and restrict possible object assignments in actions.
+- [x] **Predicates** (PDDL 1.2+): Defines the truth values of propositions (true/false).
+- [x] **Natural Language Actions** (PDDL 1.2+): Describes actions in natural language and converts them into formal PDDL actions.
+- [x] **Basic Full PDDL Actions** (PDDL 1.2+): Complete actions with parameters, preconditions, and effects.
+- [x] **Basic Action Parameters** (PDDL 1.2+): Defines parameters for actions.
+- [x] **Basic Action Preconditions** (PDDL 1.2+): Specifies the conditions for actions.
+- [x] **Basic Action Effects** (PDDL 1.2+): Defines the effects of actions on the state.
+- [x] **Full Set of Basic PDDL Actions** (PDDL 1.2+): A complete specification of actions.
+- [ ] **Action Costs** (PDDL 2.1+): Allows cost specifications for actions (e.g., optimizing time/resources).
+- [ ] **Temporal Constraints** (PDDL 2.2+): Specifies time-related constraints on actions.
+- [ ] **Disjunctive Preconditions** (PDDL 2.2+): Alternative conditions for action preconditions.
+- [ ] **Derived Predicates** (PDDL 2.1+): Inferred predicates based on other conditions.
+- [ ] **Non-deterministic Actions** (PDDL 2.2+): Models actions with multiple outcomes.
+- [ ] **Conditional Effects/Quantifications** (PDDL 2.2+): Conditional action effects and use of quantifiers.
+- [ ] **Mutex Relations** (PDDL 2.2+): Defines mutual exclusions between actions or predicates.
+
+---
+
+## `task_builder.py`
+Responsible for generating PDDL task information via LLMs.  
+Full API reference: See [documentation](docs/build/html/modules.html).
+
+### Features Supported:
+- [x] **Objects** (PDDL 1.2+): Defines objects involved in the problem.
+- [x] **Initial State** (PDDL 1.2+): Specifies the initial configuration of the world.
+- [x] **Goal State** (PDDL 1.2+): Defines the conditions to achieve the goal.
+- [ ] **Action Instances** (PDDL 1.2+): Specifies applied action instances.
+- [ ] **Quantified Goals** (PDDL 2.2+): Defines goals with quantification.
+- [ ] **Negative Goals** (PDDL 2.2+): Specifies goals where predicates must be false.
+- [ ] **Metric Optimization** (PDDL 2.1+): Optimizes a given metric, such as minimizing resources.
+- [ ] **Timeline Constraints** (PDDL 2.2+): Specifies constraints governing the sequence of events.
+- [ ] **Temporal Goal Definition** (PDDL 2.2+): Defines time-sensitive goals.
+- [ ] **Preferences** (PDDL 3.0+): Defines soft, non-mandatory goals.
+- [ ] **Resource Constraints** (PDDL 2.1+): Limits on resources like robots or fuel.
+- [ ] **Durative Goals** (PDDL 2.2+): Specifies goals over a specific time duration.
+- [ ] **Conditional Goals** (PDDL 2.2+): Defines goals based on certain conditions.
+
+---
+
+## `feedback_builder.py`
+Returns feedback information via LLMs.
+
+### General Functions:
+- **`get_feedback()`**: Retrieves feedback based on user choice ("human", "llm", or "hybrid").
+- **`human_feedback()`**: Allows user-provided human-in-the-loop feedback.
+
+### Domain Feedback Functions:
+- **`type_feedback()`**: Feedback on revised types.
+- **`type_hierarchy_feedback()`**: Feedback on revised type hierarchy.
+- **`nl_action_feedback()`**: Feedback on natural language actions.
+- **`pddl_action_feedback()`**: Feedback on PDDL actions.
+- **`parameter_feedback()`**: Feedback on action parameters.
+- **`precondition_feedback()`**: Feedback on action preconditions.
+- **`effect_feedback()`**: Feedback on action effects.
+- **`predicate_feedback()`**: Feedback on predicates.
+- **`task_feedback()`**: Complete feedback on revised PDDL tasks.
+
+### Problem Feedback Functions:
+- **`objects_feedback()`**: Feedback on objects.
+- **`initial_state_feedback()`**: Feedback on initial states.
+- **`goal_state_feedback()`**: Feedback on goal states.
+
+---
+
+## `prompt_builder.py`
+Generates prompt templates for LLMs to assemble organized prompts and swap between them.
 
 ### Components:
-- **Roles**: Provides an overview task for the LLM to generate.
-- **Technique**: Specifies a prompting technique (e.g., CoT, ZPD, etc.).
-- **Example**: Provides an in-context example for the LLM to follow.
-- **Task**: Defines placeholders. Users should observe examples and extraction functions for proper information extraction.
+- **Roles**: Overview task for the LLM.
+- **Technique**: Defines prompting methods (e.g., CoT, ZPD).
+- **Example**: Provides in-context examples.
+- **Task**: Placeholder definitions for proper information extraction.
+
+---
 
 ## llm_builder.py
 This class is responsible for extracting LLMs
@@ -84,7 +101,7 @@ Refer to [here](https://platform.openai.com/docs/quickstart) for more informatio
 **HuggingFace**
 
 Additionally, we have included support for using Huggingface models. One can set up their environment like so:
-```
+```python
 parser = argparse.ArgumentParser(description="Define Parameters")
 parser.add_argument('-test_dataset', action='store_true')
 parser.add_argument("--temp", type=float, default=0.01, help = "temperature for sampling")
