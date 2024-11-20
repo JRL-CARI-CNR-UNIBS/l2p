@@ -1,8 +1,0 @@
-Here is the task:
-
-## Domain
-{domain_desc}
-
-## Types
-The types are:
-{types}

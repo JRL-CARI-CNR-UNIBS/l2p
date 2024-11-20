@@ -1,7 +1,0 @@
-Here is the task:
-
-## Domain
-{domain_desc}
-
-## Available types:
-{types}
