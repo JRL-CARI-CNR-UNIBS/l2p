@@ -27,7 +27,12 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',]
+    'sphinx.ext.napoleon',
+    'myst_parser']
+
+myst_enable_extensions = [
+    'colon_fence',  # Enables Markdown for code block with language
+]
 
 # Napoleon settings
 napoleon_google_docstring = True
