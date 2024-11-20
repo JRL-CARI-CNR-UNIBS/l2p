@@ -128,8 +128,8 @@ export OPENAI_API_KEY='YOUR-KEY' # e.g. OPENAI_API_KEY='sk-123456'
 
 Refer to [here](https://platform.openai.com/docs/quickstart) for more information.
 
-Additionally, we have included support for using Huggingface models. One can set up their environment like so:
 **HuggingFace**
+Additionally, we have included support for using Huggingface models. One can set up their environment like so:
 ```
 parser = argparse.ArgumentParser(description="Define Parameters")
 parser.add_argument('-test_dataset', action='store_true')
@@ -145,7 +145,7 @@ huggingface_model = HUGGING_FACE(model_path=args.model_path, max_tokens=args.max
 **llm_builder.py** contains an abstract class and method for implementing any model classes in the case of other third-party LLM uses.
 
 ## Planner
-For ease of use, our library contains submodule [FastDownward] (https://github.com/aibasel/downward/tree/308812cf7315fe896dbcd319493277d82aa36bd2). Fast Downward is a domain-independent classical planning system that users can run their PDDL domain and problem files on. The motivation is that the majority of papers involving PDDL-LLM usage uses this library as their planner.
+For ease of use, our library contains submodule [FastDownward](https://github.com/aibasel/downward/tree/308812cf7315fe896dbcd319493277d82aa36bd2). Fast Downward is a domain-independent classical planning system that users can run their PDDL domain and problem files on. The motivation is that the majority of papers involving PDDL-LLM usage uses this library as their planner.
 
 ## Current Works Reconstructed Using L2P
 The following are papers that have been reconstructed so far. This list will be updated in the future.
