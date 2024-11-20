@@ -6,8 +6,7 @@ Run: python3 -m paper_reconstructions.nl2plan.nl2plan
 
 import os, json
 from l2p import *
-from tests.planner import FastDownward
-from tests.parse import check_parse_domain, check_parse_problem
+from l2p.utils.pddl_planner import FastDownward
 
 
 def open_file(file_path):
@@ -279,22 +278,13 @@ if __name__ == "__main__":
     # generate PDDL specifications
     pddl_domain = domain_builder.generate_domain(domain="test_domain", requirements=requirements, 
                                                  types=types_str, predicates=predicate_str, actions=actions)
-    pddl_problem = task_builder.generate_task(domain="test_domain", objects=objects, initial=initial, goal=goal)
+    pddl_problem = task_builder.generate_task(domain="test_domain", problem="test_problem", objects=objects, initial=initial, goal=goal)
 
     # write files
     domain_file = "paper_reconstructions/nl2plan/results/domain.pddl"
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
     problem_file = "paper_reconstructions/nl2plan/results/problem.pddl"
-    with open(problem_file, "w") as f:
-        f.write(pddl_problem)
-        
-    # parse PDDL files
-    pddl_domain = check_parse_domain(domain_file)
-    with open(domain_file, "w") as f:
-        f.write(pddl_domain)
-
-    pddl_problem = check_parse_problem(problem_file)
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
         

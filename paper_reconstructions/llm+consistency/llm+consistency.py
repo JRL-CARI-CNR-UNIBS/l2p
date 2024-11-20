@@ -13,8 +13,7 @@ from l2p.task_builder import TaskBuilder
 from l2p.feedback_builder import FeedbackBuilder
 from l2p.utils.pddl_validator import SyntaxValidator
 from l2p.utils.pddl_parser import prune_predicates, prune_types, extract_types
-from tests.planner import FastDownward
-from tests.parse import check_parse_domain, check_parse_problem
+from l2p.utils.pddl_planner import FastDownward
 
 
 def open_file(file_path):

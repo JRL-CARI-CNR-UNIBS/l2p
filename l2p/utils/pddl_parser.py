@@ -8,6 +8,12 @@ from copy import deepcopy
 import re, ast, json
 
 def parse_params(llm_output):
+    """
+    Parses parameters from LLM into Python format (refer to example templates to see
+    how these parameters should be formatted in LLM response).
+    
+    LLM output header should contain '## Parameters' along with structured content.
+    """
     params_info = OrderedDict()
     params_heading = llm_output.split('Parameters')[1].strip().split('##')[0]
     params_str = combine_blocks(params_heading)
@@ -30,6 +36,12 @@ def parse_params(llm_output):
     return params_info, params_raw
 
 def parse_new_predicates(llm_output) -> list[Predicate]:
+    """
+    Parses new predicates from LLM into Python format (refer to example templates to see
+    how these predicates should be formatted in LLM response).
+    
+    LLM output header should contain '## New Predicates' along with structured content.
+    """
     new_predicates = list()
     try:
         predicate_heading = llm_output.split('New Predicates\n')[1].strip().split('##')[0]
@@ -93,7 +105,7 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
 
 def parse_predicates(all_predicates):
     """
-    This function assumes the predicate definitions adhere to PDDL grammar
+    This function assumes the predicate definitions adhere to PDDL grammar.
     """
     all_predicates = deepcopy(all_predicates)
     for i, pred in enumerate(all_predicates):
@@ -282,7 +294,7 @@ def extract_heading(llm_output: str, heading: str):
     return heading_str
 
 def convert_to_dict(llm_response: str) -> dict[str,str]:
-    
+    """Converts string into Python dictionary format."""
     dict_pattern = re.compile(r'{.*}', re.DOTALL) # regular expression to find the JSON-like dictionary structure
     match = dict_pattern.search(llm_response) # search for the pattern in the llm_response
 
@@ -309,9 +321,9 @@ def combine_blocks(heading_str: str):
     """Combine the inside of blocks from the heading string into a single string."""
 
     possible_blocks = heading_str.split("```")
-    blocks = [possible_blocks[i] for i in range(1, len(possible_blocks), 2)] # obtain string between ```s
-    combined = "\n".join(blocks) # combine blocks
-    return combined.replace("\n\n", "\n").strip() # Remove leading/trailing whitespace and internal empty lines
+    blocks = [possible_blocks[i] for i in range(1, len(possible_blocks), 2)] # obtain string between ```
+    combined = "\n".join(blocks)
+    return combined.replace("\n\n", "\n").strip() # remove leading/trailing whitespace and internal empty lines
 
 def format_dict(dictionary):
     """Formats dictionary in JSON format easier for readability"""
@@ -341,6 +353,11 @@ def format_predicates(predicates: list[Predicate]):
     if len(predicates) == 0:
         return ""
     return "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
+    
+def indent(string: str, level: int = 2):
+    """Indent string helper function to format PDDL domain/task"""
+    return "   " * level + string.replace("\n", f"\n{'   ' * level}")
+
 
 if __name__ == '__main__':
     string = """

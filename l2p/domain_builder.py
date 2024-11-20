@@ -634,9 +634,9 @@ class DomainBuilder:
         """
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += self.indent(f"(:requirements\n  {' '.join(requirements)}\n)\n")
-        desc += f"   (:types \n{types}\n   )\n\n"
-        desc += f"   (:predicates \n{predicates}\n   )"
+        desc += indent(string=f"(:requirements\n  {' '.join(requirements)}\n)\n")
+        desc += f"   (:types \n{indent(types)}\n   )\n\n"
+        desc += f"   (:predicates \n{indent(predicates)}\n   )"
         desc += self.action_descs(actions)
         desc += "\n)"
         desc = desc.replace("AND", "and").replace("OR", "or")  # The python PDDL package can't handle capital AND and OR

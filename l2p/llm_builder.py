@@ -1,15 +1,17 @@
 """
 This file contains code for calling LLMs and saving raw model outputs 
 Currently, this builder class contains the generic method to run any LLMs. 
-It also offers extension to OpenAI, OLLAMA, and Huggingface.
+It also offers extension to OpenAI and Huggingface, but can generalise to any third-party LLM store.
 """
 
-import os, tiktoken, requests
+import transformers
+from transformers import AutoTokenizer
+import torch
+import os, tiktoken, logging, argparse
 from retry import retry
 from openai import OpenAI
 from abc import ABC, abstractmethod
 from typing_extensions import override
-import logging
 
 LOG: logging.Logger = logging.getLogger(__name__)
 
@@ -51,6 +53,7 @@ class LLM(ABC):
         List of valid model parameters, e.g., 'gpt4o-mini' for GPT
         """
         return []
+
 
 class OPENAI(LLM):
     """Accessing OpenAI"""
@@ -174,46 +177,98 @@ class OPENAI(LLM):
         ]
 
 
-class HF_Inference_Chat(LLM):
-    def __init__(self, model, api_key, max_tokens=4069, temperature=0.2):
-        self.model = model
-        self.api_key = api_key
+class HUGGING_FACE(LLM):
+    def __init__(self, model_path: str, max_tokens=4e3, temperature=0.01, top_p=0.9):
+        self.model = transformers.pipeline(
+          "text-generation",
+          model=model_path,
+          model_kwargs={"torch_dtype": torch.bfloat16},
+          device_map="auto",
+        )
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
         self.max_tokens = max_tokens
         self.temperature = temperature
-        self.API_URL = f"https://api-inference.huggingface.co/models/{self.model}"
-        self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
+        self.top_p = top_p
         self.in_tokens = 0
         self.out_tokens = 0
+    
+    # Retry decorator to handle retries on request
+    @retry(tries=2, delay=60)
+    def connect_huggingface(self, input, temperature, max_tokens, top_p, numSample):
+        if numSample > 1:
+            responses = []
+            sequences = self.model(
+                input,
+                do_sample=True,
+                top_k=1,
+                num_return_sequences=numSample,
+                max_new_tokens=max_tokens,
+                return_full_text=False,
+                temperature=temperature,
+                top_p=top_p,
+                pad_token_id=self.tokenizer.eos_token_id
+            )
 
-    def get_output(self, prompt=None, messages=None):
-        if prompt is None and messages is None:
-            raise ValueError("prompt and messages cannot both be None")
-        if messages is not None:
-            prompt = ' '.join([m['content'] for m in messages])
+            for seq in sequences:
+                response = seq['generated_text']  
+                responses.append(response)
+            return responses
         
-        data = {
-            "inputs": prompt,
-            "parameters": {
-                "max_length": self.max_tokens,
-                "temperature": self.temperature
-            }
-        }
-        
-        print(f'[INFO] connecting to the LLM ...')
-        response = requests.post(self.API_URL, headers=self.headers, json=data)
-        if response.status_code == 200:
-            generated_text = response.json()[0]['generated_text']
-            filtered_text = generated_text.replace(prompt, "").strip()
-            # filtered_text = filtered_text.split('\n')[0]
-            # self.out_tokens += len(self.tokenizer(filtered_text)['input_ids'])
-            # self.in_tokens += len(self.tokenizer(prompt)['input_ids'])
-            return filtered_text
         else:
-            raise Exception(f"Failed to generate text: {response.status_code} {response.text}")
+            sequences = self.model(
+                input,
+                do_sample=True,
+                num_return_sequences=1,
+                max_new_tokens=max_tokens,
+                return_full_text=False,
+                temperature=temperature,
+                top_p=top_p,
+                pad_token_id=self.tokenizer.eos_token_id
+            )
 
+            seq = sequences[0]
+            response = seq['generated_text']
+            
+            return response
+    
+    @override
+    def query(self, prompt: str, numSample=1, max_retry=3, est_margin=200) -> str:
+        if prompt is None:
+            raise ValueError("Prompt cannot be None")
+        
+        # Estimate current usage of tokens
+        current_tokens = len(self.tokenizer.encode(prompt))
+        requested_tokens = min(self.max_tokens, self.max_tokens - current_tokens - est_margin)
+        
+        print(f"Requesting {requested_tokens} tokens from {self.model} (estimated {current_tokens - est_margin} prompt tokens with a safety margin of {est_margin} tokens)")
+        
+        # Retry logic for Hugging Face request
+        n_retry = 0
+        conn_success = False
+        while not conn_success and n_retry < max_retry:
+            n_retry += 1
+            try:
+                print(f"[INFO] Connecting to Hugging Face model ({requested_tokens} tokens)...")
+                llm_output = self.connect_huggingface(
+                    input=prompt,
+                    temperature=self.temperature,
+                    max_tokens=requested_tokens,
+                    top_p=self.top_p,
+                    numSample=numSample
+                )
+                conn_success = True
+            except Exception as e:
+                print(f"[ERROR] Hugging Face error: {e}")
+                if n_retry >= max_retry:
+                    raise ConnectionError(f"Failed to connect to the Hugging Face model after {max_retry} retries")
+
+        # Token management
+        response_tokens = len(self.tokenizer.encode(llm_output))
+        self.out_tokens += response_tokens
+        self.in_tokens += current_tokens
+        
+        return llm_output
+        
     def get_tokens(self) -> tuple[int, int]:
         return self.in_tokens, self.out_tokens
     
@@ -223,12 +278,28 @@ class HF_Inference_Chat(LLM):
     
 
 if __name__ == '__main__':
+    
+    # test out OpenAI GPT
     api_key = os.environ.get('OPENAI_API_KEY')
     model_name = "gpt-4o-mini"
-    
     openai_llm = OPENAI(model=model_name, api_key=api_key)
     
     prompt = "What is the capital of France?"
     response = openai_llm.query(prompt)
-    
     print(f"Response from {model_name}: {response}")
+    
+    # test out Huggingface model
+    parser = argparse.ArgumentParser(description="Define Parameters")
+    parser.add_argument('-test_dataset', action='store_true') # test custom prompt by default, set flag to run predictions over a specific dataset 
+    parser.add_argument("--temp", type=float, default=0.01, help = "temperature for sampling")
+    parser.add_argument("--max_len", type=int, default=4e3, help = "max number of tokens in answer")
+    parser.add_argument("--num_sample", type=int, default=1, help = "number of answers to sample")
+    parser.add_argument("--model_path", type=str, default="/path/to/model", help = "path to llm")
+    args = parser.parse_args()    
+
+    huggingface_model = HUGGING_FACE(model_path=args.model_path, max_tokens=args.max_len, temperature=args.temp)
+    
+    prompt = "What is the capital of the United States?"
+    input = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>{prompt}<|eot_id|>\n"""
+    response = huggingface_model.query(prompt=input, numSample=args.num_sample, max_retry=3)
+    print(f"Response: {response}")

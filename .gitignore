@@ -160,7 +160,13 @@ cython_debug/
 #.idea/
 
 # directories to ignore
-tests/
+tests/main.py
+tests/planner.py
 data/
+
+# paper reconstructions to ignore
+paper_reconstructions/llm+dp/
+paper_reconstructions/llm+ew/
+paper_reconstructions/llm+consistency/
 
 .DS_Store

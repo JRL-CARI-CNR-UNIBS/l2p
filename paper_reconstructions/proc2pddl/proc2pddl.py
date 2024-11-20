@@ -6,8 +6,7 @@ Run: python3 -m paper_reconstructions.proc2pddl.proc2pddl
 
 import os, json
 from l2p import *
-from tests.planner import FastDownward
-from tests.parse import check_parse_domain
+from l2p.utils.pddl_planner import FastDownward
 
 def load_file(file_path):
     with open(file_path, 'r') as file:
@@ -86,11 +85,6 @@ if __name__ == "__main__":
         )
 
     domain_file = "paper_reconstructions/proc2pddl/results/domain.pddl"
-    with open(domain_file, "w") as f:
-        f.write(pddl_domain)
-        
-    # parse PDDL files
-    pddl_domain = check_parse_domain(domain_file)
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
 

@@ -12,8 +12,7 @@ This library only focuses on model generation, so it is not concerned with the o
 
 import os
 from l2p import *
-from tests.planner import FastDownward
-from tests.parse import check_parse_domain, check_parse_problem
+from l2p.utils.pddl_planner import FastDownward
 
 def open_file(file_path):
     with open(file_path, 'r') as file:
@@ -51,15 +50,11 @@ if __name__ == "__main__":
     initial_state_str = task_builder.format_initial(initial)
     goal_state_str = task_builder.format_goal(goal)
 
-    pddl_problem = task_builder.generate_task("blocksworld-4ops", object_str, initial_state_str, goal_state_str)
+    pddl_problem = task_builder.generate_task("blocksworld-4ops", "blocksworld-4ops_problem", object_str, initial_state_str, goal_state_str)
 
     # write down PDDL problem file
     problem_file = "paper_reconstructions/llm+p/results/problem.pddl"
     domain_file = "paper_reconstructions/llm+p/results/domain.pddl"
-    with open(problem_file, "w") as f:
-        f.write(pddl_problem)
-
-    pddl_problem = check_parse_problem(problem_file)
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
 

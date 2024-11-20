@@ -14,7 +14,6 @@ Assumes the following:
 import os, json
 from copy import deepcopy
 from l2p import *
-from tests.parse import check_parse_domain
 
 def open_txt(file_path):
     with open(file_path, 'r') as file:
@@ -187,11 +186,6 @@ if __name__ == "__main__":
     domain_file = "paper_reconstructions/llm+dm/results/domain.pddl"
     
     # save domain file
-    with open(domain_file, "w") as f:
-        f.write(pddl_domain)
-        
-    # parse domain file    
-    pddl_domain = check_parse_domain(domain_file)
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
             

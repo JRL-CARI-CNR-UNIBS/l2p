@@ -360,14 +360,14 @@ class TaskBuilder:
         return self.goal
 
 
-    def generate_task(self, domain: str, objects: str, initial: str, goal: str):
+    def generate_task(self, domain: str, problem: str, objects: str, initial: str, goal: str):
         # Write problem file
         desc = "(define\n"
-        desc += f"   (problem {domain}_problem)\n"
+        desc += f"   (problem {problem})\n"
         desc += f"   (:domain {domain})\n\n"
-        desc += f"   (:objects \n{objects}\n   )\n\n"
-        desc += f"   (:init\n{initial}\n   )\n\n"
-        desc += f"   (:goal\n{goal}\n   )\n\n"
+        desc += f"   (:objects \n{indent(objects)}\n   )\n\n"
+        desc += f"   (:init\n{indent(initial)}\n   )\n\n"
+        desc += f"   (:goal\n{indent(goal)}\n   )\n\n"
         desc += ")"
         desc = desc.replace("AND","and").replace("OR","or") # The python PDDL package can't handle capital AND and OR
         return desc
@@ -377,10 +377,10 @@ class TaskBuilder:
         for action in actions:
             param_str = "\n".join([f"{name} - {type}" for name, type in action['parameters'].items()])  # name includes ?
             desc += f"(:action {action['name']}\n"
-            desc += f"   :parameters (\n{param_str}\n   )\n"
-            desc += f"   :precondition\n{action['preconditions']}\n"
-            desc += f"   :effect\n{action['effects']}\n"
-            desc += ")\n\n"
+            desc += f"   :parameters (\n{indent(param_str,2)}\n   )\n"
+            desc += f"   :precondition\n{indent(action['preconditions'],2)}\n"
+            desc += f"   :effect\n{indent(action['effects'],2)}\n"
+            desc += ")\n"
         return desc
 
     def format_objects(self, objects: dict[str,str]) -> str:

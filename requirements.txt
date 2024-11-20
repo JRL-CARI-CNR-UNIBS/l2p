@@ -3,4 +3,7 @@ tiktoken
 retry
 pddl
 typing_extensions
-logging
+
+transformers>=4.43.1
+torch>=2.2
+accelerate>=0.26.0
