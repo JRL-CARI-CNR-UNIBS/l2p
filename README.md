@@ -129,6 +129,7 @@ export OPENAI_API_KEY='YOUR-KEY' # e.g. OPENAI_API_KEY='sk-123456'
 Refer to [here](https://platform.openai.com/docs/quickstart) for more information.
 
 **HuggingFace**
+
 Additionally, we have included support for using Huggingface models. One can set up their environment like so:
 ```
 parser = argparse.ArgumentParser(description="Define Parameters")
