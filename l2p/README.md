@@ -37,7 +37,6 @@ Full API reference: See [documentation](docs/build/html/modules.html).
 - [x] **Objects** (PDDL 1.2+): Defines objects involved in the problem.
 - [x] **Initial State** (PDDL 1.2+): Specifies the initial configuration of the world.
 - [x] **Goal State** (PDDL 1.2+): Defines the conditions to achieve the goal.
-- [ ] **Action Instances** (PDDL 1.2+): Specifies applied action instances.
 - [ ] **Quantified Goals** (PDDL 2.2+): Defines goals with quantification.
 - [ ] **Negative Goals** (PDDL 2.2+): Specifies goals where predicates must be false.
 - [ ] **Metric Optimization** (PDDL 2.1+): Optimizes a given metric, such as minimizing resources.
