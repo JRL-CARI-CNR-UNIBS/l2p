@@ -98,20 +98,20 @@ print("FEEDBACK:\n", feedback_response)
 
 
 ## Installation and Setup
-Currently, this repo has been tested for Python 3.12.2.
+Currently, this repo has been tested for Python 3.11.10
 
 You can set up a Python environment using either [Conda](https://conda.io) or [venv](https://docs.python.org/3/library/venv.html) and install the dependencies via the following steps.
 
 **Conda**
 ```
-conda create -n L2P python=3.12.2
+conda create -n L2P python=3.11.10
 conda activate L2P
 pip install -r requirements.txt
 ```
 
 **venv**
 ```
-python3.12.2 -m venv env
+python3.11.10 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 ``` 
@@ -119,7 +119,7 @@ pip install -r requirements.txt
 These environments can then be exited with `conda deactivate` and `deactivate` respectively. The instructions below assume that a suitable environemnt is active. 
 
 **API keys**
-L2P requires access to an LLM. Currently, it only supports OpenAI's GPT-series models. To configure these, provide the necessary API-key in an environment variable.
+L2P requires access to an LLM. L2P provides support for OpenAI's GPT-series models. To configure these, provide the necessary API-key in an environment variable.
 
 **OpenAI**
 ```
@@ -128,6 +128,25 @@ export OPENAI_API_KEY='YOUR-KEY' # e.g. OPENAI_API_KEY='sk-123456'
 
 Refer to [here](https://platform.openai.com/docs/quickstart) for more information.
 
+Additionally, we have included support for using Huggingface models. One can set up their environment like so:
+**HuggingFace**
+```
+parser = argparse.ArgumentParser(description="Define Parameters")
+parser.add_argument('-test_dataset', action='store_true')
+parser.add_argument("--temp", type=float, default=0.01, help = "temperature for sampling")
+parser.add_argument("--max_len", type=int, default=4e3, help = "max number of tokens in answer")
+parser.add_argument("--num_sample", type=int, default=1, help = "number of answers to sample")
+parser.add_argument("--model_path", type=str, default="/path/to/model", help = "path to llm")
+args = parser.parse_args()    
+
+huggingface_model = HUGGING_FACE(model_path=args.model_path, max_tokens=args.max_len, temperature=args.temp)
+```
+
+**llm_builder.py** contains an abstract class and method for implementing any model classes in the case of other third-party LLM uses.
+
+## Planner
+For ease of use, our library contains submodule [FastDownward] (https://github.com/aibasel/downward/tree/308812cf7315fe896dbcd319493277d82aa36bd2). Fast Downward is a domain-independent classical planning system that users can run their PDDL domain and problem files on. The motivation is that the majority of papers involving PDDL-LLM usage uses this library as their planner.
+
 ## Current Works Reconstructed Using L2P
 The following are papers that have been reconstructed so far. This list will be updated in the future.
 
@@ -135,8 +154,6 @@ The following are papers that have been reconstructed so far. This list will be 
 - [x] `LLM+DM` 
 - [x] `LLM+P`
 - [x] `PROC2PDDL`
-- [ ] `LLM+EW`
-- [ ] `LLM+consistency`
 
 ## Current Model Construction Works
 This section provides a taxonomy of research within Model Construction. For more detailed overview, visit our [paper](https://puginarug.com).
