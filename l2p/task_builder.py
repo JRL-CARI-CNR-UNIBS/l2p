@@ -356,7 +356,7 @@ class TaskBuilder:
     def get_initial(self) -> dict[str,str]:
         return self.initial
     
-    def get_objects(self) -> str:
+    def get_goal(self) -> str:
         return self.goal
 
 

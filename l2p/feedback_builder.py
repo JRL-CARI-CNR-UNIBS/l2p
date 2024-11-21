@@ -534,7 +534,7 @@ class FeedbackBuilder:
         resp = "\n".join(contents)
 
         if resp.strip().lower() == "no feedback":
-            return "no feedback"  # No feedback
+            return "no feedback"
         
         return resp
 
