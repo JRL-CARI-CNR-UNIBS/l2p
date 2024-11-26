@@ -369,7 +369,7 @@ class TaskBuilder:
         desc += f"   (:init\n{indent(initial)}\n   )\n\n"
         desc += f"   (:goal\n{indent(goal)}\n   )\n\n"
         desc += ")"
-        desc = desc.replace("AND","and").replace("OR","or") # The python PDDL package can't handle capital AND and OR
+        desc = desc.replace("AND","and").replace("OR","or")
         return desc
     
     def format_action(self, actions: list[Action]) -> str:
@@ -389,8 +389,8 @@ class TaskBuilder:
 
     def format_initial(self, initial_states: list[dict[str,str]]) -> str:
         inner_str = [f"({state['name']} {' '.join(state['params'])})" for state in initial_states] # The main part of each predicate
-        full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(initial_states, inner_str)] # Add the `not` if needed
-        initial_states_str = "\n".join(full_str) # Combine the states into a single string
+        full_str = [f"(not {inner})" if state["neg"] else inner for state, inner in zip(initial_states, inner_str)] # add `not` if needed
+        initial_states_str = "\n".join(full_str) # combine the states into a single string
         
         return initial_states_str
     

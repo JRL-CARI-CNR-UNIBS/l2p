@@ -12,10 +12,10 @@ def parse_params(llm_output):
     Parses parameters from LLM into Python format (refer to example templates to see
     how these parameters should be formatted in LLM response).
     
-    LLM output header should contain '## Parameters' along with structured content.
+    LLM output header should contain '### Parameters' along with structured content.
     """
     params_info = OrderedDict()
-    params_heading = llm_output.split('Parameters')[1].strip().split('##')[0]
+    params_heading = llm_output.split('Parameters')[1].strip().split('###')[0]
     params_str = combine_blocks(params_heading)
     params_raw = []
     for line in params_str.split('\n'):
@@ -40,11 +40,11 @@ def parse_new_predicates(llm_output) -> list[Predicate]:
     Parses new predicates from LLM into Python format (refer to example templates to see
     how these predicates should be formatted in LLM response).
     
-    LLM output header should contain '## New Predicates' along with structured content.
+    LLM output header should contain '### New Predicates' along with structured content.
     """
     new_predicates = list()
     try:
-        predicate_heading = llm_output.split('New Predicates\n')[1].strip().split('##')[0]
+        predicate_heading = llm_output.split('New Predicates\n')[1].strip().split('###')[0]
     except:
         raise Exception("Could not find the 'New Predicates' section in the output. Provide the entire response, including all headings even if some are unchanged.")
     predicate_output = combine_blocks(predicate_heading)
@@ -138,11 +138,11 @@ def parse_action(llm_response: str, action_name: str) -> Action:
     """
     parameters, _ = parse_params(llm_response)
     try:
-        preconditions = llm_response.split("Preconditions\n")[1].split("##")[0].split("```")[1].strip(" `\n")
+        preconditions = llm_response.split("Preconditions\n")[1].split("###")[0].split("```")[1].strip(" `\n")
     except:
         raise Exception("Could not find the 'Preconditions' section in the output. Provide the entire response, including all headings even if some are unchanged.")
     try:
-        effects = llm_response.split("Effects\n")[1].split("##")[0].split("```")[1].strip(" `\n")
+        effects = llm_response.split("Effects\n")[1].split("###")[0].split("```")[1].strip(" `\n")
     except:
         raise Exception("Could not find the 'Effects' section in the output. Provide the entire response, including all headings even if some are unchanged.")
     return {"name": action_name, "parameters": parameters, "preconditions": preconditions, "effects": effects}
@@ -290,7 +290,7 @@ def extract_heading(llm_output: str, heading: str):
         print(llm_output)
         print("#"*30)
         raise ValueError(f"Could not find heading {heading} in the LLM output. Likely this is caused by a too long response and limited context length. If so, try to shorten the message and exclude objects which aren't needed for the task.")
-    heading_str = llm_output.split(heading)[1].split("\n## ")[0].strip() # Get the text between the heading and the next heading
+    heading_str = llm_output.split(heading)[1].split("\n### ")[0].strip() # Get the text between the heading and the next heading
     return heading_str
 
 def convert_to_dict(llm_response: str) -> dict[str,str]:
@@ -348,15 +348,28 @@ def format_types(type_hierarchy: dict[str,str]) -> dict[str,str]:
     process_node(type_hierarchy)
     return result
 
-def format_predicates(predicates: list[Predicate]):
+def format_predicates(predicates: list[Predicate]) -> str:
     """Formats list of predicates easier for readability"""
-    if len(predicates) == 0:
+    if not predicates:
         return ""
-    return "\n".join(f"{i + 1}. {pred['name']}: {pred['desc']}" for i, pred in enumerate(predicates))
+    return "\n".join(
+        f"{i + 1}. {pred['name']}: {pred.get('desc', 'No description provided') or 'No description provided'}"
+        for i, pred in enumerate(predicates)
+    )
     
 def indent(string: str, level: int = 2):
     """Indent string helper function to format PDDL domain/task"""
     return "   " * level + string.replace("\n", f"\n{'   ' * level}")
+
+def open_txt(file_path):
+    with open(file_path, 'r') as file:
+        file = file.read().strip()
+    return file
+
+def open_json(file_path):
+    with open(file_path, 'r') as file:
+        file = json.load(file)
+    return file
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 This file contains classes of PDDL types
 """
 
-from typing import TypedDict, NewType, List
+from typing import TypedDict, NewType, List, Optional
 from collections import OrderedDict
 from dataclasses import dataclass
 
@@ -11,7 +11,7 @@ ObjectList = NewType('ObjectList', dict[str, str])              # {obj_name: obj
 
 class Predicate(TypedDict):
     name: str
-    desc: str
+    desc: Optional[str]
     raw: str
     params: ParameterList
     clean: str

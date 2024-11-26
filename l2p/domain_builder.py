@@ -72,8 +72,10 @@ class DomainBuilder:
                 # extract respective types from response
                 types = convert_to_dict(llm_response=llm_response)
                 
-                return types, llm_response
+                if types is not None:
+                    return types, llm_response
 
+                print(f"Attempt {attempt + 1}/{max_retries}: Failed to extract types.")
             except Exception as e:
                 print(f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}...")
                 time.sleep(1) # add a delay before retrying
