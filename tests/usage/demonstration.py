@@ -67,6 +67,8 @@ def run_aba():
 
 def run_predicates():
     
+    domain_builder = DomainBuilder()
+    
     api_key = os.environ.get('OPENAI_API_KEY')
     llm = OPENAI(model="gpt-4o-mini", api_key=api_key)
     
@@ -85,8 +87,6 @@ def run_predicates():
         types=types,
         nl_actions={action['action_name']: action['action_desc']}
         )
-    
-    print(predicates)
     
     # format key info into PDDL strings
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])

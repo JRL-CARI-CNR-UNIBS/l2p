@@ -8,32 +8,24 @@ L2P is an offline, NL to PDDL system that supports domain-agnostic planning. It 
 
 This is the general setup to build domain predicates:
 ```python
-import os, json
-from openai import OpenAI
-from l2p.domain_builder import DomainBuilder
-from l2p.llm_builder import GPT_Chat
-from l2p.utils.pddl_parser import prune_predicates, format_types
-
-def load_file(file_path):
-    _, ext = os.path.splitext(file_path)
-    with open(file_path, 'r') as file:
-        if ext == '.json': return json.load(file)
-        else: return file.read().strip()
+import os
+from l2p import *
 
 domain_builder = DomainBuilder()
 
-client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
-model = GPT_Chat(client=client, engine="gpt-4o-mini")
+api_key = os.environ.get('OPENAI_API_KEY')
+llm = OPENAI(model="gpt-4o-mini", api_key=api_key)
 
-# load in assumptions
-domain_desc = load_file(r'tests/usage/prompts/domain/blocksworld_domain.txt')
-extract_predicates_prompt = load_file(r'tests/usage/prompts/domain/extract_predicates.txt')
-types = load_file(r'tests/usage/prompts/domain/types.json')
-action = load_file(r'tests/usage/prompts/domain/action.json')
+# retrieve prompt information
+base_path='tests/usage/prompts/domain/'
+domain_desc = load_file(f'{base_path}blocksworld_domain.txt')
+extract_predicates_prompt = load_file(f'{base_path}extract_predicates.txt')
+types = load_file(f'{base_path}types.json')
+action = load_file(f'{base_path}action.json')
 
 # extract predicates via LLM
 predicates, llm_output = domain_builder.extract_predicates(
-    model=model,
+    model=llm,
     domain_desc=domain_desc,
     prompt_template=extract_predicates_prompt,
     types=types,
@@ -51,14 +43,20 @@ Here is how you would setup a PDDL problem:
 from l2p.task_builder import TaskBuilder
 
 task_builder = TaskBuilder()
+    
+api_key = os.environ.get('OPENAI_API_KEY')
+llm = OPENAI(model="gpt-4o-mini", api_key=api_key)
 
 # load in assumptions
-problem_desc= load_file(r'tests/usage/prompts/problem/blocksworld_problem.txt')
+problem_desc = load_file(r'tests/usage/prompts/problem/blocksworld_problem.txt')
 extract_task_prompt = load_file(r'tests/usage/prompts/problem/extract_task.txt')
+types = load_file(r'tests/usage/prompts/domain/types.json')
+predicates_json = load_file(r'tests/usage/prompts/domain/predicates.json')
+predicates: List[Predicate] = [Predicate(**item) for item in predicates_json]
 
 # extract PDDL task specifications via LLM
 objects, initial_states, goal_states, llm_response = task_builder.extract_task(
-    model=model,
+    model=llm,
     problem_desc=problem_desc,
     prompt_template=extract_task_prompt,
     types=types,
@@ -71,9 +69,14 @@ initial_str = task_builder.format_initial(initial_states)
 goal_str = task_builder.format_goal(goal_states)
 
 # generate task file
-pddl_problem = task_builder.generate_task("blocksworld_problem", objects_str, initial_str, goal_str)
+pddl_problem = task_builder.generate_task(
+    domain="blocksworld", 
+    problem="blocksworld_problem", 
+    objects=objects_str, 
+    initial=initial_str, 
+    goal=goal_str)
 
-print(f"PDDL problem: {pddl_problem}")
+print(f"### LLM OUTPUT:\n {pddl_problem}")
 ```
 
 Here is how you would setup a Feedback Mechanism:
@@ -81,11 +84,19 @@ Here is how you would setup a Feedback Mechanism:
 from l2p.feedback_builder import FeedbackBuilder
 
 feedback_builder = FeedbackBuilder()
+    
+api_key = os.environ.get('OPENAI_API_KEY')
+llm = OPENAI(model="gpt-4o-mini", api_key=api_key)
 
+problem_desc = load_file(r'tests/usage/prompts/problem/blocksworld_problem.txt')
+types = load_file(r'tests/usage/prompts/domain/types.json')
 feedback_template = load_file(r'tests/usage/prompts/problem/feedback.txt')
+predicates_json = load_file(r'tests/usage/prompts/domain/predicates.json')
+predicates: List[Predicate] = [Predicate(**item) for item in predicates_json]
+llm_response = load_file(r'tests/usage/prompts/domain/llm_output_task.txt')
 
 objects, initial, goal, feedback_response = feedback_builder.task_feedback(
-    model=model, 
+    model=llm, 
     problem_desc=problem_desc, 
     feedback_template=feedback_template, 
     feedback_type="llm", 
