@@ -5,8 +5,9 @@ with open("README.md", "r") as fh:
 
 setup(
     name='lang2pddl',
-    version='0.1.1',
-    packages=['l2p'],
+    version='0.1.2',
+    packages=find_packages(where='l2p'),
+    package_dir={'': 'l2p'},
     description='Library to connect LLMs and planning tasks',
     long_description=long_description,
     long_description_content_type="text/markdown",
