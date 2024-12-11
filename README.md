@@ -1,8 +1,8 @@
-# l2p : LLM-driven PDDL library kit
+# l2p : LLM-driven Planning Model library kit
 
 This library is a collection of tools for PDDL model generation extracted from natural language driven by large language models. This library is an expansion from the survey paper **Leveraging Large Language Models for Automated Planning and Model Construction: A Survey** (coming soon)
 
-L2P is an offline, NL to PDDL system that supports domain-agnostic planning. It does this via creating an intermediate [PDDL](https://planning.wiki/guide/whatis/pddl) representation of the domain and task, which can then be solved by a classical planner. 
+L2P is an offline, natural language -to- planning model system that supports domain-agnostic planning. It does this via creating an intermediate [PDDL](https://planning.wiki/guide/whatis/pddl) representation of the domain and task, which can then be solved by a classical planner.
 
 ## Usage
 
@@ -43,7 +43,7 @@ Here is how you would setup a PDDL problem:
 from l2p.task_builder import TaskBuilder
 
 task_builder = TaskBuilder()
-    
+
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = OPENAI(model="gpt-4o-mini", api_key=api_key)
 
@@ -70,10 +70,10 @@ goal_str = task_builder.format_goal(goal_states)
 
 # generate task file
 pddl_problem = task_builder.generate_task(
-    domain="blocksworld", 
-    problem="blocksworld_problem", 
-    objects=objects_str, 
-    initial=initial_str, 
+    domain="blocksworld",
+    problem="blocksworld_problem",
+    objects=objects_str,
+    initial=initial_str,
     goal=goal_str)
 
 print(f"### LLM OUTPUT:\n {pddl_problem}")
@@ -84,7 +84,7 @@ Here is how you would setup a Feedback Mechanism:
 from l2p.feedback_builder import FeedbackBuilder
 
 feedback_builder = FeedbackBuilder()
-    
+
 api_key = os.environ.get('OPENAI_API_KEY')
 llm = OPENAI(model="gpt-4o-mini", api_key=api_key)
 
@@ -96,12 +96,12 @@ predicates: List[Predicate] = [Predicate(**item) for item in predicates_json]
 llm_response = load_file(r'tests/usage/prompts/domain/llm_output_task.txt')
 
 objects, initial, goal, feedback_response = feedback_builder.task_feedback(
-    model=llm, 
-    problem_desc=problem_desc, 
-    feedback_template=feedback_template, 
-    feedback_type="llm", 
+    model=llm,
+    problem_desc=problem_desc,
+    feedback_template=feedback_template,
+    feedback_type="llm",
     predicates=predicates,
-    types=types, 
+    types=types,
     llm_response=llm_response)
 
 print("FEEDBACK:\n", feedback_response)
@@ -125,9 +125,9 @@ pip install -r requirements.txt
 python3.11.10 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
-``` 
+```
 
-These environments can then be exited with `conda deactivate` and `deactivate` respectively. The instructions below assume that a suitable environemnt is active. 
+These environments can then be exited with `conda deactivate` and `deactivate` respectively. The instructions below assume that a suitable environemnt is active.
 
 **API keys**
 L2P requires access to an LLM. L2P provides support for OpenAI's GPT-series models. To configure these, provide the necessary API-key in an environment variable.
@@ -149,7 +149,7 @@ parser.add_argument("--temp", type=float, default=0.01, help = "temperature for 
 parser.add_argument("--max_len", type=int, default=4e3, help = "max number of tokens in answer")
 parser.add_argument("--num_sample", type=int, default=1, help = "number of answers to sample")
 parser.add_argument("--model_path", type=str, default="/path/to/model", help = "path to llm")
-args = parser.parse_args()    
+args = parser.parse_args()
 
 huggingface_model = HUGGING_FACE(model_path=args.model_path, max_tokens=args.max_len, temperature=args.temp)
 ```
@@ -163,7 +163,7 @@ For ease of use, our library contains submodule [FastDownward](https://github.co
 The following are papers that have been reconstructed so far. This list will be updated in the future.
 
 - [x] `NL2Plan`
-- [x] `LLM+DM` 
+- [x] `LLM+DM`
 - [x] `LLM+P`
 - [x] `PROC2PDDL`
 
