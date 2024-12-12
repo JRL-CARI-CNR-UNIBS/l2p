@@ -4,6 +4,7 @@ This file contains collection of functions for PDDL domain generation purposes
 
 from .utils import *
 from .llm_builder import LLM
+from .llm_builder import require_llm
 from collections import OrderedDict
 import re, time
 
@@ -33,6 +34,7 @@ class DomainBuilder:
         self.pddl_actions = pddl_actions
 
     """Extract functions"""
+    @require_llm
     def extract_type(
         self, 
         model: LLM, 
@@ -82,6 +84,7 @@ class DomainBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract types.")
     
+    @require_llm
     def extract_type_hierarchy(
         self, 
         model: LLM, 
@@ -130,6 +133,7 @@ class DomainBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract type hierarchy.")
             
+    @require_llm
     def extract_nl_actions(
         self, 
         model: LLM,
@@ -182,6 +186,7 @@ class DomainBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract NL actions.")
     
+    @require_llm
     def extract_pddl_action(
         self, 
         model: LLM, 
@@ -245,7 +250,8 @@ class DomainBuilder:
                 time.sleep(1) # add a delay before retrying
                 
         raise RuntimeError("Max retries exceeded. Failed to extract PDDL action.")
- 
+    
+    @require_llm
     def extract_pddl_actions(
         self, 
         model: LLM, 
@@ -317,7 +323,8 @@ class DomainBuilder:
             new_predicates = None
 
         return actions, new_predicates, llm_response 
-        
+    
+    @require_llm
     def extract_parameters(
         self, 
         model: LLM, 
@@ -372,6 +379,7 @@ class DomainBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract parameters.")
     
+    @require_llm
     def extract_preconditions(
         self, 
         model: LLM, 
@@ -431,6 +439,7 @@ class DomainBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract preconditions.")
 
+    @require_llm
     def extract_effects(
         self, 
         model: LLM, 
@@ -493,6 +502,7 @@ class DomainBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract effects.")
         
+    @require_llm
     def extract_predicates(
         self, 
         model: LLM,

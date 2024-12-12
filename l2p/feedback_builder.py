@@ -4,6 +4,7 @@ This file contains collection of functions for PDDL feedback generation purposes
 
 from .utils import *
 from .llm_builder import LLM
+from .llm_builder import require_llm
 from .domain_builder import DomainBuilder
 from .task_builder import TaskBuilder
 from collections import OrderedDict
@@ -13,6 +14,7 @@ task_builder = TaskBuilder()
 
 class FeedbackBuilder:
 
+    @require_llm
     def get_feedback(
             self, 
             model: LLM, 
@@ -44,6 +46,7 @@ class FeedbackBuilder:
         
         return False, feedback_msg
 
+    @require_llm
     def type_feedback(
             self, 
             model: LLM, 
@@ -75,6 +78,7 @@ class FeedbackBuilder:
 
         return types, llm_response
 
+    @require_llm
     def type_hierarchy_feedback(
             self, 
             model: LLM, 
@@ -105,6 +109,7 @@ class FeedbackBuilder:
 
         return type_hierarchy, llm_response
 
+    @require_llm
     def nl_action_feedback(
             self, 
             model: LLM, 
@@ -138,6 +143,7 @@ class FeedbackBuilder:
 
         return nl_actions, llm_response
 
+    @require_llm
     def pddl_action_feedback(
             self, 
             model: LLM, 
@@ -181,6 +187,7 @@ class FeedbackBuilder:
             action, predicates, llm_response = domain_builder.extract_pddl_action(model, domain_desc, prompt, action_name)
         return action, predicates, llm_response
 
+    @require_llm
     def parameter_feedback(
             self, 
             model: LLM, 
@@ -221,6 +228,7 @@ class FeedbackBuilder:
             param, param_raw, llm_response = domain_builder.extract_parameters(model, domain_desc, prompt, action_name, action_desc, types)
         return param, param_raw, llm_response
 
+    @require_llm
     def precondition_feedback(
             self, 
             model: LLM, 
@@ -268,6 +276,7 @@ class FeedbackBuilder:
                                                                     domain_desc, prompt, action_name, action_desc)
         return preconditions, new_predicates, llm_response
 
+    @require_llm
     def effect_feedback(
             self, 
             model: LLM, 
@@ -318,6 +327,7 @@ class FeedbackBuilder:
                                                                     domain_desc, prompt, action_name, action_desc)
         return effects, new_predicates, llm_response
 
+    @require_llm
     def predicate_feedback(
             self,
             model: LLM, 
@@ -354,7 +364,7 @@ class FeedbackBuilder:
             new_predicates, llm_response = domain_builder.extract_predicates(model, domain_desc, prompt)
         return new_predicates, llm_response
 
-
+    @require_llm
     def task_feedback(
             self, 
             model: LLM, 
@@ -398,6 +408,7 @@ class FeedbackBuilder:
 
         return objects, initial, goal, fb_msg
 
+    @require_llm
     def objects_feedback(
         self, 
         model: LLM, 
@@ -435,6 +446,7 @@ class FeedbackBuilder:
 
         return objects, llm_response
 
+    @require_llm
     def initial_state_feedback(
         self, 
         model: LLM, 
@@ -475,6 +487,7 @@ class FeedbackBuilder:
 
         return initial, llm_response
 
+    @require_llm
     def goal_state_feedback(
         self, 
         model: LLM, 
@@ -517,7 +530,6 @@ class FeedbackBuilder:
             goal, llm_response = task_builder.extract_goal_state(model, problem_desc, prompt)
 
         return goal, llm_response
-
 
     def human_feedback(self, info: str):
         """This enables human-in-the-loop feedback mechanism"""
