@@ -4,16 +4,39 @@ Currently, this builder class contains the generic method to run any LLMs.
 It also offers extension to OpenAI and Huggingface, but can generalise to any third-party LLM store.
 """
 
-import transformers
-from transformers import AutoTokenizer
-import torch
-import os, tiktoken, logging, argparse
+import os, logging, argparse, functools
 from retry import retry
-from openai import OpenAI
 from abc import ABC, abstractmethod
 from typing_extensions import override
 
 LOG: logging.Logger = logging.getLogger(__name__)
+
+def require_llm(func):
+    """
+    Decorator to check if an LLM instance is provided and catch errors.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        # check if LLM instance is provided
+        model = kwargs.get('model', None)
+        if model is None:
+            # attempt tp get model from positional argument
+            for arg in args:
+                if isinstance(arg, LLM):
+                    model = arg
+                    break
+                
+        if not model:
+            raise ValueError("An LLM instance must be provided to use this method.")
+        
+        # try-catch to ensure LLM is even used properly
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"An error occurred in {func.__name__}: {e}.\n You must provide an LLM engine OR proper configuration to use L2P. Refer to https://github.com/AI-Planning/l2p.")
+            raise
+        
+    return wrapper
 
 class LLM(ABC):
     def __init__(self, model: str, api_key: str | None = None) -> None:
@@ -60,13 +83,24 @@ class OPENAI(LLM):
     
     def __init__(self, model: str, api_key: str | None = None, client=None, stop=None, max_tokens=4e3, 
                  temperature=0, top_p=1, frequency_penalty=0.0, presence_penalty=0.0, seed=0) -> None:
-        # Call the parent class constructor to handle model and api_key
+        
+        # attempt to import necessary OPENAI modules
+        try:
+            from openai import OpenAI
+            import tiktoken
+        except ImportError:
+            raise ImportError(
+                "The 'openai' library is required for OPENAI but is not installed. "
+                "Install it using: `pip install openai`."
+            )
+        
+        # call the parent class constructor to handle model and api_key
         super().__init__(model, api_key)
         
-        # Initialize the OpenAI client or use the one provided
+        # initialize the OpenAI client or use the one provided
         self.client = client if client else OpenAI(api_key=api_key)
         
-        # Store other parameters
+        # store other parameters
         self.temperature = temperature
         self.top_p = top_p
         self.freq_penalty = frequency_penalty
@@ -179,22 +213,45 @@ class OPENAI(LLM):
 
 class HUGGING_FACE(LLM):
     def __init__(self, model_path: str, max_tokens=4e3, temperature=0.01, top_p=0.9):
-        self.model = transformers.pipeline(
-          "text-generation",
-          model=model_path,
-          model_kwargs={"torch_dtype": torch.bfloat16},
-          device_map="auto",
-        )
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.model_path = model_path
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.top_p = top_p
         self.in_tokens = 0
         self.out_tokens = 0
+        
+    def _load_transformers(self):
+        try:
+            import transformers
+            from transformers import AutoTokenizer
+            import torch
+        except ImportError:
+            raise ImportError(
+                "The 'transformers' and 'torch' libraries are required for HUGGING_FACE but are not installed. "
+                "Install them using: `pip install transformers torch`."
+            )
+        try:
+            # Check if the model_path is valid by trying to load it
+            self.model = transformers.pipeline(
+                "text-generation",
+                model=self.model_path,
+                model_kwargs={"torch_dtype": torch.bfloat16},
+                device_map="auto",
+            )
+            self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+        except OSError as e:
+            # if model_path is not found, raise an error
+            raise ValueError(f"Model path '{self.model_path}' could not be found. Please ensure the model exists.")
+        except Exception as e:
+            # catch any other exceptions and raise a generic error
+            raise RuntimeError(f"An error occurred while loading the model: {str(e)}")
     
     # Retry decorator to handle retries on request
     @retry(tries=2, delay=60)
     def connect_huggingface(self, input, temperature, max_tokens, top_p, numSample):
+        if self.model is None or self.tokenizer is None:
+            self._load_transformers()
+        
         if numSample > 1:
             responses = []
             sequences = self.model(

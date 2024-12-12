@@ -161,8 +161,8 @@ cython_debug/
 
 # directories to ignore
 tests/main.py
-tests/planner.py
 data/
+tests/tests.py
 
 # paper reconstructions to ignore
 paper_reconstructions/llm+dp/

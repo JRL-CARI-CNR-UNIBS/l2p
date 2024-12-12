@@ -5,7 +5,7 @@ This file contains collection of functions for extracting/parsing information fr
 from .pddl_types import Action, Predicate
 from collections import OrderedDict
 from copy import deepcopy
-import re, ast, json, os
+import re, ast, json
 
 def parse_params(llm_output):
     """
@@ -360,12 +360,6 @@ def format_predicates(predicates: list[Predicate]) -> str:
 def indent(string: str, level: int = 2):
     """Indent string helper function to format PDDL domain/task"""
     return "   " * level + string.replace("\n", f"\n{'   ' * level}")
-
-def load_file(file_path):
-        _, ext = os.path.splitext(file_path)
-        with open(file_path, 'r') as file:
-            if ext == '.json': return json.load(file)
-            else: return file.read().strip()
 
 
 if __name__ == '__main__':

@@ -8,8 +8,9 @@ L2P is an offline, natural language -to- planning model system that supports dom
 
 This is the general setup to build domain predicates:
 ```python
-import os
-from l2p import *
+from l2p.llm_builder import OPENAI
+from l2p.utils import load_file
+from l2p.domain_builder import DomainBuilder
 
 domain_builder = DomainBuilder()
 

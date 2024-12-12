@@ -3,7 +3,7 @@ This file contains collection of functions for PDDL task generation purposes
 """
 from .utils import *
 from .llm_builder import LLM
-from .prompt_builder import PromptBuilder
+from .llm_builder import require_llm
 import time
 
 class TaskBuilder:
@@ -27,6 +27,7 @@ class TaskBuilder:
         self.goal=goal
 
     """Extract functions"""
+    @require_llm
     def extract_objects(self, 
         model: LLM, 
         problem_desc: str,
@@ -78,6 +79,7 @@ class TaskBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract objects.")
 
+    @require_llm
     def extract_initial_state(
         self, 
         model: LLM, 
@@ -142,6 +144,7 @@ class TaskBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract initial states.")
         
+    @require_llm
     def extract_goal_state(
         self, 
         model: LLM, 
@@ -206,6 +209,7 @@ class TaskBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract goal states.")
 
+    @require_llm
     def extract_task(
         self, 
         model: LLM, 
@@ -268,11 +272,12 @@ class TaskBuilder:
                 
         raise RuntimeError("Max retries exceeded. Failed to extract task.")
 
+    @require_llm
     def extract_nl_conditions(
         self, 
         model: LLM, 
         problem_desc: str,
-        prompt_template: PromptBuilder,
+        prompt_template: str,
         types: dict[str,str]=None, 
         predicates: list[Predicate]=None,
         actions: list[Action]=None,
