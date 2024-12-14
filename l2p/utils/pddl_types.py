@@ -6,8 +6,11 @@ from typing import TypedDict, NewType, List, Optional
 from collections import OrderedDict
 from dataclasses import dataclass
 
-ParameterList = NewType('ParameterList', OrderedDict[str, str]) # {param_name: param_type}
-ObjectList = NewType('ObjectList', dict[str, str])              # {obj_name: obj_type}
+ParameterList = NewType(
+    "ParameterList", OrderedDict[str, str]
+)  # {param_name: param_type}
+ObjectList = NewType("ObjectList", dict[str, str])  # {obj_name: obj_type}
+
 
 class Predicate(TypedDict):
     name: str
@@ -16,13 +19,15 @@ class Predicate(TypedDict):
     params: ParameterList
     clean: str
 
+
 class Action(TypedDict):
     name: str
     raw: str
     parameters: ParameterList
     preconditions: str
     effects: str
-    
+
+
 # Domain details data class including predicates and actions
 @dataclass
 class DomainDetails:
@@ -34,15 +39,17 @@ class DomainDetails:
     predicates: List[Predicate]  # List of Predicate objects
     actions: List[Action]  # List of Action objects
 
+
 # Problem details data class
 @dataclass
 class ProblemDetails:
     name: str
     problem_desc: str
     problem_pddl: str
-    objects: tuple[dict[str,str], str]
-    initial: tuple[dict[str,str], str]
-    goal: tuple[dict[str,str], str]
+    objects: tuple[dict[str, str], str]
+    initial: tuple[dict[str, str], str]
+    goal: tuple[dict[str, str], str]
+
 
 # Plan details data class
 @dataclass

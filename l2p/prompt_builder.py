@@ -5,12 +5,19 @@ have to use this class, but it is generally advisable for ease of use.
 
 import os
 
+
 class PromptBuilder:
-    def __init__(self, role: str=None, technique: str=None, examples: list=[], task: str=None):
-        self.role = role # role for LLM to follow (i.e. PDDL predicate constructor)
-        self.technique = technique # prompting technique (i.e. CoT)
-        self.examples = examples # n-shot examples for LLM to follow
-        self.task = task # dynamic placeholder given information to LLM
+    def __init__(
+        self,
+        role: str = None,
+        technique: str = None,
+        examples: list = [],
+        task: str = None,
+    ):
+        self.role = role  # role for LLM to follow (i.e. PDDL predicate constructor)
+        self.technique = technique  # prompting technique (i.e. CoT)
+        self.examples = examples  # n-shot examples for LLM to follow
+        self.task = task  # dynamic placeholder given information to LLM
 
     def set_role(self, role):
         """Sets the role for the LLM to perform task"""
@@ -43,7 +50,6 @@ class PromptBuilder:
         """
         self.task = task
 
-
     def get_role(self):
         """Returns role of the prompt given"""
         return self.role
@@ -60,7 +66,6 @@ class PromptBuilder:
         """Returns dynamic placeholder task prompt"""
         return self.task
 
-
     def remove_role(self):
         """Removes role prompt"""
         self.role = None
@@ -76,7 +81,6 @@ class PromptBuilder:
     def remove_task(self):
         """Removes dynamic placeholder task prompt"""
         self.task = None
-
 
     def generate_prompt(self):
         """Generates the whole prompt in proper format"""
@@ -101,30 +105,3 @@ class PromptBuilder:
             prompt += f"[TASK]:\nHere is the task to solve:\n{self.task}\n\n"
 
         return prompt.strip()
-    
-
-# USAGE EXAMPLE
-if __name__ == "__main__":
-    def open_file(filepath):
-        with open(filepath, 'r') as file:
-            return file.read()
-
-    role_file_path = 'data/prompt_templates/type_extraction/role.txt'
-    role_desc = open_file(role_file_path)
-    tech_file_path = 'data/prompt_templates/type_extraction/technique.txt'
-    tech_desc = open_file(tech_file_path)
-    task_file_path = 'data/prompt_templates/type_extraction/task.txt'
-    task_desc = open_file(task_file_path)
-    domain_file_path = 'data/domains/logistics.txt'
-    domain_desc = open_file(domain_file_path)
-
-    # Directory where example files are stored
-    examples_dir = 'data/prompt_templates/type_extraction/examples/'
-    example_files = [f for f in os.listdir(examples_dir) if os.path.isfile(os.path.join(examples_dir, f))]
-
-    # Read all example files
-    examples = [open_file(os.path.join(examples_dir, f)) for f in example_files]
-
-    type_extraction_prompt = PromptBuilder(role_desc, tech_desc, examples, task_desc, domain_desc)
-
-    print(type_extraction_prompt.get_prompt())

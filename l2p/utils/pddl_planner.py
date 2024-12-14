@@ -25,6 +25,7 @@ DRIVER_CRITICAL_ERROR = 35
 DRIVER_INPUT_ERROR = 36
 DRIVER_UNSUPPORTED = 37
 
+
 class FastDownward:
 
     def run_fast_downward(self, domain_file, problem_file, plan_file="sas_plan"):
@@ -35,18 +36,20 @@ class FastDownward:
             result = subprocess.run(
                 [downward_path, "--alias", "lama-first", domain_file, problem_file],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             exitcodes = [result.returncode]
 
             if result.returncode == SUCCESS:
                 # Planning succeeded
-                with open(plan_file, 'w') as f:
+                with open(plan_file, "w") as f:
                     f.write(result.stdout)
                 print("Planning succeeded!")
-                print("All run components successfully terminated (translator: completed, search: found a plan, validate: validated a plan)")
-                
+                print(
+                    "All run components successfully terminated (translator: completed, search: found a plan, validate: validated a plan)"
+                )
+
                 # Extract the plan steps from the output
                 plan_output = self.extract_plan_steps(result.stdout)
                 if plan_output:
@@ -62,7 +65,7 @@ class FastDownward:
             return False, str(e)
 
     def extract_plan_steps(self, output):
-        plan_steps = re.findall(r'^\w+.*\(.*\)', output, re.MULTILINE)
+        plan_steps = re.findall(r"^\w+.*\(.*\)", output, re.MULTILINE)
         return "\n".join(plan_steps)
 
     def handle_error(self, exitcode, plan_found):
@@ -119,7 +122,9 @@ class FastDownward:
 
         print("Exit codes: {}".format(exitcodes))
         exitcodes = set(exitcodes)
-        unrecoverable_codes = [code for code in exitcodes if self.is_unrecoverable(code)]
+        unrecoverable_codes = [
+            code for code in exitcodes if self.is_unrecoverable(code)
+        ]
 
         # There are unrecoverable exit codes.
         if unrecoverable_codes:
@@ -154,11 +159,3 @@ class FastDownward:
             return (SEARCH_OUT_OF_TIME, False)
 
         assert False, "Error: Unhandled exit codes: {}".format(exitcodes)
-
-if __name__ == "__main__":
-    
-    planner = FastDownward()
-   
-    domain = "paper_reconstructions/proc2pddl/results/domain.pddl"
-    problem = "paper_reconstructions/proc2pddl/results/problems/problem-start-fire.pddl"
-    planner.run_fast_downward(domain, problem)

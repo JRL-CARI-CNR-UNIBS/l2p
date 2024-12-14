@@ -14,16 +14,18 @@ import os
 from l2p import *
 from l2p.utils.pddl_planner import FastDownward
 
+
 def open_file(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         file = file.read().strip()
     return file
 
+
 if __name__ == "__main__":
-  
+
     # setup L2P requirements
     engine = "gpt-4o-mini"
-    api_key = os.environ.get('OPENAI_API_KEY')
+    api_key = os.environ.get("OPENAI_API_KEY")
     openai_llm = OPENAI(model=engine, api_key=api_key)
     planner = FastDownward()
 
@@ -41,16 +43,23 @@ if __name__ == "__main__":
 
     # extract PDDL from prompt
     objects, initial, goal, llm_response = task_builder.extract_task(
-        model=openai_llm, 
+        model=openai_llm,
         problem_desc=problem_desc,
-        prompt_template=prompt_builder.generate_prompt())
+        prompt_template=prompt_builder.generate_prompt(),
+    )
 
     # construct PDDL components into PDDL problem file
     object_str = task_builder.format_objects(objects)
     initial_state_str = task_builder.format_initial(initial)
     goal_state_str = task_builder.format_goal(goal)
 
-    pddl_problem = task_builder.generate_task("blocksworld-4ops", "blocksworld-4ops_problem", object_str, initial_state_str, goal_state_str)
+    pddl_problem = task_builder.generate_task(
+        "blocksworld-4ops",
+        "blocksworld-4ops_problem",
+        object_str,
+        initial_state_str,
+        goal_state_str,
+    )
 
     # write down PDDL problem file
     problem_file = "paper_reconstructions/llm+p/results/problem.pddl"
@@ -62,4 +71,3 @@ if __name__ == "__main__":
 
     # run planner
     planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)
-    
