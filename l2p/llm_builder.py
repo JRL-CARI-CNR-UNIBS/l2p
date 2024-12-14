@@ -4,7 +4,7 @@ Currently, this builder class contains the generic method to run any LLMs.
 It also offers extension to OpenAI and Huggingface, but can generalise to any third-party LLM store.
 """
 
-import os, logging, argparse, functools
+import logging, functools
 from retry import retry
 from abc import ABC, abstractmethod
 from typing_extensions import override

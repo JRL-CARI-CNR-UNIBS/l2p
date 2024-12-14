@@ -233,10 +233,6 @@ def parse_initial(llm_response: str) -> list[dict[str, str]]:
     """
     state_head = extract_heading(llm_response, "INITIAL")
     state_raw = combine_blocks(state_head)
-    print("STATE RAW")
-    print(state_raw)
-    print("END STATE RAW")
-
     state_clean = clear_comments(state_raw)
 
     states = []
