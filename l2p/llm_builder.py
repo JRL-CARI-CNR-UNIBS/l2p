@@ -87,12 +87,19 @@ class OPENAI(LLM):
         # attempt to import necessary OPENAI modules
         try:
             from openai import OpenAI
-            import tiktoken
         except ImportError:
             raise ImportError(
                 "The 'openai' library is required for OPENAI but is not installed. "
                 "Install it using: `pip install openai`."
             )
+            
+        try:
+            import tiktoken
+        except ImportError:
+            raise ImportError(
+                "The 'tiktoken' library is required for token processing but is not installed. "
+                "Install it using: `pip install tiktoken`."
+    )
         
         # call the parent class constructor to handle model and api_key
         super().__init__(model, api_key)
@@ -221,15 +228,34 @@ class HUGGING_FACE(LLM):
         self.out_tokens = 0
         
     def _load_transformers(self):
+        
+        # attempt to import the `transformers` library
         try:
             import transformers
+        except ImportError:
+            raise ImportError(
+                "The 'transformers' library is required for HUGGING_FACE but is not installed. "
+                "Install it using: `pip install transformers`."
+            )
+            
+        # attempt to import `AutoTokenizer` from `transformers`
+        try:
             from transformers import AutoTokenizer
+        except ImportError:
+            raise ImportError(
+                "The 'transformers.AutoTokenizer' module is required but is not installed properly. "
+                "Ensure that the 'transformers' library is installed correctly."
+            )
+            
+        # attempt to import the `torch` library
+        try:
             import torch
         except ImportError:
             raise ImportError(
-                "The 'transformers' and 'torch' libraries are required for HUGGING_FACE but are not installed. "
-                "Install them using: `pip install transformers torch`."
+                "The 'torch' library is required for HUGGING_FACE but is not installed. "
+                "Install it using: `pip install torch`."
             )
+
         try:
             # Check if the model_path is valid by trying to load it
             self.model = transformers.pipeline(
