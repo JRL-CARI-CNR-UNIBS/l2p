@@ -1,21 +1,21 @@
 import unittest
 from l2p.task_builder import TaskBuilder
-from l2p.utils.pddl_parser import *
+from l2p.utils import *
 from .mock_llm import MockLLM
 
 
 class TestTaskBuilder(unittest.TestCase):
     def setUp(self):
-        self.domain_builder = TaskBuilder()
-        self.domain_desc = "Blocksworld is..."
+        self.task_builder = TaskBuilder()
 
+    # TODO: implement test task builder functions
     def test_extract_objects(self):
         pass
 
     def test_extract_initial_state(self):
         pass
 
-    def test_extract_object_state(self):
+    def test_extract_goal_state(self):
         pass
 
     def test_extract_task(self):

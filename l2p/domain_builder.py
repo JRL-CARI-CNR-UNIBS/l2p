@@ -79,10 +79,10 @@ class DomainBuilder:
                 if types is not None:
                     return types, llm_response
 
-                print(f"Attempt {attempt + 1}/{max_retries}: Failed to extract types.")
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 
@@ -128,12 +128,14 @@ class DomainBuilder:
 
                 # extract respective types from response
                 type_hierarchy = convert_to_dict(llm_response=llm_response)
-
-                return type_hierarchy, llm_response
+                
+                if type_hierarchy is not None:
+                    return type_hierarchy, llm_response
 
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 
@@ -189,12 +191,14 @@ class DomainBuilder:
 
                 # extract respective types from response
                 nl_actions = convert_to_dict(llm_response=llm_response)
-
-                return nl_actions, llm_response
+                
+                if nl_actions is not None:
+                    return nl_actions, llm_response
 
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 
@@ -264,12 +268,14 @@ class DomainBuilder:
                     llm_response=llm_response, action_name=action_name
                 )
                 new_predicates = parse_new_predicates(llm_response)
-
-                return action, new_predicates, llm_response
+                
+                if action is not None and new_predicates is not None:
+                    return action, new_predicates, llm_response
 
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 
@@ -409,7 +415,8 @@ class DomainBuilder:
 
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 
@@ -478,7 +485,8 @@ class DomainBuilder:
 
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 
@@ -550,7 +558,8 @@ class DomainBuilder:
 
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 
@@ -614,7 +623,8 @@ class DomainBuilder:
 
             except Exception as e:
                 print(
-                    f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
+                    f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
+                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
                 time.sleep(1)  # add a delay before retrying
 

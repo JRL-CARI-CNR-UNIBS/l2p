@@ -161,6 +161,7 @@ cython_debug/
 
 # directories to ignore
 tests/main.py
+tests/parse.py
 data/
 tests/tests.py
 

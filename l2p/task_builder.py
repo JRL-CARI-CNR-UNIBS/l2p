@@ -313,6 +313,7 @@ class TaskBuilder:
 
         raise RuntimeError("Max retries exceeded. Failed to extract task.")
 
+    # NOTE: This function is experimental and may be subject to change in future versions.
     @require_llm
     def extract_nl_conditions(
         self,
