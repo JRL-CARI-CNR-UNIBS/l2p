@@ -110,7 +110,7 @@ print("FEEDBACK:\n", feedback_response)
 
 
 ## Installation and Setup
-Currently, this repo has been tested for Python 3.11.10
+Currently, this repo has been tested for Python 3.11.10 but should be fine to install newer versions.
 
 You can set up a Python environment using either [Conda](https://conda.io) or [venv](https://docs.python.org/3/library/venv.html) and install the dependencies via the following steps.
 

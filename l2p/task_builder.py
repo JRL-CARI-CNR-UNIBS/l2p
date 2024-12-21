@@ -287,21 +287,10 @@ class TaskBuilder:
 
                 llm_response = model.query(prompt=prompt_template)
 
-                print(llm_response)
-                print("END OF LLM RESPONSE")
-
                 # extract respective types from response
                 objects = parse_objects(llm_response)
-                print(objects)
-                print("----------")
-
                 initial = parse_initial(llm_response)
-                print(initial)
-                print("----------")
-
                 goal = parse_goal(llm_response)
-                print(goal)
-                print("----------")
 
                 return objects, initial, goal, llm_response
 

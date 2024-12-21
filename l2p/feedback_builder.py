@@ -187,7 +187,7 @@ class FeedbackBuilder:
         )
         param_str = (
             ", ".join(
-                [f"{name} - {type}" for name, type in action["parameters"].items()]
+                [f"{name} - {type}" for name, type in action["params"].items()]
             )
             if action
             else "No parameters provided"

@@ -23,7 +23,7 @@ class Predicate(TypedDict):
 class Action(TypedDict):
     name: str
     raw: str
-    parameters: ParameterList
+    params: ParameterList
     preconditions: str
     effects: str
 

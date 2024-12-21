@@ -122,6 +122,11 @@ def run_task():
         types=types,
         predicates=predicates,
     )
+    
+    print("OBJECTS:", objects)
+    print("INITIAL:", initial_states)
+    print("GOAL:", goal_states)
+    print("LLM OUTPUT:", llm_response)
 
     # format key info into PDDL strings
     objects_str = task_builder.format_objects(objects)
@@ -137,9 +142,7 @@ def run_task():
         goal=goal_str,
     )
 
-    print(f"### LLM OUTPUT:\n {pddl_problem}")
-
-    print(llm_response)
+    print(f"### PDDL PROBLEM:\n {pddl_problem}")
 
 
 def run_feedback():
@@ -174,4 +177,4 @@ if __name__ == "__main__":
     # run_aba()
     # run_predicates()
     # run_task()
-    run_feedback()
+    run_task()

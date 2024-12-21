@@ -31,6 +31,7 @@ extensions = [
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
     "myst_parser",
+    "sphinx_copybutton",
 ]
 
 myst_enable_extensions = [
