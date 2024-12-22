@@ -9,9 +9,9 @@ class TestDomainBuilder(unittest.TestCase):
         self.domain_builder = DomainBuilder()
 
     def test_extract_type(self):
-        mock_llm_1 = MockLLM([load_file("tests/test_prompts/test_extract_type/01.txt")])
-        mock_llm_2 = MockLLM([load_file("tests/test_prompts/test_extract_type/02.txt")])
-        mock_llm_3 = MockLLM([load_file("tests/test_prompts/test_extract_type/03.txt")])
+        mock_llm_1 = MockLLM([load_file("tests/test_prompts/test_domain_builder/test_extract_type/01.txt")])
+        mock_llm_2 = MockLLM([load_file("tests/test_prompts/test_domain_builder/test_extract_type/02.txt")])
+        mock_llm_3 = MockLLM([load_file("tests/test_prompts/test_domain_builder/test_extract_type/03.txt")])
 
         types, _ = self.domain_builder.extract_type(
             model=mock_llm_1,
@@ -49,13 +49,13 @@ class TestDomainBuilder(unittest.TestCase):
 
     def test_extract_type_hierarchy(self):
         mock_llm_1 = MockLLM(
-            [load_file("tests/test_prompts/test_extract_type_hierarchy/01.txt")]
+            [load_file("tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/01.txt")]
         )
         mock_llm_2 = MockLLM(
-            [load_file("tests/test_prompts/test_extract_type_hierarchy/02.txt")]
+            [load_file("tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/02.txt")]
         )
         mock_llm_3 = MockLLM(
-            [load_file("tests/test_prompts/test_extract_type_hierarchy/03.txt")]
+            [load_file("tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/03.txt")]
         )
 
         expected_hierarchy = {
