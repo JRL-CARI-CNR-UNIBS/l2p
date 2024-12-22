@@ -128,7 +128,7 @@ class DomainBuilder:
 
                 # extract respective types from response
                 type_hierarchy = convert_to_dict(llm_response=llm_response)
-                
+
                 if type_hierarchy is not None:
                     return type_hierarchy, llm_response
 
@@ -191,7 +191,7 @@ class DomainBuilder:
 
                 # extract respective types from response
                 nl_actions = convert_to_dict(llm_response=llm_response)
-                
+
                 if nl_actions is not None:
                     return nl_actions, llm_response
 
@@ -268,7 +268,7 @@ class DomainBuilder:
                     llm_response=llm_response, action_name=action_name
                 )
                 new_predicates = parse_new_predicates(llm_response)
-                
+
                 if action is not None and new_predicates is not None:
                     return action, new_predicates, llm_response
 

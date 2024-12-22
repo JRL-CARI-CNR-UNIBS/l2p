@@ -186,9 +186,7 @@ class FeedbackBuilder:
             format_predicates(predicates) if predicates else "No predicates provided."
         )
         param_str = (
-            ", ".join(
-                [f"{name} - {type}" for name, type in action["params"].items()]
-            )
+            ", ".join([f"{name} - {type}" for name, type in action["params"].items()])
             if action
             else "No parameters provided"
         )

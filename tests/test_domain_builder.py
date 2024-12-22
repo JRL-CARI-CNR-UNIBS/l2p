@@ -16,29 +16,47 @@ class TestDomainBuilder(unittest.TestCase):
         types, _ = self.domain_builder.extract_type(
             model=mock_llm_1,
             domain_desc="Blocksworld is a...",
-            prompt_template="Prompt template placeholder"
+            prompt_template="Prompt template placeholder",
         )
-        self.assertEqual(types, {
-            "object": "Object is always root, everything is an object",
-            "children": [
-                {"arm": "mechanical arm that picks up and stacks blocks on other blocks or table.", "children": []},
-                {"block": "colored block that can be stacked or stacked on other blocks or table.", "children": []},
-                {"table": "surface where the blocks can be placed on top of.", "children": []}
-            ]
-        })   
+        self.assertEqual(
+            types,
+            {
+                "object": "Object is always root, everything is an object",
+                "children": [
+                    {
+                        "arm": "mechanical arm that picks up and stacks blocks on other blocks or table.",
+                        "children": [],
+                    },
+                    {
+                        "block": "colored block that can be stacked or stacked on other blocks or table.",
+                        "children": [],
+                    },
+                    {
+                        "table": "surface where the blocks can be placed on top of.",
+                        "children": [],
+                    },
+                ],
+            },
+        )
 
         with self.assertRaises(RuntimeError) as context:
             types, _ = self.domain_builder.extract_type(
                 model=mock_llm_2,
                 domain_desc="Blocksworld is a...",
-                prompt_template="Prompt template placeholder"
+                prompt_template="Prompt template placeholder",
             )
         self.assertIn("Max retries exceeded", str(context.exception))
 
     def test_extract_type_hierarchy(self):
-        mock_llm_1 = MockLLM([load_file("tests/test_prompts/test_extract_type_hierarchy/01.txt")])
-        mock_llm_2 = MockLLM([load_file("tests/test_prompts/test_extract_type_hierarchy/02.txt")])
-        mock_llm_3 = MockLLM([load_file("tests/test_prompts/test_extract_type_hierarchy/03.txt")])
+        mock_llm_1 = MockLLM(
+            [load_file("tests/test_prompts/test_extract_type_hierarchy/01.txt")]
+        )
+        mock_llm_2 = MockLLM(
+            [load_file("tests/test_prompts/test_extract_type_hierarchy/02.txt")]
+        )
+        mock_llm_3 = MockLLM(
+            [load_file("tests/test_prompts/test_extract_type_hierarchy/03.txt")]
+        )
 
         expected_hierarchy = {
             "object": "Object is always root, everything is an object",
@@ -47,18 +65,21 @@ class TestDomainBuilder(unittest.TestCase):
                     "worker": "A type of object consisting of humans who do things.",
                     "children": [
                         {"administrator": "A type of worker.", "children": []},
-                        {"general_worker": "A type of worker.", "children": []}
-                    ]
+                        {"general_worker": "A type of worker.", "children": []},
+                    ],
                 },
-                {"order": "A type of object consisting of instructions.", "children": []},
+                {
+                    "order": "A type of object consisting of instructions.",
+                    "children": [],
+                },
                 {"vehicle": "A type of object consisting of vehicles.", "children": []},
                 {
                     "house_component": "A type of object consisting of the components of a house.",
                     "children": [
                         {"wall": "A type of house_component.", "children": []},
                         {"floor": "A type of house_component.", "children": []},
-                        {"roof": "A type of house_component.", "children": []}
-                    ]
+                        {"roof": "A type of house_component.", "children": []},
+                    ],
                 },
                 {
                     "location": "A type of object consisting of places which can be visited.",
@@ -67,27 +88,27 @@ class TestDomainBuilder(unittest.TestCase):
                             "house": "A type of location. ",
                             "children": [
                                 {"mansion": "A type of house.", "children": []},
-                                {"library": "A type of house.", "children": []}
-                            ]
+                                {"library": "A type of house.", "children": []},
+                            ],
                         },
-                        {"depot": "A type of location.", "children": []}
-                    ]
-                }
-            ]
+                        {"depot": "A type of location.", "children": []},
+                    ],
+                },
+            ],
         }
 
         type_hierarchy, _ = self.domain_builder.extract_type_hierarchy(
             model=mock_llm_1,
             domain_desc="HouseConstruction is...",
-            prompt_template="Prompt template placeholder"
+            prompt_template="Prompt template placeholder",
         )
         self.assertEqual(type_hierarchy, expected_hierarchy)
-        
+
         with self.assertRaises(RuntimeError) as context:
             type_hierarchy, _ = self.domain_builder.extract_type_hierarchy(
                 model=mock_llm_2,
                 domain_desc="HouseConstruction is...",
-                prompt_template="Prompt template placeholder"
+                prompt_template="Prompt template placeholder",
             )
         self.assertIn("Max retries exceeded", str(context.exception))
 

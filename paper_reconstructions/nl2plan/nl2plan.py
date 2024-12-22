@@ -28,33 +28,65 @@ problem_desc = open_file("paper_reconstructions/nl2plan/prompts/blocksworld_p1.t
 
 # open and create type extraction prompt builder class
 role_desc = open_file("paper_reconstructions/nl2plan/prompts/type_extraction/role.txt")
-tech_desc = open_file("paper_reconstructions/nl2plan/prompts/type_extraction/technique.txt")
+tech_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/type_extraction/technique.txt"
+)
 task_desc = open_file("paper_reconstructions/nl2plan/prompts/type_extraction/task.txt")
-type_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+type_extraction_prompt = PromptBuilder(
+    role=role_desc, technique=tech_desc, task=task_desc
+)
 
 # open and create type hierarchy prompt builder class
-role_desc = open_file("paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt")
-tech_desc = open_file("paper_reconstructions/nl2plan/prompts/hierarchy_construction/technique.txt")
-task_desc = open_file("paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt")
-type_hierarchy_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+role_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt"
+)
+tech_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/hierarchy_construction/technique.txt"
+)
+task_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt"
+)
+type_hierarchy_prompt = PromptBuilder(
+    role=role_desc, technique=tech_desc, task=task_desc
+)
 
 # open and create NL action prompt builder class
-role_desc = open_file("paper_reconstructions/nl2plan/prompts/action_extraction/role.txt")
-tech_desc = open_file("paper_reconstructions/nl2plan/prompts/action_extraction/technique.txt")
-task_desc = open_file("paper_reconstructions/nl2plan/prompts/action_extraction/task.txt")
-action_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+role_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/action_extraction/role.txt"
+)
+tech_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/action_extraction/technique.txt"
+)
+task_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/action_extraction/task.txt"
+)
+action_extraction_prompt = PromptBuilder(
+    role=role_desc, technique=tech_desc, task=task_desc
+)
 
 # open and create PDDL action prompt builder class
-role_desc = open_file("paper_reconstructions/nl2plan/prompts/action_construction/role.txt")
-tech_desc = open_file("paper_reconstructions/nl2plan/prompts/action_construction/technique.txt")
-task_desc = open_file("paper_reconstructions/nl2plan/prompts/action_construction/task.txt")
-action_construction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+role_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/action_construction/role.txt"
+)
+tech_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/action_construction/technique.txt"
+)
+task_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/action_construction/task.txt"
+)
+action_construction_prompt = PromptBuilder(
+    role=role_desc, technique=tech_desc, task=task_desc
+)
 
 # open and create compact action prompt builder class
 role_desc = open_file("paper_reconstructions/nl2plan/prompts/task_extraction/role.txt")
-tech_desc = open_file("paper_reconstructions/nl2plan/prompts/task_extraction/technique.txt")
+tech_desc = open_file(
+    "paper_reconstructions/nl2plan/prompts/task_extraction/technique.txt"
+)
 task_desc = open_file("paper_reconstructions/nl2plan/prompts/task_extraction/task.txt")
-task_extraction_prompt = PromptBuilder(role=role_desc, technique=tech_desc, task=task_desc)
+task_extraction_prompt = PromptBuilder(
+    role=role_desc, technique=tech_desc, task=task_desc
+)
 
 domain_builder = DomainBuilder()
 task_builder = TaskBuilder()

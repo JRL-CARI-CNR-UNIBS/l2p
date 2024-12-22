@@ -122,7 +122,7 @@ def run_task():
         types=types,
         predicates=predicates,
     )
-    
+
     print("OBJECTS:", objects)
     print("INITIAL:", initial_states)
     print("GOAL:", goal_states)
