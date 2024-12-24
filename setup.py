@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="lang2pddl",
-    version="0.1.4",
+    version="0.1.5",
     packages=find_packages(exclude=["tests"]),
     description="Library to connect LLMs and planning tasks",
     long_description=long_description,
