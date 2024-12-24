@@ -8,30 +8,34 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
 
-project = 'L2P'
-copyright = '2024, Marcus Tantakoun'
-author = 'Marcus Tantakoun'
-release = '0.1.0'
+sys.path.insert(0, os.path.abspath(".."))
+
+project = "L2P"
+copyright = "2024, Marcus Tantakoun"
+author = "Marcus Tantakoun"
+release = "0.1.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinx.ext.napoleon',
-    'myst_parser']
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.ifconfig",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.githubpages",
+    "sphinx.ext.napoleon",
+    "myst_parser",
+    "sphinx_copybutton",
+]
 
 myst_enable_extensions = [
-    'colon_fence',  # Enables Markdown for code block with language
+    "colon_fence",  # Enables Markdown for code block with language
 ]
 
 # Napoleon settings
@@ -47,14 +51,13 @@ napoleon_use_ivar = False
 napoleon_use_param = True
 napoleon_use_rtype = True
 
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
+html_theme = "furo"
 html_title = "l2p"
-html_static_path = ['_static']
+html_static_path = ["_static"]

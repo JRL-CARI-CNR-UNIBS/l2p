@@ -12,522 +12,666 @@ from collections import OrderedDict
 domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
 
+
 class FeedbackBuilder:
 
     @require_llm
     def get_feedback(
-            self, 
-            model: LLM, 
-            feedback_template: str, 
-            feedback_type: str, 
-            llm_response: str
-            ) -> tuple[bool, str]:
+        self, model: LLM, feedback_template: str, feedback_type: str, llm_response: str
+    ) -> tuple[bool, str]:
         """
         This retrieves the type of feedback user requests and returns feedack message.
-        feedback_type takes in either "human" "llm" or "hybrid" which it both 
+        feedback_type takes in either "human" "llm" or "hybrid" which it both
         """
 
         model.reset_tokens()
-        
+
         if feedback_type.lower() == "human":
             feedback_msg = self.human_feedback(llm_response)
         elif feedback_type.lower() == "llm":
             feedback_msg = model.query(prompt=feedback_template)
         elif feedback_type.lower() == "hybrid":
             feedback_msg = model.query(prompt=feedback_template)
-            response = "\nORIGINAL LLM OUTPUT:\n" + llm_response + "\nFEEDBACK:\n" + feedback_msg
+            response = (
+                "\nORIGINAL LLM OUTPUT:\n"
+                + llm_response
+                + "\nFEEDBACK:\n"
+                + feedback_msg
+            )
             feedback_msg.replace("no feedback".lower(), "")
             feedback_msg += self.human_feedback(response)
         else:
-            raise ValueError("Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'.")
-        
-        if 'no feedback' in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
+            raise ValueError(
+                "Invalid feedback_type. Expected 'human', 'llm', or 'hybrid'."
+            )
+
+        if "no feedback" in feedback_msg.lower() or len(feedback_msg.strip()) == 0:
             return True, feedback_msg
-        
+
         return False, feedback_msg
 
     @require_llm
     def type_feedback(
-            self, 
-            model: LLM, 
-            domain_desc: str,
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm",
-            types: dict[str,str]=None, 
-            ) -> tuple[dict[str,str], str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        types: dict[str, str] = None,
+    ) -> tuple[dict[str, str], str]:
         """Makes LLM call using feedback prompt, then parses it into type format"""
 
         model.reset_tokens()
 
         type_str = format_dict(types) if types else "No types provided."
 
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            types, llm_response = domain_builder.extract_type(model, domain_desc, prompt)
+            types, llm_response = domain_builder.extract_type(
+                model, domain_desc, prompt
+            )
 
         return types, llm_response
 
     @require_llm
     def type_hierarchy_feedback(
-            self, 
-            model: LLM, 
-            domain_desc: str,
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm",
-            type_hierarchy: dict[str,str]=None, 
-            ) -> tuple[dict[str,str], str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        type_hierarchy: dict[str, str] = None,
+    ) -> tuple[dict[str, str], str]:
         """Makes LLM call using feedback prompt, then parses it into type hierarchy format"""
 
         model.reset_tokens()
 
-        type_str = format_dict(type_hierarchy) if type_hierarchy else "No types provided."
+        type_str = (
+            format_dict(type_hierarchy) if type_hierarchy else "No types provided."
+        )
 
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            type_hierarchy, llm_response = domain_builder.extract_type_hierarchy(model, domain_desc, prompt)
+            type_hierarchy, llm_response = domain_builder.extract_type_hierarchy(
+                model, domain_desc, prompt
+            )
 
         return type_hierarchy, llm_response
 
     @require_llm
     def nl_action_feedback(
-            self, 
-            model: LLM, 
-            domain_desc: str, 
-            llm_response: str,
-            feedback_template: str,
-            feedback_type: str="llm",
-            nl_actions: dict[str,str]=None,
-            type_hierarchy: dict[str,str]=None, 
-            ) -> tuple[dict[str,str], str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        nl_actions: dict[str, str] = None,
+        type_hierarchy: dict[str, str] = None,
+    ) -> tuple[dict[str, str], str]:
         """Makes LLM call using feedback prompt, then parses it into nl_action format"""
 
         model.reset_tokens()
 
-        type_str = format_dict(type_hierarchy) if type_hierarchy else "No types provided."
-        nl_action_str = format_dict(nl_actions) if nl_actions else "No actions provided."
+        type_str = (
+            format_dict(type_hierarchy) if type_hierarchy else "No types provided."
+        )
+        nl_action_str = (
+            format_dict(nl_actions) if nl_actions else "No actions provided."
+        )
 
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{nl_actions}', nl_action_str)
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{nl_actions}", nl_action_str)
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            nl_actions, llm_response = domain_builder.extract_type_hierarchy(model, domain_desc, prompt)
+            nl_actions, llm_response = domain_builder.extract_type_hierarchy(
+                model, domain_desc, prompt
+            )
 
         return nl_actions, llm_response
 
     @require_llm
     def pddl_action_feedback(
-            self, 
-            model: LLM, 
-            domain_desc: str, 
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm",
-            action: Action=None, 
-            predicates: list[Predicate]=None, 
-            types: dict[str,str]=None
-            ) -> tuple[Action, list[Predicate], str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        action: Action = None,
+        predicates: list[Predicate] = None,
+        types: dict[str, str] = None,
+    ) -> tuple[Action, list[Predicate], str]:
         """Makes LLM call using feedback prompt, then parses it into action format"""
 
         model.reset_tokens()
 
         type_str = format_dict(types) if types else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        param_str = ", ".join([f"{name} - {type}" for name, type in action['parameters'].items()]) \
-                if action else "No parameters provided"
-        action_name = action['name'] if action else "No action name provided"
-        preconditions_str = action['preconditions'] if action else "No preconditions provided."
-        effects_str = action['effects'] if action else "No effects provided."
-        
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{action_name}', action_name)
-        feedback_template = feedback_template.replace('{parameters}', param_str)
-        feedback_template = feedback_template.replace('{action_preconditions}', preconditions_str)
-        feedback_template = feedback_template.replace('{action_effects}', effects_str)
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        param_str = (
+            ", ".join([f"{name} - {type}" for name, type in action["params"].items()])
+            if action
+            else "No parameters provided"
+        )
+        action_name = action["name"] if action else "No action name provided"
+        preconditions_str = (
+            action["preconditions"] if action else "No preconditions provided."
+        )
+        effects_str = action["effects"] if action else "No effects provided."
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{action_name}", action_name)
+        feedback_template = feedback_template.replace("{parameters}", param_str)
+        feedback_template = feedback_template.replace(
+            "{action_preconditions}", preconditions_str
+        )
+        feedback_template = feedback_template.replace("{action_effects}", effects_str)
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            action, predicates, llm_response = domain_builder.extract_pddl_action(model, domain_desc, prompt, action_name)
+            action, predicates, llm_response = domain_builder.extract_pddl_action(
+                model, domain_desc, prompt, action_name
+            )
         return action, predicates, llm_response
 
     @require_llm
     def parameter_feedback(
-            self, 
-            model: LLM, 
-            domain_desc: str, 
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm", 
-            parameter: OrderedDict=None, 
-            action_name: str=None, 
-            action_desc: str=None,
-            types: dict[str,str]=None
-            ) -> tuple[OrderedDict, OrderedDict, str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        parameter: OrderedDict = None,
+        action_name: str = None,
+        action_desc: str = None,
+        types: dict[str, str] = None,
+    ) -> tuple[OrderedDict, OrderedDict, str]:
         """Makes LLM call using feedback prompt, then parses it into parameter format"""
 
         model.reset_tokens()
 
         type_str = format_dict(types) if types else "No types provided."
-        param_str = "\n".join([f"{name} - {type}" for name, type in parameter.items()]) \
-            if parameter else "No parameters provided"
+        param_str = (
+            "\n".join([f"{name} - {type}" for name, type in parameter.items()])
+            if parameter
+            else "No parameters provided"
+        )
         action_name = action_name if action_name else "No action name provided."
         action_desc = action_desc if action_desc else "No action description provided."
-        
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{action_name}', action_name)
-        feedback_template = feedback_template.replace('{action_desc}', action_desc)
-        feedback_template = feedback_template.replace('{parameters}', param_str)
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{action_name}", action_name)
+        feedback_template = feedback_template.replace("{action_desc}", action_desc)
+        feedback_template = feedback_template.replace("{parameters}", param_str)
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            param, param_raw, llm_response = domain_builder.extract_parameters(model, domain_desc, prompt, action_name, action_desc, types)
+            param, param_raw, llm_response = domain_builder.extract_parameters(
+                model, domain_desc, prompt, action_name, action_desc, types
+            )
         return param, param_raw, llm_response
 
     @require_llm
     def precondition_feedback(
-            self, 
-            model: LLM, 
-            domain_desc: str, 
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm", 
-            parameter: OrderedDict=None, 
-            preconditions: str=None,
-            action_name: str=None, 
-            action_desc: str=None,
-            types: dict[str,str]=None,
-            predicates: list[Predicate]=None
-            ) -> tuple[str, list[Predicate], str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        parameter: OrderedDict = None,
+        preconditions: str = None,
+        action_name: str = None,
+        action_desc: str = None,
+        types: dict[str, str] = None,
+        predicates: list[Predicate] = None,
+    ) -> tuple[str, list[Predicate], str]:
         """Makes LLM call using feedback prompt, then parses it into precondition format"""
-        
+
         model.reset_tokens()
 
         type_str = format_dict(types) if types else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        param_str = "\n".join([f"{name} - {type}" for name, type in parameter.items()]) \
-            if parameter else "No parameters provided"
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        param_str = (
+            "\n".join([f"{name} - {type}" for name, type in parameter.items()])
+            if parameter
+            else "No parameters provided"
+        )
         action_name = action_name if action_name else "No action name provided."
         action_desc = action_desc if action_desc else "No action description provided."
-        precondition_str = preconditions if preconditions else "No preconditions provided."
-        
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{action_name}', action_name)
-        feedback_template = feedback_template.replace('{action_desc}', action_desc)
-        feedback_template = feedback_template.replace('{parameters}', param_str)
-        feedback_template = feedback_template.replace('{action_preconditions}', precondition_str)
+        precondition_str = (
+            preconditions if preconditions else "No preconditions provided."
+        )
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{action_name}", action_name)
+        feedback_template = feedback_template.replace("{action_desc}", action_desc)
+        feedback_template = feedback_template.replace("{parameters}", param_str)
+        feedback_template = feedback_template.replace(
+            "{action_preconditions}", precondition_str
+        )
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            preconditions, new_predicates, llm_response = domain_builder.extract_preconditions(model, 
-                                                                    domain_desc, prompt, action_name, action_desc)
+            preconditions, new_predicates, llm_response = (
+                domain_builder.extract_preconditions(
+                    model, domain_desc, prompt, action_name, action_desc
+                )
+            )
         return preconditions, new_predicates, llm_response
 
     @require_llm
     def effect_feedback(
-            self, 
-            model: LLM, 
-            domain_desc: str, 
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm", 
-            parameter: OrderedDict=None, 
-            preconditions: str=None,
-            effects: str=None,
-            action_name: str=None, 
-            action_desc: str=None,
-            types: dict[str,str]=None,
-            predicates: list[Predicate]=None
-            ) -> tuple[str, list[Predicate], str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        parameter: OrderedDict = None,
+        preconditions: str = None,
+        effects: str = None,
+        action_name: str = None,
+        action_desc: str = None,
+        types: dict[str, str] = None,
+        predicates: list[Predicate] = None,
+    ) -> tuple[str, list[Predicate], str]:
         """Makes LLM call using feedback prompt, then parses it into effects format"""
 
         model.reset_tokens()
 
         type_str = format_dict(types) if types else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        param_str = "\n".join([f"{name} - {type}" for name, type in parameter.items()]) \
-            if parameter else "No parameters provided"
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        param_str = (
+            "\n".join([f"{name} - {type}" for name, type in parameter.items()])
+            if parameter
+            else "No parameters provided"
+        )
         action_name = action_name if action_name else "No action name provided."
         action_desc = action_desc if action_desc else "No action description provided."
-        precondition_str = preconditions if preconditions else "No preconditions provided."
+        precondition_str = (
+            preconditions if preconditions else "No preconditions provided."
+        )
         effect_str = effects if effects else "No effects provided."
-        
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{action_name}', action_name)
-        feedback_template = feedback_template.replace('{action_desc}', action_desc)
-        feedback_template = feedback_template.replace('{parameters}', param_str)
-        feedback_template = feedback_template.replace('{action_preconditions}', precondition_str)
-        feedback_template = feedback_template.replace('{action_effects}', effect_str)
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{action_name}", action_name)
+        feedback_template = feedback_template.replace("{action_desc}", action_desc)
+        feedback_template = feedback_template.replace("{parameters}", param_str)
+        feedback_template = feedback_template.replace(
+            "{action_preconditions}", precondition_str
+        )
+        feedback_template = feedback_template.replace("{action_effects}", effect_str)
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            effects, new_predicates, llm_response = domain_builder.extract_effects(model, 
-                                                                    domain_desc, prompt, action_name, action_desc)
+            effects, new_predicates, llm_response = domain_builder.extract_effects(
+                model, domain_desc, prompt, action_name, action_desc
+            )
         return effects, new_predicates, llm_response
 
     @require_llm
     def predicate_feedback(
-            self,
-            model: LLM, 
-            domain_desc: str, 
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm", 
-            types: dict[str,str]=None,
-            predicates: list[Predicate]=None,
-            nl_actions: dict[str,str]=None
-            ) -> tuple[list[Predicate], str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        types: dict[str, str] = None,
+        predicates: list[Predicate] = None,
+        nl_actions: dict[str, str] = None,
+    ) -> tuple[list[Predicate], str]:
         """Makes LLM call using feedback prompt, then parses it into predicates format"""
-        
+
         model.reset_tokens()
 
         type_str = format_dict(types) if types else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        nl_action_str = format_dict(nl_actions) if nl_actions else "No actions provided."
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        nl_action_str = (
+            format_dict(nl_actions) if nl_actions else "No actions provided."
+        )
 
-        feedback_template = feedback_template.replace('{domain_desc}', domain_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{nl_actions}', nl_action_str)
+        feedback_template = feedback_template.replace("{domain_desc}", domain_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{nl_actions}", nl_action_str)
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            new_predicates, llm_response = domain_builder.extract_predicates(model, domain_desc, prompt)
+            new_predicates, llm_response = domain_builder.extract_predicates(
+                model, domain_desc, prompt
+            )
         return new_predicates, llm_response
 
     @require_llm
     def task_feedback(
-            self, 
-            model: LLM, 
-            problem_desc: str, 
-            llm_response: str,
-            feedback_template: str, 
-            feedback_type: str="llm",
-            predicates: list[Predicate]=None, 
-            types: dict[str,str]=None, 
-            objects: dict[str,str]=None, 
-            initial: list[dict[str,str]]=None, 
-            goal: list[dict[str,str]]=None, 
-            ) -> tuple[dict[str,str], list[dict[str,str]], list[dict[str,str]], str]:
+        self,
+        model: LLM,
+        problem_desc: str,
+        llm_response: str,
+        feedback_template: str,
+        feedback_type: str = "llm",
+        predicates: list[Predicate] = None,
+        types: dict[str, str] = None,
+        objects: dict[str, str] = None,
+        initial: list[dict[str, str]] = None,
+        goal: list[dict[str, str]] = None,
+    ) -> tuple[dict[str, str], list[dict[str, str]], list[dict[str, str]], str]:
         """Makes LLM call using feedback prompt, then parses it into object, initial, and goal format"""
-        
+
         model.reset_tokens()
 
         type_str = format_dict(types) if types else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
-        initial_state_str = task_builder.format_initial(initial) if initial else "No initial state provided."
-        goal_state_str = task_builder.format_goal(goal) if goal else "No goal state provided."
-        
-        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{objects}', objects_str)
-        feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
-        feedback_template = feedback_template.replace('{goal_state}', goal_state_str)
-    
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        objects_str = (
+            "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+            if objects
+            else "No objects provided."
+        )
+        initial_state_str = (
+            task_builder.format_initial(initial)
+            if initial
+            else "No initial state provided."
+        )
+        goal_state_str = (
+            task_builder.format_goal(goal) if goal else "No goal state provided."
+        )
+
+        feedback_template = feedback_template.replace("{problem_desc}", problem_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{objects}", objects_str)
+        feedback_template = feedback_template.replace(
+            "{initial_state}", initial_state_str
+        )
+        feedback_template = feedback_template.replace("{goal_state}", goal_state_str)
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            objects, initial, goal, _ = task_builder.extract_task(model, problem_desc, prompt)
+            objects, initial, goal, _ = task_builder.extract_task(
+                model, problem_desc, prompt
+            )
 
         return objects, initial, goal, fb_msg
 
     @require_llm
     def objects_feedback(
-        self, 
-        model: LLM, 
+        self,
+        model: LLM,
         problem_desc: str,
         llm_response: str,
-        feedback_template: str, 
-        feedback_type: str="llm", 
-        type_hierarchy: dict[str,str]=None, 
-        predicates: list[Predicate]=None,
-        objects: dict[str,str]=None
-        ) -> tuple[dict[str,str], str]:
+        feedback_template: str,
+        feedback_type: str = "llm",
+        type_hierarchy: dict[str, str] = None,
+        predicates: list[Predicate] = None,
+        objects: dict[str, str] = None,
+    ) -> tuple[dict[str, str], str]:
         """Makes LLM call using feedback prompt, then parses it into objects format"""
-        
+
         model.reset_tokens()
 
-        type_str = format_dict(type_hierarchy) if type_hierarchy else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
-        
-        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{objects}', objects_str)
+        type_str = (
+            format_dict(type_hierarchy) if type_hierarchy else "No types provided."
+        )
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        objects_str = (
+            "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+            if objects
+            else "No objects provided."
+        )
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{problem_desc}", problem_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{objects}", objects_str)
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            objects, llm_response = task_builder.extract_objects(model, problem_desc, prompt)
+            objects, llm_response = task_builder.extract_objects(
+                model, problem_desc, prompt
+            )
 
         return objects, llm_response
 
     @require_llm
     def initial_state_feedback(
-        self, 
-        model: LLM, 
+        self,
+        model: LLM,
         problem_desc: str,
         llm_response: str,
-        feedback_template: str, 
-        feedback_type: str="llm", 
-        type_hierarchy: dict[str,str]=None, 
-        predicates: list[Predicate]=None,
-        objects: dict[str,str]=None,
-        initial: list[dict[str,str]]=None
-        ) -> tuple[list[dict[str,str]], str]:
+        feedback_template: str,
+        feedback_type: str = "llm",
+        type_hierarchy: dict[str, str] = None,
+        predicates: list[Predicate] = None,
+        objects: dict[str, str] = None,
+        initial: list[dict[str, str]] = None,
+    ) -> tuple[list[dict[str, str]], str]:
         """Makes LLM call using feedback prompt, then parses it into initial states format"""
-        
+
         model.reset_tokens()
 
-        type_str = format_dict(type_hierarchy) if type_hierarchy else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
-        initial_state_str = task_builder.format_initial(initial) if initial else "No initial state provided."
-        
-        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{objects}', objects_str)
-        feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
+        type_str = (
+            format_dict(type_hierarchy) if type_hierarchy else "No types provided."
+        )
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        objects_str = (
+            "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+            if objects
+            else "No objects provided."
+        )
+        initial_state_str = (
+            task_builder.format_initial(initial)
+            if initial
+            else "No initial state provided."
+        )
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{problem_desc}", problem_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{objects}", objects_str)
+        feedback_template = feedback_template.replace(
+            "{initial_state}", initial_state_str
+        )
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            initial, llm_response = task_builder.extract_initial_state(model, problem_desc, prompt)
+            initial, llm_response = task_builder.extract_initial_state(
+                model, problem_desc, prompt
+            )
 
         return initial, llm_response
 
     @require_llm
     def goal_state_feedback(
-        self, 
-        model: LLM, 
+        self,
+        model: LLM,
         problem_desc: str,
         llm_response: str,
-        feedback_template: str, 
-        feedback_type: str="llm", 
-        type_hierarchy: dict[str,str]=None, 
-        predicates: list[Predicate]=None,
-        objects: dict[str,str]=None,
-        initial: list[dict[str,str]]=None,
-        goal: list[dict[str,str]]=None
-        ) -> tuple[list[dict[str,str]], str]:
+        feedback_template: str,
+        feedback_type: str = "llm",
+        type_hierarchy: dict[str, str] = None,
+        predicates: list[Predicate] = None,
+        objects: dict[str, str] = None,
+        initial: list[dict[str, str]] = None,
+        goal: list[dict[str, str]] = None,
+    ) -> tuple[list[dict[str, str]], str]:
         """Makes LLM call using feedback prompt, then parses it into goal states format"""
-        
+
         model.reset_tokens()
 
-        type_str = format_dict(type_hierarchy) if type_hierarchy else "No types provided."
-        predicate_str = format_predicates(predicates) if predicates else "No predicates provided."
-        objects_str = "\n".join([f"{obj} - {type}" for obj, type in objects.items()]) if objects else "No objects provided."
-        initial_state_str = task_builder.format_initial(initial) if initial else "No initial state provided."
-        goal_state_str = task_builder.format_goal(goal) if goal else "No goal state provided."
-        
-        feedback_template = feedback_template.replace('{problem_desc}', problem_desc)
-        feedback_template = feedback_template.replace('{llm_response}', llm_response)
-        feedback_template = feedback_template.replace('{types}', type_str)
-        feedback_template = feedback_template.replace('{predicates}', predicate_str)
-        feedback_template = feedback_template.replace('{objects}', objects_str)
-        feedback_template = feedback_template.replace('{initial_state}', initial_state_str)
-        feedback_template = feedback_template.replace('{initial_state}', goal_state_str)
+        type_str = (
+            format_dict(type_hierarchy) if type_hierarchy else "No types provided."
+        )
+        predicate_str = (
+            format_predicates(predicates) if predicates else "No predicates provided."
+        )
+        objects_str = (
+            "\n".join([f"{obj} - {type}" for obj, type in objects.items()])
+            if objects
+            else "No objects provided."
+        )
+        initial_state_str = (
+            task_builder.format_initial(initial)
+            if initial
+            else "No initial state provided."
+        )
+        goal_state_str = (
+            task_builder.format_goal(goal) if goal else "No goal state provided."
+        )
 
-        no_fb, fb_msg = self.get_feedback(model, feedback_template, feedback_type, llm_response)
-    
+        feedback_template = feedback_template.replace("{problem_desc}", problem_desc)
+        feedback_template = feedback_template.replace("{llm_response}", llm_response)
+        feedback_template = feedback_template.replace("{types}", type_str)
+        feedback_template = feedback_template.replace("{predicates}", predicate_str)
+        feedback_template = feedback_template.replace("{objects}", objects_str)
+        feedback_template = feedback_template.replace(
+            "{initial_state}", initial_state_str
+        )
+        feedback_template = feedback_template.replace("{initial_state}", goal_state_str)
+
+        no_fb, fb_msg = self.get_feedback(
+            model, feedback_template, feedback_type, llm_response
+        )
+
         if not no_fb:
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
 
-            goal, llm_response = task_builder.extract_goal_state(model, problem_desc, prompt)
+            goal, llm_response = task_builder.extract_goal_state(
+                model, problem_desc, prompt
+            )
 
         return goal, llm_response
 
@@ -547,8 +691,5 @@ class FeedbackBuilder:
 
         if resp.strip().lower() == "no feedback":
             return "no feedback"
-        
-        return resp
 
-if __name__ == "__main__":
-    pass
+        return resp

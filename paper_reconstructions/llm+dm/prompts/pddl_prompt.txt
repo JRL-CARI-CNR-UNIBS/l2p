@@ -4,6 +4,8 @@ Here are two examples from the classical BlocksWorld domain for demonstrating th
 
 Domain information: BlocksWorld is a planning domain in artificial intelligence. The AI agent here is a mechanical robot arm that can pick and place the blocks. Only one block may be moved at a time: it may either be placed on the table or placed atop another block. Because of this, any blocks that are, at a given time, under another block cannot be moved. There is only one type of object in this domain, and that is the block.
 
+End your final answers underneath the headers: '### Action Parameters,' '### Action Preconditions,' '### Action Effects,' and '### New Predicates' with ''' ''' comment blocks in PDDL. Follow the exact example syntax as the following:
+
 Example 1
 Action: This action enables the robot to put a block onto the table. For example, the robot puts block_1 onto the table.
 

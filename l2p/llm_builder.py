@@ -4,39 +4,44 @@ Currently, this builder class contains the generic method to run any LLMs.
 It also offers extension to OpenAI and Huggingface, but can generalise to any third-party LLM store.
 """
 
-import os, logging, argparse, functools
+import logging, functools
 from retry import retry
 from abc import ABC, abstractmethod
 from typing_extensions import override
 
 LOG: logging.Logger = logging.getLogger(__name__)
 
+
 def require_llm(func):
     """
     Decorator to check if an LLM instance is provided and catch errors.
     """
+
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         # check if LLM instance is provided
-        model = kwargs.get('model', None)
+        model = kwargs.get("model", None)
         if model is None:
             # attempt tp get model from positional argument
             for arg in args:
                 if isinstance(arg, LLM):
                     model = arg
                     break
-                
+
         if not model:
             raise ValueError("An LLM instance must be provided to use this method.")
-        
+
         # try-catch to ensure LLM is even used properly
         try:
             return func(*args, **kwargs)
         except Exception as e:
-            print(f"An error occurred in {func.__name__}: {e}.\n You must provide an LLM engine OR proper configuration to use L2P. Refer to https://github.com/AI-Planning/l2p.")
+            print(
+                f"An error occurred in {func.__name__}: {e}.\n You must provide an LLM engine OR proper configuration to use L2P. Refer to https://github.com/AI-Planning/l2p."
+            )
             raise
-        
+
     return wrapper
+
 
 class LLM(ABC):
     def __init__(self, model: str, api_key: str | None = None) -> None:
@@ -46,23 +51,23 @@ class LLM(ABC):
             )
         self.model: str = model
         self.api_key: str | None = api_key
-       
-    @abstractmethod 
+
+    @abstractmethod
     def query(self, prompt: str) -> str:
         """
         Abstract method to query an LLM with a given prompt and return the response.
-        
+
         Args:
             prompt (str): The prompt to send to the LLM
         Returns:
             str: The response from the LLM
         """
         pass
-    
+
     def query_with_system_prompt(self, system_prompt: str, prompt: str) -> str:
         """
         Abstract methody to query an LLM with a given prompt and system prompt and return the response.
-        
+
         Args:
             system_prompt (str): The system prompt to send to the LLM
             prompt (str): The prompt to send to the LLM
@@ -70,7 +75,7 @@ class LLM(ABC):
             str: The response from the LLM
         """
         return self.query(system_prompt + "\n" + prompt)
-    
+
     def valid_models(self) -> list[str]:
         """
         List of valid model parameters, e.g., 'gpt4o-mini' for GPT
@@ -80,52 +85,80 @@ class LLM(ABC):
 
 class OPENAI(LLM):
     """Accessing OpenAI"""
-    
-    def __init__(self, model: str, api_key: str | None = None, client=None, stop=None, max_tokens=4e3, 
-                 temperature=0, top_p=1, frequency_penalty=0.0, presence_penalty=0.0, seed=0) -> None:
-        
+
+    def __init__(
+        self,
+        model: str,
+        api_key: str | None = None,
+        client=None,
+        stop=None,
+        max_tokens=4e3,
+        temperature=0,
+        top_p=1,
+        frequency_penalty=0.0,
+        presence_penalty=0.0,
+        seed=0,
+    ) -> None:
+
         # attempt to import necessary OPENAI modules
         try:
             from openai import OpenAI
-            import tiktoken
         except ImportError:
             raise ImportError(
                 "The 'openai' library is required for OPENAI but is not installed. "
                 "Install it using: `pip install openai`."
             )
-        
+
+        try:
+            import tiktoken
+        except ImportError:
+            raise ImportError(
+                "The 'tiktoken' library is required for token processing but is not installed. "
+                "Install it using: `pip install tiktoken`."
+            )
+
         # call the parent class constructor to handle model and api_key
         super().__init__(model, api_key)
-        
+
         # initialize the OpenAI client or use the one provided
         self.client = client if client else OpenAI(api_key=api_key)
-        
+
         # store other parameters
         self.temperature = temperature
         self.top_p = top_p
         self.freq_penalty = frequency_penalty
         self.presence_penalty = presence_penalty
         self.stop = stop
-        
+
         self.context_length = {
-            "gpt-3.5-turbo-0125": 16e3, # 16k tokens
-            "gpt-3.5-turbo-instruct": 4e3, # 4k tokens
-            "gpt-4-1106-preview": 128e3, # 128k tokens
-            "gpt-4-turbo-2024-04-09": 128e3, # 128k tokens
-            "gpt-4": 8192, # ~8k tokens
-            "gpt-4-32k": 32768, # ~32k tokens
-            "gpt-4o": 32768, # ~32k tokens
-            "gpt-4o-mini": 32768, # ~32k tokens
+            "gpt-3.5-turbo-0125": 16e3,  # 16k tokens
+            "gpt-3.5-turbo-instruct": 4e3,  # 4k tokens
+            "gpt-4-1106-preview": 128e3,  # 128k tokens
+            "gpt-4-turbo-2024-04-09": 128e3,  # 128k tokens
+            "gpt-4": 8192,  # ~8k tokens
+            "gpt-4-32k": 32768,  # ~32k tokens
+            "gpt-4o": 32768,  # ~32k tokens
+            "gpt-4o-mini": 32768,  # ~32k tokens
         }[model]
-        
+
         self.max_tokens = max_tokens if max_tokens is not None else self.context_length
-        self.tok = tiktoken.get_encoding("cl100k_base") # For GPT3.5+
+        self.tok = tiktoken.get_encoding("cl100k_base")  # For GPT3.5+
         self.in_tokens = 0
         self.out_tokens = 0
-        
+
     @retry(tries=2, delay=60)
-    def connect_openai(self, client, model, messages, temperature, max_tokens,
-                    top_p, frequency_penalty, presence_penalty, stop):
+    def connect_openai(
+        self,
+        client,
+        model,
+        messages,
+        temperature,
+        max_tokens,
+        top_p,
+        frequency_penalty,
+        presence_penalty,
+        stop,
+    ):
         return client.chat.completions.create(
             model=model,
             messages=messages,
@@ -134,22 +167,35 @@ class OPENAI(LLM):
             top_p=top_p,
             frequency_penalty=frequency_penalty,
             presence_penalty=presence_penalty,
-            stop=stop
+            stop=stop,
         )
 
     @override
-    def query(self, prompt: str, messages=None, end_when_error=False, max_retry=5, est_margin = 200) -> str:
+    def query(
+        self,
+        prompt: str,
+        messages=None,
+        end_when_error=False,
+        max_retry=5,
+        est_margin=200,
+    ) -> str:
         if prompt is None and messages is None:
             raise ValueError("Prompt and messages cannot both be None")
         if messages is not None:
             messages = messages
         else:
-            messages = [{'role': 'user', 'content': prompt}]
+            messages = [{"role": "user", "content": prompt}]
 
         # calculate # of tokens to request. At most self.max_tokens, and prompt + request < self.context_length
-        current_tokens = int(sum([len(self.tok.encode(m['content'])) for m in messages])) # estimate current usage
-        requested_tokens = int(min(self.max_tokens, self.context_length - current_tokens - est_margin)) # request with safety margin
-        print(f"Requesting {requested_tokens} tokens from {self.model} (estimated {current_tokens - est_margin} prompt tokens with a safety margin of {est_margin} tokens)")
+        current_tokens = int(
+            sum([len(self.tok.encode(m["content"])) for m in messages])
+        )  # estimate current usage
+        requested_tokens = int(
+            min(self.max_tokens, self.context_length - current_tokens - est_margin)
+        )  # request with safety margin
+        print(
+            f"Requesting {requested_tokens} tokens from {self.model} (estimated {current_tokens - est_margin} prompt tokens with a safety margin of {est_margin} tokens)"
+        )
         self.in_tokens += current_tokens
 
         # request response
@@ -160,7 +206,7 @@ class OPENAI(LLM):
             if n_retry >= max_retry:
                 break
             try:
-                print(f'[INFO] connecting to the LLM ({requested_tokens} tokens)...')
+                print(f"[INFO] connecting to the LLM ({requested_tokens} tokens)...")
                 response = self.connect_openai(
                     client=self.client,
                     model=self.model,
@@ -170,30 +216,34 @@ class OPENAI(LLM):
                     top_p=self.top_p,
                     frequency_penalty=self.freq_penalty,
                     presence_penalty=self.presence_penalty,
-                    stop=self.stop
+                    stop=self.stop,
                 )
-                llm_output = response.choices[0].message.content # response['choices'][0]['message']['content']
+                llm_output = response.choices[
+                    0
+                ].message.content  # response['choices'][0]['message']['content']
                 conn_success = True
             except Exception as e:
-                print(f'[ERROR] LLM error: {e}')
+                print(f"[ERROR] LLM error: {e}")
                 if end_when_error:
                     break
         if not conn_success:
-            raise ConnectionError(f'Failed to connect to the LLM after {max_retry} retries')
-        
-        response_tokens = len(self.tok.encode(llm_output)) # Estimate response tokens
+            raise ConnectionError(
+                f"Failed to connect to the LLM after {max_retry} retries"
+            )
+
+        response_tokens = len(self.tok.encode(llm_output))  # Estimate response tokens
         self.out_tokens += response_tokens
 
         return llm_output
-    
+
     def get_tokens(self) -> tuple[int, int]:
         return self.in_tokens, self.out_tokens
-    
+
     def reset_tokens(self):
         self.in_tokens = 0
         self.out_tokens = 0
-        
-    @override    
+
+    @override
     def valid_models(self) -> list[str]:
         """
         List of valid model parameters for OpenAI.
@@ -207,7 +257,7 @@ class OPENAI(LLM):
             "gpt-4",
             "gpt-4-32k",
             "gpt-4o",
-            "gpt-4o-mini"
+            "gpt-4o-mini",
         ]
 
 
@@ -219,17 +269,36 @@ class HUGGING_FACE(LLM):
         self.top_p = top_p
         self.in_tokens = 0
         self.out_tokens = 0
-        
+
     def _load_transformers(self):
+
+        # attempt to import the `transformers` library
         try:
             import transformers
+        except ImportError:
+            raise ImportError(
+                "The 'transformers' library is required for HUGGING_FACE but is not installed. "
+                "Install it using: `pip install transformers`."
+            )
+
+        # attempt to import `AutoTokenizer` from `transformers`
+        try:
             from transformers import AutoTokenizer
+        except ImportError:
+            raise ImportError(
+                "The 'transformers.AutoTokenizer' module is required but is not installed properly. "
+                "Ensure that the 'transformers' library is installed correctly."
+            )
+
+        # attempt to import the `torch` library
+        try:
             import torch
         except ImportError:
             raise ImportError(
-                "The 'transformers' and 'torch' libraries are required for HUGGING_FACE but are not installed. "
-                "Install them using: `pip install transformers torch`."
+                "The 'torch' library is required for HUGGING_FACE but is not installed. "
+                "Install it using: `pip install torch`."
             )
+
         try:
             # Check if the model_path is valid by trying to load it
             self.model = transformers.pipeline(
@@ -241,17 +310,19 @@ class HUGGING_FACE(LLM):
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
         except OSError as e:
             # if model_path is not found, raise an error
-            raise ValueError(f"Model path '{self.model_path}' could not be found. Please ensure the model exists.")
+            raise ValueError(
+                f"Model path '{self.model_path}' could not be found. Please ensure the model exists."
+            )
         except Exception as e:
             # catch any other exceptions and raise a generic error
             raise RuntimeError(f"An error occurred while loading the model: {str(e)}")
-    
+
     # Retry decorator to handle retries on request
     @retry(tries=2, delay=60)
     def connect_huggingface(self, input, temperature, max_tokens, top_p, numSample):
         if self.model is None or self.tokenizer is None:
             self._load_transformers()
-        
+
         if numSample > 1:
             responses = []
             sequences = self.model(
@@ -263,14 +334,14 @@ class HUGGING_FACE(LLM):
                 return_full_text=False,
                 temperature=temperature,
                 top_p=top_p,
-                pad_token_id=self.tokenizer.eos_token_id
+                pad_token_id=self.tokenizer.eos_token_id,
             )
 
             for seq in sequences:
-                response = seq['generated_text']  
+                response = seq["generated_text"]
                 responses.append(response)
             return responses
-        
+
         else:
             sequences = self.model(
                 input,
@@ -280,83 +351,63 @@ class HUGGING_FACE(LLM):
                 return_full_text=False,
                 temperature=temperature,
                 top_p=top_p,
-                pad_token_id=self.tokenizer.eos_token_id
+                pad_token_id=self.tokenizer.eos_token_id,
             )
 
             seq = sequences[0]
-            response = seq['generated_text']
-            
+            response = seq["generated_text"]
+
             return response
-    
+
     @override
     def query(self, prompt: str, numSample=1, max_retry=3, est_margin=200) -> str:
         if prompt is None:
             raise ValueError("Prompt cannot be None")
-        
+
         # Estimate current usage of tokens
         current_tokens = len(self.tokenizer.encode(prompt))
-        requested_tokens = min(self.max_tokens, self.max_tokens - current_tokens - est_margin)
-        
-        print(f"Requesting {requested_tokens} tokens from {self.model} (estimated {current_tokens - est_margin} prompt tokens with a safety margin of {est_margin} tokens)")
-        
+        requested_tokens = min(
+            self.max_tokens, self.max_tokens - current_tokens - est_margin
+        )
+
+        print(
+            f"Requesting {requested_tokens} tokens from {self.model} (estimated {current_tokens - est_margin} prompt tokens with a safety margin of {est_margin} tokens)"
+        )
+
         # Retry logic for Hugging Face request
         n_retry = 0
         conn_success = False
         while not conn_success and n_retry < max_retry:
             n_retry += 1
             try:
-                print(f"[INFO] Connecting to Hugging Face model ({requested_tokens} tokens)...")
+                print(
+                    f"[INFO] Connecting to Hugging Face model ({requested_tokens} tokens)..."
+                )
                 llm_output = self.connect_huggingface(
                     input=prompt,
                     temperature=self.temperature,
                     max_tokens=requested_tokens,
                     top_p=self.top_p,
-                    numSample=numSample
+                    numSample=numSample,
                 )
                 conn_success = True
             except Exception as e:
                 print(f"[ERROR] Hugging Face error: {e}")
                 if n_retry >= max_retry:
-                    raise ConnectionError(f"Failed to connect to the Hugging Face model after {max_retry} retries")
+                    raise ConnectionError(
+                        f"Failed to connect to the Hugging Face model after {max_retry} retries"
+                    )
 
         # Token management
         response_tokens = len(self.tokenizer.encode(llm_output))
         self.out_tokens += response_tokens
         self.in_tokens += current_tokens
-        
+
         return llm_output
-        
+
     def get_tokens(self) -> tuple[int, int]:
         return self.in_tokens, self.out_tokens
-    
+
     def reset_tokens(self):
         self.in_tokens = 0
         self.out_tokens = 0
-    
-
-if __name__ == '__main__':
-    
-    # test out OpenAI GPT
-    api_key = os.environ.get('OPENAI_API_KEY')
-    model_name = "gpt-4o-mini"
-    openai_llm = OPENAI(model=model_name, api_key=api_key)
-    
-    prompt = "What is the capital of France?"
-    response = openai_llm.query(prompt)
-    print(f"Response from {model_name}: {response}")
-    
-    # test out Huggingface model
-    parser = argparse.ArgumentParser(description="Define Parameters")
-    parser.add_argument('-test_dataset', action='store_true') # test custom prompt by default, set flag to run predictions over a specific dataset 
-    parser.add_argument("--temp", type=float, default=0.01, help = "temperature for sampling")
-    parser.add_argument("--max_len", type=int, default=4e3, help = "max number of tokens in answer")
-    parser.add_argument("--num_sample", type=int, default=1, help = "number of answers to sample")
-    parser.add_argument("--model_path", type=str, default="/path/to/model", help = "path to llm")
-    args = parser.parse_args()    
-
-    huggingface_model = HUGGING_FACE(model_path=args.model_path, max_tokens=args.max_len, temperature=args.temp)
-    
-    prompt = "What is the capital of the United States?"
-    input = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>{prompt}<|eot_id|>\n"""
-    response = huggingface_model.query(prompt=input, numSample=args.num_sample, max_retry=3)
-    print(f"Response: {response}")

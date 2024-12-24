@@ -46,7 +46,7 @@ Below is L2P code reconstruction of "action-by-action algorithm" from `"Leveragi
 
 Current Model Construction Works
 --------------------------------
-This section provides a taxonomy of research within Model Construction. For more detailed overview, visit our `paper <https://puginarug.com>`_.
+This section provides a taxonomy of research within Model Construction from the survey paper **Leveraging Large Language Models for Automated Planning and Model Construction: A Survey** (currently under review process). 
 
 Task Translation Frameworks
 -------------------------------

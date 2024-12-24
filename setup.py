@@ -12,16 +12,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Marcus Tantakoun",
     author_email="mtantakoun@gmail.com",
-    install_requires=[
-        "openai",
-        "tiktoken",
-        "retry",
-        "pddl",
-        "typing_extensions",
-        "transformers>=4.43.1",
-        "torch>=2.2",
-        "accelerate>=0.26.0",
-    ],
+    install_requires=["retry", "pddl", "typing_extensions"],
     license="MIT",
     url="https://github.com/AI-Planning/l2p",
     classifiers=[

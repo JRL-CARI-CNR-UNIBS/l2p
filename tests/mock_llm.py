@@ -6,7 +6,7 @@ class MockLLM:
         self.responses = responses
         self.current_index = 0
 
-    def query(self, prompt):
+    def query(self, prompt: str = None):
         """
         Simulates the LLM query response.
         """

@@ -5,12 +5,14 @@ Installing
 ----------
 L2P can be installed with pip::
 
-    pip install l2p
+    pip install lang2pddl
+
+**NOT** `pip install l2p`
 
 Using L2P
 -------------
 
-First things first, import the L2P library::
+First things first, import the whole L2P library, or necessary modules (see :doc:`l2p`)::
 
     from l2p import *
 
@@ -73,7 +75,7 @@ Build LLM feedback components using the ``FeedbackBuilder`` class. This is an ex
         feedback_type = "llm"
     )
 
-Below are actual usage examples. This is the general setup to build domain predicates:
+Below are actual runnable usage examples. This is the general setup to build domain predicates:
 
 .. code-block:: python
     :linenos:
