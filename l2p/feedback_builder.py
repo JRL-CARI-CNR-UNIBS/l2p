@@ -159,6 +159,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
+            
             nl_actions, llm_response = domain_builder.extract_type_hierarchy(
                 model, domain_desc, prompt
             )

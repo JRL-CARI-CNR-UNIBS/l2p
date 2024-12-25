@@ -1,22 +1,11 @@
 """
 Paper: "PROC2PDDL: Open-Domain Planning Representations from Texts" Zhang et al. (2024)
 Source code: https://github.com/zharry29/proc2pddl
-Run: python3 -m paper_reconstructions.proc2pddl.proc2pddl
+Run: python3 -m paper_reconstructions.proc2pddl.main
 """
 
-import os, json
+import os
 from l2p import *
-from l2p.utils.pddl_planner import FastDownward
-
-
-def load_file(file_path):
-    with open(file_path, "r") as file:
-        return file.read().strip()
-
-
-def load_json(file_path):
-    with open(file_path, "r") as file:
-        return json.load(file)
 
 
 engine = "gpt-4o-mini"
@@ -27,12 +16,12 @@ domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
 feedback_builder = FeedbackBuilder()
 prompt_builder = PromptBuilder()
-planner = FastDownward()
+planner = FastDownward(planner_path="downward/fast-downward.py")
 
 # annotated original domain header
-types = load_json("paper_reconstructions/proc2pddl/prompts/types.json")
-predicates = load_json("paper_reconstructions/proc2pddl/prompts/predicates.json")
-nl_actions = load_json("paper_reconstructions/proc2pddl/prompts/nl_actions.json")
+types = load_file("paper_reconstructions/proc2pddl/prompts/types.json")
+predicates = load_file("paper_reconstructions/proc2pddl/prompts/predicates.json")
+nl_actions = load_file("paper_reconstructions/proc2pddl/prompts/nl_actions.json")
 
 if __name__ == "__main__":
 

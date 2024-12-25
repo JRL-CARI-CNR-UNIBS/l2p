@@ -1,7 +1,7 @@
 """
 Paper: "LLM+P: Empowering Large Language Models with Optimal Planning Proficiency" Liu et al (2023)
 Source code: https://github.com/Cranial-XIX/llm-pddl
-Run: python3 -m tests.paper_reconstructions.llm+p.llm+p
+Run: python3 -m paper_reconstructions.llm+p.main
 
 Assumes the following:
     1. NL task description
@@ -12,14 +12,6 @@ This library only focuses on model generation, so it is not concerned with the o
 
 import os
 from l2p import *
-from l2p.utils.pddl_planner import FastDownward
-
-
-def open_file(file_path):
-    with open(file_path, "r") as file:
-        file = file.read().strip()
-    return file
-
 
 if __name__ == "__main__":
 
@@ -27,14 +19,14 @@ if __name__ == "__main__":
     engine = "gpt-4o-mini"
     api_key = os.environ.get("OPENAI_API_KEY")
     openai_llm = OPENAI(model=engine, api_key=api_key)
-    planner = FastDownward()
+    planner = FastDownward(planner_path="downward/fast-downward.py")
 
     # prompts taken from LLM+P
-    role = open_file("paper_reconstructions/llm+p/prompts/role.txt")
-    example = open_file("paper_reconstructions/llm+p/prompts/example.txt")
-    task = open_file("paper_reconstructions/llm+p/prompts/task.txt")
+    role = load_file("paper_reconstructions/llm+p/prompts/role.txt")
+    example = load_file("paper_reconstructions/llm+p/prompts/example.txt")
+    task = load_file("paper_reconstructions/llm+p/prompts/task.txt")
 
-    problem_desc = open_file("paper_reconstructions/llm+p/prompts/problem_desc.txt")
+    problem_desc = load_file("paper_reconstructions/llm+p/prompts/problem_desc.txt")
 
     # assemble prompt builder
     prompt_builder = PromptBuilder(role=role, examples=[example], task=task)

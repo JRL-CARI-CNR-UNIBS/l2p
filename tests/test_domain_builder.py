@@ -1,6 +1,6 @@
 import unittest
 from l2p.domain_builder import DomainBuilder
-from l2p.utils import *
+from l2p.utils.pddl_parser import load_file
 from .mock_llm import MockLLM
 
 

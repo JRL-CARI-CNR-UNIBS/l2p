@@ -424,7 +424,7 @@ class TaskBuilder:
         desc = ""
         for action in actions:
             param_str = "\n".join(
-                [f"{name} - {type}" for name, type in action["parameters"].items()]
+                [f"{name} - {type}" for name, type in action["params"].items()]
             )  # name includes ?
             desc += f"(:action {action['name']}\n"
             desc += f"   :parameters (\n{indent(param_str,2)}\n   )\n"

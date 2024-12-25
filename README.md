@@ -160,6 +160,8 @@ huggingface_model = HUGGING_FACE(model_path=args.model_path, max_tokens=args.max
 ## Planner
 For ease of use, our library contains submodule [FastDownward](https://github.com/aibasel/downward/tree/308812cf7315fe896dbcd319493277d82aa36bd2). Fast Downward is a domain-independent classical planning system that users can run their PDDL domain and problem files on. The motivation is that the majority of papers involving PDDL-LLM usage uses this library as their planner.
 
+**IMPORTANT** FastDownward is a submodule in L2P. To use the planner, you must clone the GitHub repo of [FastDownward](https://github.com/aibasel/downward/tree/308812cf7315fe896dbcd319493277d82aa36bd2) and run the `planner_path` to that directory.
+
 ## Current Works Reconstructed Using L2P
 The following are papers that have been reconstructed so far. This list will be updated in the future.
 

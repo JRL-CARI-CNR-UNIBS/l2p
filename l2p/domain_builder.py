@@ -729,25 +729,25 @@ class DomainBuilder:
         """
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += indent(string=f"(:requirements\n  {' '.join(requirements)}\n)\n")
-        desc += f"   (:types \n{indent(types)}\n   )\n\n"
-        desc += f"   (:predicates \n{indent(predicates)}\n   )"
+        desc += indent(string=f"(:requirements\n  {' '.join(requirements)})", level=1) + "\n\n"
+        desc += f"   (:types \n{indent(string=types, level=2)}\n   )\n\n"
+        desc += f"   (:predicates \n{indent(string=predicates, level=2)}\n   )"
         desc += self.action_descs(actions)
         desc += "\n)"
         desc = desc.replace("AND", "and").replace(
             "OR", "or"
-        )  # The python PDDL package can't handle capital AND and OR
+        )
         return desc
 
     def action_desc(self, action: Action) -> str:
         """Helper function to format individual action descriptions"""
         param_str = "\n".join(
-            [f"{name} - {type}" for name, type in action["parameters"].items()]
+            [f"{name} - {type}" for name, type in action["params"].items()]
         )  # name includes ?
         desc = f"(:action {action['name']}\n"
-        desc += f"   :parameters (\n{param_str}\n   )\n"
-        desc += f"   :precondition\n{action['preconditions']}\n"
-        desc += f"   :effect\n{action['effects']}\n"
+        desc += f"   :parameters (\n{indent(string=param_str, level=2)}\n   )\n"
+        desc += f"   :precondition\n{indent(string=action['preconditions'], level=2)}\n"
+        desc += f"   :effect\n{indent(string=action['effects'], level=2)}\n"
         desc += ")"
         return desc
 
@@ -755,7 +755,7 @@ class DomainBuilder:
         """Helper function to combine all action descriptions"""
         desc = ""
         for action in actions:
-            desc += "\n\n" + self.action_desc(action)
+            desc += "\n\n" + indent(self.action_desc(action), level=1)
         return desc
 
     def format_predicates(self, predicates: list[Predicate]) -> str:
