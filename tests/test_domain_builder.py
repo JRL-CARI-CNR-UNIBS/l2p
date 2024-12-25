@@ -1,4 +1,4 @@
-import unittest
+import unittest, textwrap
 from l2p.domain_builder import DomainBuilder
 from l2p.utils.pddl_parser import load_file
 from .mock_llm import MockLLM
@@ -48,6 +48,7 @@ class TestDomainBuilder(unittest.TestCase):
         self.assertIn("Max retries exceeded", str(context.exception))
 
     def test_extract_type_hierarchy(self):
+        
         mock_llm_1 = MockLLM(
             [load_file("tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/01.txt")]
         )
@@ -112,10 +113,6 @@ class TestDomainBuilder(unittest.TestCase):
             )
         self.assertIn("Max retries exceeded", str(context.exception))
 
-    # TODO: implement rest of test domain builder functions
-    def test_extract_nl_actions(self):
-        pass
-
     def test_extract_pddl_action(self):
         pass
 
@@ -135,8 +132,70 @@ class TestDomainBuilder(unittest.TestCase):
         pass
 
     def test_generate_domain(self):
-        pass
+        
+        domain = "test_domain"
+        types = "robot location"
+        predicates = "(at ?r - robot ?l - location)\n(connected ?l1 ?l2 - location)"
+        actions = [
+            {
+                "name": "move",
+                "params": {"?r": "robot", "?l1": "location", "?l2": "location"},
+                "preconditions": "(and (at ?r ?l1) (connected ?l1 ?l2))",
+                "effects": "(and (not (at ?r ?l1)) (at ?r ?l2))",
+            },
+            {
+                "name": "pick",
+                "params": {"?r": "robot", "?l": "location"},
+                "preconditions": "(and (at ?r ?l) (not (holding ?r)))",
+                "effects": "(holding ?r)",
+            },
+        ]
+        requirements = [":strips", ":typing"]
+        
+        expected_output = textwrap.dedent("""\
+            (define (domain test_domain)
+               (:requirements
+                  :strips :typing)
+
+               (:types 
+                  robot location
+               )
+
+               (:predicates 
+                  (at ?r - robot ?l - location)
+                  (connected ?l1 ?l2 - location)
+               )
+
+               (:action move
+                  :parameters (
+                     ?r - robot
+                     ?l1 - location
+                     ?l2 - location
+                  )
+                  :precondition
+                     (and (at ?r ?l1) (connected ?l1 ?l2))
+                  :effect
+                     (and (not (at ?r ?l1)) (at ?r ?l2))
+               )
+
+               (:action pick
+                  :parameters (
+                     ?r - robot
+                     ?l - location
+                  )
+                  :precondition
+                     (and (at ?r ?l) (not (holding ?r)))
+                  :effect
+                     (holding ?r)
+               )
+            )
+        """).strip()
+
+        result = self.domain_builder.generate_domain(domain=domain, types=types, predicates=predicates, actions=actions, requirements=requirements)
+        
+        self.assertEqual(result.strip(), expected_output.strip())
 
 
 if __name__ == "__main__":
     unittest.main()
+

@@ -3,8 +3,7 @@ This file contains collection of functions for PDDL domain generation purposes
 """
 
 from .utils import *
-from .llm_builder import LLM
-from .llm_builder import require_llm
+from .llm_builder import LLM, require_llm
 from collections import OrderedDict
 import re, time
 
@@ -729,7 +728,7 @@ class DomainBuilder:
         """
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += indent(string=f"(:requirements\n  {' '.join(requirements)})", level=1) + "\n\n"
+        desc += indent(string=f"(:requirements\n   {' '.join(requirements)})", level=1) + "\n\n"
         desc += f"   (:types \n{indent(string=types, level=2)}\n   )\n\n"
         desc += f"   (:predicates \n{indent(string=predicates, level=2)}\n   )"
         desc += self.action_descs(actions)

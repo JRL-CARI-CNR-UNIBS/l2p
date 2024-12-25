@@ -3,8 +3,7 @@ This file contains collection of functions for PDDL task generation purposes
 """
 
 from .utils import *
-from .llm_builder import LLM
-from .llm_builder import require_llm
+from .llm_builder import LLM, require_llm
 import time
 
 
