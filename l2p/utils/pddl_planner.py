@@ -27,14 +27,18 @@ DRIVER_UNSUPPORTED = 37
 
 
 class FastDownward:
+    
+    def __init__(self, planner_path: str):
+        self.planner_path = planner_path
 
     def run_fast_downward(self, domain_file, problem_file, plan_file="sas_plan"):
         try:
-            downward_path = "downward/fast-downward.py"
+            
+            print(self.planner_path)
 
             # lmcut() = landmark-cut heuristic - refer to: https://www.fast-downward.org/PlannerUsage
             result = subprocess.run(
-                [downward_path, "--alias", "lama-first", domain_file, problem_file],
+                [self.planner_path, "--alias", "lama-first", domain_file, problem_file],
                 capture_output=True,
                 text=True,
             )

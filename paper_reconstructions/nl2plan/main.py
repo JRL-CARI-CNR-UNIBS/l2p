@@ -1,19 +1,11 @@
 """
 Paper: "NL2Plan: Robust LLM-Driven Planning from Minimal Text Descriptions" Gestrin et al (2024)
 Source code: https://github.com/mrlab-ai/NL2Plan
-Run: python3 -m paper_reconstructions.nl2plan.nl2plan
+Run: python3 -m paper_reconstructions.nl2plan.main
 """
 
 import os, json
 from l2p import *
-from l2p.utils.pddl_planner import FastDownward
-
-
-def open_file(file_path):
-    with open(file_path, "r") as file:
-        file = file.read().strip()
-    return file
-
 
 def format_json_output(data):
     return json.dumps(data, indent=4)
@@ -23,27 +15,27 @@ engine = "gpt-4o-mini"
 api_key = os.environ.get("OPENAI_API_KEY")
 openai_llm = OPENAI(model=engine, api_key=api_key)
 
-domain_desc = open_file("paper_reconstructions/nl2plan/prompts/blocksworld.txt")
-problem_desc = open_file("paper_reconstructions/nl2plan/prompts/blocksworld_p1.txt")
+domain_desc = load_file("paper_reconstructions/nl2plan/prompts/blocksworld.txt")
+problem_desc = load_file("paper_reconstructions/nl2plan/prompts/blocksworld_p1.txt")
 
 # open and create type extraction prompt builder class
-role_desc = open_file("paper_reconstructions/nl2plan/prompts/type_extraction/role.txt")
-tech_desc = open_file(
+role_desc = load_file("paper_reconstructions/nl2plan/prompts/type_extraction/role.txt")
+tech_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/type_extraction/technique.txt"
 )
-task_desc = open_file("paper_reconstructions/nl2plan/prompts/type_extraction/task.txt")
+task_desc = load_file("paper_reconstructions/nl2plan/prompts/type_extraction/task.txt")
 type_extraction_prompt = PromptBuilder(
     role=role_desc, technique=tech_desc, task=task_desc
 )
 
 # open and create type hierarchy prompt builder class
-role_desc = open_file(
+role_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt"
 )
-tech_desc = open_file(
+tech_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/hierarchy_construction/technique.txt"
 )
-task_desc = open_file(
+task_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt"
 )
 type_hierarchy_prompt = PromptBuilder(
@@ -51,13 +43,13 @@ type_hierarchy_prompt = PromptBuilder(
 )
 
 # open and create NL action prompt builder class
-role_desc = open_file(
+role_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/action_extraction/role.txt"
 )
-tech_desc = open_file(
+tech_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/action_extraction/technique.txt"
 )
-task_desc = open_file(
+task_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/action_extraction/task.txt"
 )
 action_extraction_prompt = PromptBuilder(
@@ -65,13 +57,13 @@ action_extraction_prompt = PromptBuilder(
 )
 
 # open and create PDDL action prompt builder class
-role_desc = open_file(
+role_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/action_construction/role.txt"
 )
-tech_desc = open_file(
+tech_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/action_construction/technique.txt"
 )
-task_desc = open_file(
+task_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/action_construction/task.txt"
 )
 action_construction_prompt = PromptBuilder(
@@ -79,11 +71,11 @@ action_construction_prompt = PromptBuilder(
 )
 
 # open and create compact action prompt builder class
-role_desc = open_file("paper_reconstructions/nl2plan/prompts/task_extraction/role.txt")
-tech_desc = open_file(
+role_desc = load_file("paper_reconstructions/nl2plan/prompts/task_extraction/role.txt")
+tech_desc = load_file(
     "paper_reconstructions/nl2plan/prompts/task_extraction/technique.txt"
 )
-task_desc = open_file("paper_reconstructions/nl2plan/prompts/task_extraction/task.txt")
+task_desc = load_file("paper_reconstructions/nl2plan/prompts/task_extraction/task.txt")
 task_extraction_prompt = PromptBuilder(
     role=role_desc, technique=tech_desc, task=task_desc
 )
@@ -91,7 +83,7 @@ task_extraction_prompt = PromptBuilder(
 domain_builder = DomainBuilder()
 task_builder = TaskBuilder()
 syntax_validator = SyntaxValidator()
-planner = FastDownward()
+planner = FastDownward(planner_path="downward/fast-downward.py")
 feedback_builder = FeedbackBuilder()
 
 unsupported_keywords = ["object", "pddl", "lisp"]
@@ -105,7 +97,7 @@ def type_extraction(
         model, domain_desc, type_extraction_prompt.generate_prompt()
     )
 
-    feedback_template = open_file(
+    feedback_template = load_file(
         "paper_reconstructions/nl2plan/prompts/type_extraction/feedback.txt"
     )
     types, _ = feedback_builder.type_feedback(
@@ -116,8 +108,7 @@ def type_extraction(
         types=types,
         llm_response=response,
     )
-
-    print("Types:", format_json_output(types))
+    
     return types
 
 
@@ -132,7 +123,7 @@ def hierarchy_construction(
         types=types,
     )
 
-    feedback_template = open_file(
+    feedback_template = load_file(
         "paper_reconstructions/nl2plan/prompts/hierarchy_construction/feedback.txt"
     )
     type_hierarchy, _ = feedback_builder.type_hierarchy_feedback(
@@ -144,7 +135,6 @@ def hierarchy_construction(
         llm_response=response,
     )
 
-    print("Type Hierarchy", format_json_output(type_hierarchy))
     return type_hierarchy
 
 
@@ -159,7 +149,7 @@ def action_extraction(
         types=type_hierarchy,
     )
 
-    feedback_template = open_file(
+    feedback_template = load_file(
         "paper_reconstructions/nl2plan/prompts/action_extraction/feedback.txt"
     )
     nl_actions, _ = feedback_builder.nl_action_feedback(
@@ -172,9 +162,6 @@ def action_extraction(
         type_hierarchy=type_hierarchy,
     )
 
-    print("Natural Language Actions")
-    for i in nl_actions:
-        print(i)
     return nl_actions
 
 
@@ -192,7 +179,7 @@ def action_construction(
 
         for action_name, action_desc in nl_actions.items():
 
-            feedback_template = open_file(
+            feedback_template = load_file(
                 "paper_reconstructions/nl2plan/prompts/action_construction/feedback.txt"
             )
 
@@ -224,18 +211,20 @@ def action_construction(
                     "\n\nThe following is a syntax error with your response:\n"
                     + feedback_msg
                 )
+                
+            # TODO: currently buggy - run feedback at the end of the pipline
 
             # RUN FEEDBACK
-            action, new_predicates, _ = feedback_builder.pddl_action_feedback(
-                model=model,
-                domain_desc=domain_desc,
-                llm_response=llm_response,
-                feedback_template=feedback_template,
-                feedback_type="llm",
-                action=action,
-                predicates=predicates,
-                types=types,
-            )
+            # action, new_predicates, _ = feedback_builder.pddl_action_feedback(
+            #     model=model,
+            #     domain_desc=domain_desc,
+            #     llm_response=llm_response,
+            #     feedback_template=feedback_template,
+            #     feedback_type="llm",
+            #     action=action,
+            #     predicates=predicates,
+            #     types=types,
+            # )
 
             actions.append(action)
             predicates.extend(new_predicates)
@@ -254,7 +243,7 @@ def task_extraction(
     model, problem_desc, task_extraction_prompt, types, predicates, actions
 ) -> tuple[dict[str, str], list[dict[str, str]], list[dict[str, str]]]:
     # STEP FIVE: task extraction
-    feedback_template = open_file(
+    feedback_template = load_file(
         "paper_reconstructions/nl2plan/prompts/task_extraction/feedback.txt"
     )
 
@@ -311,10 +300,6 @@ def task_extraction(
     initial = task_builder.format_initial(initial)
     goal = task_builder.format_goal(goal)
 
-    print("Objects:\n", objects)
-    print("Initial States:\n", initial)
-    print("Goal States:\n", goal)
-
     return objects, initial, goal
 
 
@@ -323,6 +308,7 @@ if __name__ == "__main__":
     # STEP ONE: type extraction
     types = type_extraction(openai_llm, domain_desc, type_extraction_prompt)
 
+    print("Types:", format_json_output(types))
     print("END OF STEP ONE")
 
     # STEP TWO: hierarchy construction
@@ -330,6 +316,7 @@ if __name__ == "__main__":
         openai_llm, domain_desc, type_hierarchy_prompt, types
     )
 
+    print("Type Hierarchy", format_json_output(type_hierarchy))
     print("END OF STEP TWO")
 
     # STEP THREE: action extraction
@@ -337,6 +324,9 @@ if __name__ == "__main__":
         openai_llm, domain_desc, action_extraction_prompt, type_hierarchy
     )
 
+    print("Natural Language Actions")
+    for i in nl_actions:
+        print(i)
     print("END OF STEP THREE")
 
     # STEP FOUR: action construction
@@ -344,6 +334,13 @@ if __name__ == "__main__":
         openai_llm, domain_desc, action_construction_prompt, nl_actions, type_hierarchy
     )
 
+    print("PDDL Actions")
+    for i in actions:
+        print(i)
+    print("--------------------")
+    print("PDDL Predicates")
+    for i in predicates:
+        print(i)
     print("END OF STEP FOUR")
 
     types = format_types(type_hierarchy)  # retrieve types
@@ -361,6 +358,9 @@ if __name__ == "__main__":
         openai_llm, problem_desc, task_extraction_prompt, types, predicates, actions
     )
 
+    print("Objects:\n", objects)
+    print("Initial States:\n", initial)
+    print("Goal States:\n", goal)
     print("END OF STEP FIVE")
 
     # format strings

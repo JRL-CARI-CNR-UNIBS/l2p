@@ -2,11 +2,20 @@
 This file contains collection of functions for extracting/parsing information from LLM output
 """
 
+from pddl.formatter import domain_to_string, problem_to_string
+from pddl import parse_domain, parse_problem
 from .pddl_types import Action, Predicate
 from collections import OrderedDict
 from copy import deepcopy
-import re, ast, json
+import re, ast, json, sys, os
 
+def load_file(file_path):
+    _, ext = os.path.splitext(file_path)
+    with open(file_path, "r") as file:
+        if ext == ".json":
+            return json.load(file)
+        else:
+            return file.read().strip()
 
 def parse_params(llm_output):
     """
@@ -189,7 +198,7 @@ def parse_action(llm_response: str, action_name: str) -> Action:
         )
     return {
         "name": action_name,
-        "parameters": parameters,
+        "params": parameters,
         "preconditions": preconditions,
         "effects": effects,
     }
@@ -315,7 +324,7 @@ def prune_types(
                 break
         else:
             for action in actions:
-                if type.split(" ")[0] in action["parameters"].values():
+                if type.split(" ")[0] in action["params"].values():
                     used_types[type] = types[type]
                     break
                 if (
@@ -460,3 +469,29 @@ def format_predicates(predicates: list[Predicate]) -> str:
 def indent(string: str, level: int = 2):
     """Indent string helper function to format PDDL domain/task"""
     return "   " * level + string.replace("\n", f"\n{'   ' * level}")
+
+
+def check_parse_domain(file_path: str):
+    """Run PDDL library to check if file is syntactically correct"""
+    try:
+        domain = parse_domain(file_path)
+        pddl_domain = domain_to_string(domain)
+        return pddl_domain
+    except Exception as e:
+        print("------------------")
+        print(f"Error parsing domain: {e}", file=sys.stderr)
+        print("------------------")
+        sys.exit(1)
+
+
+def check_parse_problem(file_path: str):
+    """Run PDDL library to check if file is syntactically correct"""
+    try:
+        problem = parse_problem(file_path)
+        pddl_problem = problem_to_string(problem)
+        return pddl_problem
+    except Exception as e:
+        print("------------------")
+        print(f"Error parsing domain: {e}", file=sys.stderr)
+        print("------------------")
+        sys.exit(1)

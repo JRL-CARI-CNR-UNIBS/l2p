@@ -1,7 +1,7 @@
 """
 Paper: "Leveraging Pre-trained Large Language Models to Construct and Utilize World Models for Model-based Task Planning" Guan et al. (2023)
 Source code: https://github.com/GuanSuns/LLMs-World-Models-for-Planning
-Run: python3 -m paper_reconstructions.llm+dm.llm+dm
+Run: python3 -m paper_reconstructions.llm+dm.main
 
 Assumes the following:
     1. NL descriptions of all the actions
@@ -9,21 +9,9 @@ Assumes the following:
     3. Information of the object types and hierarchy - fixed set of object types specified in prompt
 """
 
-import os, json
+import os
 from copy import deepcopy
 from l2p import *
-
-
-def open_txt(file_path):
-    with open(file_path, "r") as file:
-        file = file.read().strip()
-    return file
-
-
-def open_json(file_path):
-    with open(file_path, "r") as file:
-        file = json.load(file)
-    return file
 
 
 def construct_action_model(
@@ -118,12 +106,12 @@ def construct_action_model(
 if __name__ == "__main__":
 
     # setup prompt templates
-    action_model = open_json("paper_reconstructions/llm+dm/prompts/action_model.json")
-    domain_desc = open_txt("paper_reconstructions/llm+dm/prompts/domain_desc.txt")
-    hierarchy_requirements = open_json(
+    action_model = load_file("paper_reconstructions/llm+dm/prompts/action_model.json")
+    domain_desc = load_file("paper_reconstructions/llm+dm/prompts/domain_desc.txt")
+    hierarchy_requirements = load_file(
         "paper_reconstructions/llm+dm/prompts/hierarchy_requirements.json"
     )
-    prompt_template = open_txt("paper_reconstructions/llm+dm/prompts/pddl_prompt.txt")
+    prompt_template = load_file("paper_reconstructions/llm+dm/prompts/pddl_prompt.txt")
 
     # setup LLM engine
     engine = "gpt-4o-mini"
