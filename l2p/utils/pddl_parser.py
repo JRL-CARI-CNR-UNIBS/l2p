@@ -217,6 +217,7 @@ def parse_objects(llm_response: str) -> dict[str, str]:
 
     objects_head = extract_heading(llm_response, "OBJECTS")
     objects_raw = combine_blocks(objects_head)
+    
     objects_clean = clear_comments(
         text=objects_raw, comments=[":", "//", "#", ";", "(", ")"]
     )  # Remove comments
