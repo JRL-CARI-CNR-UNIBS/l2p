@@ -9,13 +9,22 @@ from collections import OrderedDict
 from copy import deepcopy
 import re, ast, json, sys, os
 
-def load_file(file_path):
+def load_file(file_path: str):
     _, ext = os.path.splitext(file_path)
     with open(file_path, "r") as file:
         if ext == ".json":
             return json.load(file)
         else:
             return file.read().strip()
+        
+def load_files(folder_path: str):
+    file_contents = []
+    for filename in sorted(os.listdir(folder_path)):
+        file_path = os.path.join(folder_path, filename)
+        if os.path.isfile(file_path):
+            with open(file_path, 'r') as file:
+                file_contents.append(file.read())
+    return file_contents
 
 def parse_params(llm_output):
     """
@@ -25,7 +34,7 @@ def parse_params(llm_output):
     LLM output header should contain '### Parameters' along with structured content.
     """
     params_info = OrderedDict()
-    params_heading = llm_output.split("Parameters")[1].strip().split("###")[0]
+    params_heading = re.split(r"\n#+\s", llm_output.split("Parameters")[1].strip(), maxsplit=1)[0]
     params_str = combine_blocks(params_heading)
     params_raw = []
     for line in params_str.split("\n"):

@@ -58,7 +58,7 @@ class TaskBuilder:
 
         # replace prompt placeholders
         predicate_str = (
-            format_predicates(predicates) if predicates else "No predicates provided."
+            "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else "No predicates provided."
         )
         types_str = "\n".join(types) if types else "No types provided."
 
@@ -82,7 +82,7 @@ class TaskBuilder:
                 print(
                     f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract objects.")
 
@@ -155,7 +155,7 @@ class TaskBuilder:
                 print(
                     f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract initial states.")
 
@@ -228,7 +228,7 @@ class TaskBuilder:
                 print(
                     f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract goal states.")
 
@@ -297,7 +297,7 @@ class TaskBuilder:
                 print(
                     f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract task.")
 
@@ -363,7 +363,7 @@ class TaskBuilder:
                 print(
                     f"Error encountered: {e}. Retrying {attempt + 1}/{max_retries}..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract NL task states.")
 

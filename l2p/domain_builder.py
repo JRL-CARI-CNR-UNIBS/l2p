@@ -81,9 +81,9 @@ class DomainBuilder:
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract types.")
 
@@ -134,9 +134,9 @@ class DomainBuilder:
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract type hierarchy.")
 
@@ -197,9 +197,9 @@ class DomainBuilder:
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract NL actions.")
 
@@ -211,11 +211,12 @@ class DomainBuilder:
         prompt_template: str,
         action_name: str,
         action_desc: str = None,
-        action_list: dict[str, str] = None,
+        action_list: str = None,
         predicates: list[Predicate] = None,
         types: dict[str, str] = None,
+        syntax_validator: SyntaxValidator = None,
         max_retries: int = 3,
-    ) -> tuple[Action, list[Predicate], str]:
+    ) -> tuple[Action, list[Predicate], str, tuple[bool, str]]:
         """
         Extract an action and predicates from a given action description using LLM
 
@@ -234,15 +235,16 @@ class DomainBuilder:
             action (Action): constructed action class
             new_predicates (list[Predicate]): a list of new predicates
             llm_response (str): the raw string LLM response
+            validation_info (tuple[bool, str]): validation check information
         """
 
         # replace prompt placeholders
         types_str = format_dict(types) if types else "No types provided."
         predicates_str = (
-            format_predicates(predicates) if predicates else "No predicates provided."
+            "\n".join([f"- {pred['clean']}" for pred in predicates]) if predicates else "No predicates provided."
         )
         action_list_str = (
-            str(action_list) if action_list else "No other actions provided"
+            action_list if action_list else "No other actions provided"
         )
 
         prompt_template = prompt_template.replace("{domain_desc}", domain_desc)
@@ -267,16 +269,39 @@ class DomainBuilder:
                     llm_response=llm_response, action_name=action_name
                 )
                 new_predicates = parse_new_predicates(llm_response)
+                
+                validation_info = [True, "All validations passed."]
+                if syntax_validator:
+                    for e in syntax_validator.error_types:
+                        if e == 'invalid_header':
+                            validation_info = syntax_validator.validate_header(llm_response)
+                        elif e == 'invalid_keyword_usage':
+                            validation_info = syntax_validator.validate_keyword_usage(llm_response)
+                        elif e == 'unsupported_keywords':
+                            validation_info = syntax_validator.validate_unsupported_keywords(llm_response, syntax_validator.unsupported_keywords)
+                        elif e == 'invalid_param_types':
+                            validation_info = syntax_validator.validate_params(action['params'], types)
+                        elif e == 'invalid_predicate_name':
+                            validation_info = syntax_validator.validate_types_predicates(new_predicates, types)
+                        elif e == 'invalid_predicate_format':
+                            validation_info = syntax_validator.validate_format_predicates(predicates, types)
+                        elif e == 'invalid_predicate_usage':
+                            validation_info = syntax_validator.validate_usage_predicates(llm_response, predicates, types)
+                        else:
+                            raise NotImplementedError(f"Validation type '{e}' is not implemented.")
+                        
+                        if not validation_info[0]:
+                            return action, new_predicates, llm_response, validation_info
 
                 if action is not None and new_predicates is not None:
-                    return action, new_predicates, llm_response
+                    return action, new_predicates, llm_response, validation_info
 
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract PDDL action.")
 
@@ -415,9 +440,9 @@ class DomainBuilder:
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract parameters.")
 
@@ -485,9 +510,9 @@ class DomainBuilder:
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract preconditions.")
 
@@ -558,9 +583,9 @@ class DomainBuilder:
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract effects.")
 
@@ -623,9 +648,9 @@ class DomainBuilder:
             except Exception as e:
                 print(
                     f"Error encountered during attempt {attempt + 1}/{max_retries}: {e}. "
-                    f"LLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
+                    f"\nLLM Output: \n\n{llm_response if 'llm_response' in locals() else 'None'}\n\n Retrying..."
                 )
-                time.sleep(1)  # add a delay before retrying
+                time.sleep(2)  # add a delay before retrying
 
         raise RuntimeError("Max retries exceeded. Failed to extract predicates.")
 

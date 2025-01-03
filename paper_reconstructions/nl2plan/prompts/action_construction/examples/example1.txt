@@ -1,38 +1,26 @@
-The following is an in-context example following the CoT technique.
+## Domain
+The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport workers.
 
-Given domain:
-The AI agent is here a scheduling system for a house construction company with administrators who can create orders, workers who perform them and vehicles to transport things.
+Currently, there are a couple of trucks at the Chicago depot and we're trying to build three houses in the area. Jamie is the only administrator, but we've got Emma and Bob available for general work. 
 
-Given type hierarchy:
-{
-    "object": "Object is always root, everything is an object",
-    "children": [
-        {
-            "worker": "A type of object consisting of humans who do things.",
-            "children": [
-                {"administrator": "A type of worker.", "children": []},
-                {"general_worker": "A type of worker.", "children": []}
-            ]
-        },
-        {"vehicle": "A type of object consisting of vehicles.", "children": []},
-        {
-            "location": "A type of object consisting of places which can be visited.",
-            "children": [
-                {"house": "A type of location.", "children": []}
-            ]
-        }
-    ]
-}
+## Types
+- object: Everything is an object
+    - worker: Human workers which do things
+        - administrator: Workers who can create orders for other workers
+        - general_worker: Workers who can perform a variety of tasks, if there is an order for it
+    - vehicle: Used to transport workers
+    - location: Places where workers and machines can be
+        - house: What is constructed.
 
-Given action: description
-drive: A vehicle drives from a location to another. Requires that the vehicle is at the starting location and that the two locations are connected. Example: truck1 drives from loc1 to house1.
+## Action
+drive
+
+A vehicle drives from a location to another. Requires that the vehicle is at the starting location and that the two locations are connected. Example: truck1 drives from loc1 to house1.
 
 ### Available Predicates
 No predicate has been defined yet
 
------------------------------------------------------
-
-Get predicates:
+### Action Parameters
 Well, first we need to know which vehicle is travelling.
 ```
 - ?v - vehicle: The vehicle travelling
@@ -44,7 +32,7 @@ Then, we need to know where it's travelling to and from. Any type of location (b
 - ?to - location: The location travelling to
 ```
 
-Get preconditions:
+### Action Preconditions
 To be able to drive from ?from to ?to it's specified that:
     1: The truck has to be at the starting location.
     2: The two locations have to be connected.
@@ -67,7 +55,7 @@ Let's specify this in PDDL:
 )
 ```
 
-Get effects:
+### Action Effects
 So, what happens when the action is performed?
  - The vehicle is no longer at ?from.
  - The vehicle is now at ?to.
@@ -82,7 +70,7 @@ Let's write the PDDL:
 )
 ```
 
-State new predicates:
+### New Predicates
 We used several new predicates. Those have to be specified formally here.
 
 The first predicate we created is "at" which shows where something is. To make it compatible for both vehicles and workers, we use the general object type.
@@ -169,7 +157,6 @@ These are the exact same as above, but they need to be reiterated:
 ```
 
 ### New Predicates
-These are the same as before:
 ```
 - (at ?o - object ?l - location): true if the object ?o (a vehicle or a worker) is at the location ?l
 - (connected ?l1 - location ?l2 - location): true if a road exists between ?l1 and ?l2 allowing vehicle travel between them.

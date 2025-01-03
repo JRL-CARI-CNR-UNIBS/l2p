@@ -25,7 +25,7 @@ nl_actions = load_file("paper_reconstructions/proc2pddl/prompts/nl_actions.json"
 
 if __name__ == "__main__":
 
-    unsupported_keywords = ["object", "pddl", "lisp"]
+    UNSUPPORTED_KEYWORDS = ["object", "pddl", "lisp"]
 
     # retrieve wikihow text
     domain_desc = load_file("paper_reconstructions/proc2pddl/prompts/wikihow.txt")
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     pruned_types = {
         name: description
         for name, description in types.items()
-        if name not in unsupported_keywords
+        if name not in UNSUPPORTED_KEYWORDS
     }  # remove unsupported words
 
     # format strings
