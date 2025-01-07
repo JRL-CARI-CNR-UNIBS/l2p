@@ -6,17 +6,13 @@ Run: python3 -m paper_reconstructions.nl2plan.main
 
 import argparse
 from l2p import *
-from .nl2plan.type_extraction import TypeExtraction
-from .nl2plan.hierarchy_construction import HierarchyConstruction
-from .nl2plan.action_extraction import ActionExtraction
-from .nl2plan.action_construction import ActionConstruction
-from .nl2plan.task_extraction import TaskExtraction
+from .nl2plan import *
 
 DOMAINS = [
     "blocksworld",
     "household",
-    "isr",
-    "isr-assisted",
+    "isr", # currently unsupported
+    "isr-assisted", # currently unsupported
     "logistics",
     "tyreworld"
 ]
@@ -33,11 +29,14 @@ REQUIREMENTS = [
 
 UNSUPPORTED_KEYWORDS = ["object", "pddl", "lisp"]
 
-def run_nl2plan(args):
+separator = "-" * 20
+
+def run_nl2plan(args, domain: str, problem: str):
     # create necessary classes
     domain_builder = DomainBuilder() # L2P domain builder
     task_builder = TaskBuilder() # L2P task builder
     planner = FastDownward(planner_path=args.planner) # FastDownward planner
+    log = "" # string to log all step output
     
     # initialize OpenAI engine
     api_key = os.environ.get("OPENAI_API_KEY")
@@ -53,11 +52,11 @@ def run_nl2plan(args):
     
     types = type_extraction.type_extraction(
         model=model, 
-        domain_desc=load_file("paper_reconstructions/nl2plan/domains/blocksworld/desc.txt"), 
+        domain_desc=load_file(f"paper_reconstructions/nl2plan/domains/{domain}/desc.txt"), 
         type_extraction_prompt=type_extraction.prompt_template,
         feedback_prompt=load_file("paper_reconstructions/nl2plan/prompts/type_extraction/feedback.txt"))
     
-    print("TYPES:\n", types)
+    log += f"STEP ONE: TYPE EXTRACTION\n\n{types}\n\n"
     model.reset_tokens()
     
     # B. Hierarchy Construction
@@ -69,12 +68,12 @@ def run_nl2plan(args):
     
     type_hierarchy = hierarchy_construction.hierarchy_construction(
         model=model, 
-        domain_desc=load_file("paper_reconstructions/nl2plan/domains/blocksworld/desc.txt"), 
+        domain_desc=load_file(f"paper_reconstructions/nl2plan/domains/{domain}/desc.txt"), 
         type_hierarchy_prompt=hierarchy_construction.prompt_template,
         types=types,
         feedback_prompt=load_file("paper_reconstructions/nl2plan/prompts/hierarchy_construction/feedback.txt"))
-    
-    print("\n\nTYPE HIERARCHY:\n", type_hierarchy)
+
+    log += f"{separator}\nSTEP TWO: HIERARCHY CONSTRUCTION\n\n{type_hierarchy}\n\n"
     model.reset_tokens()
     
     # C. Action Extraction
@@ -86,12 +85,12 @@ def run_nl2plan(args):
     
     nl_actions = action_extraction.action_extraction(
         model=model, 
-        domain_desc=load_file("paper_reconstructions/nl2plan/domains/blocksworld/desc.txt"), 
+        domain_desc=load_file(f"paper_reconstructions/nl2plan/domains/{domain}/desc.txt"), 
         action_extraction_prompt=action_extraction.prompt_template,
         type_hierarchy=type_hierarchy,
         feedback_prompt=load_file("paper_reconstructions/nl2plan/prompts/action_extraction/feedback.txt"))
-    
-    print("\n\nNL ACTIONS:\n", nl_actions)
+
+    log += f"{separator}\nSTEP THREE: ACTION EXTRACTION\n\n{nl_actions}\n\n"
     model.reset_tokens()
     
     # D. Action Construction
@@ -103,7 +102,7 @@ def run_nl2plan(args):
     
     actions, predicates, = action_construction.action_construction(
         model=model, 
-        domain_desc=load_file("paper_reconstructions/nl2plan/domains/blocksworld/desc.txt"), 
+        domain_desc=load_file(f"paper_reconstructions/nl2plan/domains/{domain}/desc.txt"), 
         act_constr_prompt=action_construction.prompt_template,
         nl_actions=nl_actions,
         type_hierarchy=type_hierarchy,
@@ -111,14 +110,12 @@ def run_nl2plan(args):
         max_attempts=1
         )
     
-    print("\n\nACTIONS:")
-    for i in actions:
-        print(i)
-    
-    print("\n\nPREDICATES:")
-    for i in predicates:
-        print(i)
-        
+    log += f"{separator}\n"
+    log += "STEP FOUR: ACTION CONSTRUCTION\n\n"
+    log += "ACTIONS:\n"
+    log += '\n'.join([str(action) for action in actions]) + "\n\n"
+    log += "PREDICATES:\n"
+    log += '\n'.join([str(predicate) for predicate in predicates]) + "\n\n"
     model.reset_tokens()
     
     # E. Task Extraction
@@ -130,7 +127,7 @@ def run_nl2plan(args):
     
     objects, initial, goal = task_extraction.task_extraction(
         model=model, 
-        problem_desc=load_file("paper_reconstructions/nl2plan/domains/blocksworld/task1.txt"), 
+        problem_desc=load_file(f"paper_reconstructions/nl2plan/domains/{domain}/{problem}.txt"), 
         task_extraction_prompt=task_extraction.prompt_template,
         types=type_hierarchy,
         predicates=predicates,
@@ -138,9 +135,10 @@ def run_nl2plan(args):
         error_prompt=load_file("paper_reconstructions/nl2plan/prompts/task_extraction/error.txt")
         )
     
-    print("\n\nOBJECTS:\n", objects)
-    print("\n\nINITIAL STATES:\n", initial)
-    print("\n\nGOAL STATES:\n", goal)
+    log += f"{separator}\nSTEP FIVE: TASK EXTRACTION\n\n"
+    log += f"OBJECTS:\n{objects}\n"
+    log += f"INITIAL STATES:\n{initial}\n"
+    log += f"GOAL STATES:\n{goal}\n"
     
     predicate_str = "\n".join(
         [pred["clean"].replace(":", " ; ") for pred in predicates]
@@ -165,7 +163,7 @@ def run_nl2plan(args):
         actions=actions,
     )
     
-    print("\n\nPDDL DOMAIN:\n", pddl_domain)
+    log += f"\n\nPDDL DOMAIN:\n{pddl_domain}"
     
     problem_name = args.domain + "_problem"
     pddl_problem = task_builder.generate_task(
@@ -176,25 +174,40 @@ def run_nl2plan(args):
         goal=goal,
     )
     
-    print("\n\nPDDL PROBLEM:\n", pddl_problem)
+    log += f"\n\nPDDL PROBLEM:\n{pddl_problem}"
+    
+    # Ensure that the directories exist
+    main_directory = f"paper_reconstructions/nl2plan/results/{domain}/{problem}"
+    os.makedirs(main_directory, exist_ok=True)  # Creates the directory, if it doesn't exist
 
-    # write files
-    domain_file = "paper_reconstructions/nl2plan/results/blocksworld/domain.pddl"
+    # Write log file
+    log_file = f"{main_directory}/log.txt"
+    with open(log_file, "w") as f:
+        f.write(log)
+
+    # Write domain and problem files
+    domain_file = f"{main_directory}/domain.pddl"
     with open(domain_file, "w") as f:
         f.write(pddl_domain)
-    problem_file = "paper_reconstructions/nl2plan/results/blocksworld/problem.pddl"
+    problem_file = f"{main_directory}/problem.pddl"
     with open(problem_file, "w") as f:
         f.write(pddl_problem)
 
-    # run planner
-    planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)
+    # Run planner
+    _, plan = planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)
+
+    # Write plan file
+    plan_file = f"{main_directory}/plan.txt"
+    with open(plan_file, "w") as f:
+        f.write(plan)
+    
     
     
 
 if __name__ == "__main__":
     
     # load in arguments to run program
-    parser = argparse.ArgumentParser(description="LLM+P")
+    parser = argparse.ArgumentParser(description="NL2Plan")
     parser.add_argument('--model', type=str, default="gpt-4o-mini")
     parser.add_argument('--domain', type=str, choices=DOMAINS, default="blocksworld")
     parser.add_argument('--requirements', type=list[str], default=REQUIREMENTS)
@@ -202,4 +215,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # run LLM+P method
-    run_nl2plan(args=args)
+    run_nl2plan(args=args, domain="blocksworld", problem="task1")

@@ -1,0 +1,167 @@
+STEP ONE: TYPE EXTRACTION
+
+{'block': 'The individual units that can be picked and placed by the robot arm. They can be stacked or placed on a table.', 'table': 'A flat surface where blocks can be placed. It serves as a base for the blocks.'}
+
+--------------------
+STEP TWO: HIERARCHY CONSTRUCTION
+
+{'object': 'Object is always root, everything is an object', 'children': [{'block': 'The individual units that can be picked and placed by the robot arm. They can be stacked or placed on a table.', 'children': []}, {'table': 'A flat surface where blocks can be placed. It serves as a base for the blocks.', 'children': []}]}
+
+--------------------
+STEP THREE: ACTION EXTRACTION
+
+{'pick_block': 'The robot arm picks up a block from the table or from on top of another block. Requires the block to be on the table or on another block and not currently being held. Example: robot_arm picks up block_1 from the table.', 'place_on_table': 'The robot arm places a block down on the table. Requires the block to be held and the table to be clear of any blocks directly beneath the block being placed. Example: robot_arm places block_1 on the table.', 'place_on_block': 'The robot arm places a block on top of another block. Requires the block to be held and the block being placed on to be clear of any blocks directly beneath it. Example: robot_arm places block_1 on block_2.', 'release_block': 'The robot arm releases a block it is holding. Requires the block to be held. Example: robot_arm releases block_1.'}
+
+--------------------
+STEP FOUR: ACTION CONSTRUCTION
+
+ACTIONS:
+{'name': 'pick_block', 'params': OrderedDict([('?b', 'block'), ('?t', 'table'), ('?b2', 'block')]), 'preconditions': '(and\n    (or (on_table ?b ?t) (on_block ?b ?b2)) ; The block is either on the table or on another block\n    (not (held ?b)) ; The block is not currently being held\n)', 'effects': '(and\n    (held ?b) ; The block is now being held by the robot arm\n    (not (on_table ?b ?t)) ; The block is no longer on the table\n    (not (on_block ?b ?b2)) ; The block is no longer on top of another block\n)'}
+{'name': 'place_on_table', 'params': OrderedDict([('?b', 'block'), ('?t', 'table')]), 'preconditions': '(and\n    (held ?b) ; The block is currently being held\n    (not (on_block ?b ?t)) ; The table must be clear of any blocks directly beneath the block being placed\n    (not (on_block ?b1 ?t)) ; The table must not have any blocks directly beneath the block being placed\n)', 'effects': '(and\n    (on_table ?b ?t) ; The block is now on the table\n    (not (held ?b)) ; The block is no longer being held\n)'}
+{'name': 'place_on_block', 'params': OrderedDict([('?b1', 'block'), ('?b2', 'block'), ('?t', 'table')]), 'preconditions': '(and\n    (held ?b1) ; The block being placed is currently held\n    (not (held ?b2)) ; The block being placed on is not currently held\n    (not (on_block ?b1 ?b2)) ; The block being placed on is clear of any blocks directly beneath it\n    (not (on_table ?b2 ?t)) ; The block being placed on is not on the table\n)', 'effects': '(and\n    (on_block ?b1 ?b2) ; The block being placed is now on top of the other block\n    (not (held ?b1)) ; The block being placed is no longer held\n)'}
+{'name': 'release_block', 'params': OrderedDict([('?b', 'block')]), 'preconditions': '(and\n    (held ?b) ; The block is currently being held\n    (or (on_table ?b) (not (exists (?b2 - block) (on_block ?b ?b2)))) ; The block is either on the table or not on top of another block\n)', 'effects': '(and\n    (not (held ?b)) ; The block is no longer held\n    (on_table ?b) ; The block is placed on the table after being released\n)'}
+
+PREDICATES:
+{'name': 'on_table', 'desc': 'true if block ?b is on the table ?t', 'raw': '(on_table ?b - block ?t - table): true if block ?b is on the table ?t', 'params': OrderedDict([('?b', 'block'), ('?t', 'table')]), 'clean': '(on_table ?b - block ?t - table): true if block ?b is on the table ?t'}
+{'name': 'on_block', 'desc': 'true if block ?b1 is on top of block ?b2', 'raw': '(on_block ?b1 - block ?b2 - block): true if block ?b1 is on top of block ?b', 'params': OrderedDict([('?b1', 'block'), ('?b2', 'block')]), 'clean': '(on_block ?b1 - block ?b2 - block): true if block ?b1 is on top of block ?b2'}
+{'name': 'held', 'desc': 'true if block ?b is currently being held by the robot arm', 'raw': '(held ?b - block): true if block ?b is currently being held by the robot arm', 'params': OrderedDict([('?b', 'block')]), 'clean': '(held ?b - block): true if block ?b is currently being held by the robot arm'}
+
+--------------------
+STEP FIVE: TASK EXTRACTION
+
+OBJECTS:
+blue_block - block
+red_block - block
+yellow_block - block
+green_block - block
+table1 - table
+INITIAL STATES:
+(on_block blue_block red_block)
+(on_block red_block yellow_block)
+(on_table yellow_block table1)
+(on_table green_block table1)
+(clear green_block)
+GOAL STATES:
+(AND 
+   (on_block red_block green_block) 
+)
+
+
+PDDL DOMAIN:
+(define (domain blocksworld)
+   (:requirements
+      :strips :typing :equality :negative-preconditions :disjunctive-preconditions :universal-preconditions :conditional-effects)
+
+   (:types 
+      block - object
+      table - object
+   )
+
+   (:predicates 
+      (on_table ?b - block ?t - table) ;  true if block ?b is on the table ?t
+      (on_block ?b1 - block ?b2 - block) ;  true if block ?b1 is on top of block ?b2
+      (held ?b - block) ;  true if block ?b is currently being held by the robot arm
+   )
+
+   (:action pick_block
+      :parameters (
+         ?b - block
+         ?t - table
+         ?b2 - block
+      )
+      :precondition
+         (and
+             (or (on_table ?b ?t) (on_block ?b ?b2)) ; The block is either on the table or on another block
+             (not (held ?b)) ; The block is not currently being held
+         )
+      :effect
+         (and
+             (held ?b) ; The block is now being held by the robot arm
+             (not (on_table ?b ?t)) ; The block is no longer on the table
+             (not (on_block ?b ?b2)) ; The block is no longer on top of another block
+         )
+   )
+
+   (:action place_on_table
+      :parameters (
+         ?b - block
+         ?t - table
+      )
+      :precondition
+         (and
+             (held ?b) ; The block is currently being held
+             (not (on_block ?b ?t)) ; The table must be clear of any blocks directly beneath the block being placed
+             (not (on_block ?b1 ?t)) ; The table must not have any blocks directly beneath the block being placed
+         )
+      :effect
+         (and
+             (on_table ?b ?t) ; The block is now on the table
+             (not (held ?b)) ; The block is no longer being held
+         )
+   )
+
+   (:action place_on_block
+      :parameters (
+         ?b1 - block
+         ?b2 - block
+         ?t - table
+      )
+      :precondition
+         (and
+             (held ?b1) ; The block being placed is currently held
+             (not (held ?b2)) ; The block being placed on is not currently held
+             (not (on_block ?b1 ?b2)) ; The block being placed on is clear of any blocks directly beneath it
+             (not (on_table ?b2 ?t)) ; The block being placed on is not on the table
+         )
+      :effect
+         (and
+             (on_block ?b1 ?b2) ; The block being placed is now on top of the other block
+             (not (held ?b1)) ; The block being placed is no longer held
+         )
+   )
+
+   (:action release_block
+      :parameters (
+         ?b - block
+      )
+      :precondition
+         (and
+             (held ?b) ; The block is currently being held
+             (or (on_table ?b) (not (exists (?b2 - block) (on_block ?b ?b2)))) ; The block is either on the table or not on top of another block
+         )
+      :effect
+         (and
+             (not (held ?b)) ; The block is no longer held
+             (on_table ?b) ; The block is placed on the table after being released
+         )
+   )
+)
+
+PDDL PROBLEM:
+(define
+   (problem blocksworld_problem)
+   (:domain blocksworld)
+
+   (:objects 
+      blue_block - block
+      red_block - block
+      yellow_block - block
+      green_block - block
+      table1 - table
+   )
+
+   (:init
+      (on_block blue_block red_block)
+      (on_block red_block yellow_block)
+      (on_table yellow_block table1)
+      (on_table green_block table1)
+      (clear green_block)
+   )
+
+   (:goal
+      (and 
+         (on_block red_block green_block) 
+      )
+   )
+
+)
