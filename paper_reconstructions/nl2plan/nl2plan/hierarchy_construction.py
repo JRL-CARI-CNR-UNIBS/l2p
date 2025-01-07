@@ -1,5 +1,6 @@
 import os
 from l2p import *
+from .utils import set_prompt
 
 class HierarchyConstruction:
     def __init__(self):
@@ -7,20 +8,7 @@ class HierarchyConstruction:
         self.domain_builder = DomainBuilder()
         self.feedback_builder = FeedbackBuilder()
         self.type_hierarchy = dict[str, str]
-    
-    def set_prompt(self, role_path: str, examples_path: str, task_path: str):
-        
-        role = load_file(role_path)
-        examples = load_files(examples_path)
-        task = load_file(task_path)
-        
-        self.prompt_template.set_role(role=role)
-        for ex in examples:
-            self.prompt_template.set_examples(example=ex)
-        self.prompt_template.set_task(task=task)
-        
-    def set_types(self, types: dict[str,str]):
-        self.type_hierarchy = types
+
     
     def hierarchy_construction(
         self, 
@@ -62,7 +50,9 @@ if __name__ == "__main__":
         'movable_object': 'A meta-type that includes all objects that can be moved by the robot arm, specifically blocks in this case.'}
     
     hierarchy_construction = HierarchyConstruction()
-    hierarchy_construction.set_prompt(
+    
+    hierarchy_construction.prompt_template = set_prompt(
+        hierarchy_construction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt")

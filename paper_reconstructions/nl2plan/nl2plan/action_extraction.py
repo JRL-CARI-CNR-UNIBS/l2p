@@ -1,5 +1,6 @@
 import os
 from l2p import *
+from .utils import set_prompt
 
 class ActionExtraction:
     def __init__(self):
@@ -8,20 +9,7 @@ class ActionExtraction:
         self.feedback_builder = FeedbackBuilder()
         self.nl_actions = dict[str,str]
     
-    def set_prompt(self, role_path: str, examples_path: str, task_path: str):
-        
-        role = load_file(role_path)
-        examples = load_files(examples_path)
-        task = load_file(task_path)
-        
-        self.prompt_template.set_role(role=role)
-        for ex in examples:
-            self.prompt_template.set_examples(example=ex)
-        self.prompt_template.set_task(task=task)
-        
-    def set_nl_actions(self, nl_actions: dict[str,str]):
-        self.nl_actions = nl_actions
-    
+
     def action_extraction(
         self,
         model: LLM, 
@@ -74,7 +62,9 @@ if __name__ == "__main__":
         }
     
     action_extraction = ActionExtraction()
-    action_extraction.set_prompt(
+    
+    action_extraction.prompt_template = set_prompt(
+        action_extraction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/action_extraction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/action_extraction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/action_extraction/task.txt")

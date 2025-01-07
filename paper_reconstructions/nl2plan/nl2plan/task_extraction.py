@@ -1,5 +1,6 @@
 import os
 from l2p import *
+from .utils import set_prompt
 
 class TaskExtraction:
     def __init__(self):
@@ -7,21 +8,7 @@ class TaskExtraction:
         self.task_builder = TaskBuilder()
         self.feedback_builder = FeedbackBuilder()
         self.syntax_validator = SyntaxValidator()
-        self.pddl_predicates = list[Predicate]
-    
-    def set_prompt(self, role_path: str, examples_path: str, task_path: str):
-        
-        role = load_file(role_path)
-        examples = load_files(examples_path)
-        task = load_file(task_path)
-        
-        self.prompt_template.set_role(role=role)
-        for ex in examples:
-            self.prompt_template.set_examples(example=ex)
-        self.prompt_template.set_task(task=task)
-        
-    def set_predicates(self, predicates: list[Predicate]):
-        self.pddl_predicates = predicates
+
         
     def task_extraction(
         self, 
@@ -131,7 +118,9 @@ if __name__ == "__main__":
                 {'name': 'on_block', 'desc': "'Indicates that block ?b is placed on top of block ?b2'", 'raw': "(on_block ?b - block ?b2 - block): 'Indicates that block ?b is placed on top of block ?b2'", 'params': OrderedDict([('?b', 'block'), ('?b2', 'block')]), 'clean': "(on_block ?b - block ?b2 - block): 'Indicates that block ?b is placed on top of block ?b2'"}]
     
     task_extraction = TaskExtraction()
-    task_extraction.set_prompt(
+    
+    task_extraction.prompt_template = set_prompt(
+        task_extraction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/task_extraction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/task_extraction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/task_extraction/task.txt")
