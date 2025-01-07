@@ -14,6 +14,7 @@ class SyntaxValidator:
         unsupported_keywords = None
         ):
         
+        # current error types available
         default_error_types = [
             'invalid_header',
             'invalid_keyword_usage',
@@ -24,7 +25,7 @@ class SyntaxValidator:
             'invalid_predicate_usage'
         ]
         
-        default_unsupported = ['forall', 'when', 'exists', 'implies']
+        default_unsupported = ['forall', 'when', 'exists', 'implies'] # current unsupported usage of PDDL
         self.error_types = default_error_types if error_types is None else error_types
         self.unsupported_keywords = default_unsupported if unsupported_keywords is None else unsupported_keywords
 

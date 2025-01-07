@@ -220,15 +220,12 @@ if __name__ == "__main__":
             ]
         }
     
-    # nl_actions = {
-    #     "pick_block": "The robot arm picks up a block from a surface. Requires the block to be on a surface and not currently held by the arm. Example: robot_arm picks up block_1 from table_1.",
-    #     "place_on_table": "The robot arm places a block on a table. Requires the block to be held by the arm and the table to be clear of other blocks. Example: robot_arm places block_1 on table_1.",
-    #     "place_on_block": "The robot arm places a block on top of another block. Requires the block to be held by the arm and the target block to be clear (not currently held or covered by another block). Example: robot_arm places block_1 on block_2.",
-    #     "release_block": "The robot arm releases a block it is currently holding. Requires the block to be held by the arm. Example: robot_arm releases block_1."
-    # }
-    
-    nl_actions = {'pick_block': 'The robot arm picks up a block from the table or from on top of another block. The block must be accessible and not currently under another block. Example: robot_arm picks up block_1 from the table.', 'place_on_table': 'The robot arm places a block onto the table. The block must be held by the robot arm and the table must be clear of any other blocks in that position. Example: robot_arm places block_1 on the table.', 'place_on_block': 'The robot arm places a block on top of another block. The block being placed must be held by the robot arm, and the block it is being placed on must be stable and not currently under another block. Example: robot_arm places block_1 on block_2.', 'release_block': 'The robot arm releases the currently held block without placing it on the table or another block. This action is used to drop the block. The block is no longer held by the robot arm after this action is performed. Example: robot_arm releases block_1.', 'check_accessibility': 'The robot arm checks if a block is accessible for picking. Example: robot_arm checks if block_1 is accessible.'}
-
+    nl_actions = {
+        "pick_block": "The robot arm picks up a block from a surface. Requires the block to be on a surface and not currently held by the arm. Example: robot_arm picks up block_1 from table_1.",
+        "place_on_table": "The robot arm places a block on a table. Requires the block to be held by the arm and the table to be clear of other blocks. Example: robot_arm places block_1 on table_1.",
+        "place_on_block": "The robot arm places a block on top of another block. Requires the block to be held by the arm and the target block to be clear (not currently held or covered by another block). Example: robot_arm places block_1 on block_2.",
+        "release_block": "The robot arm releases a block it is currently holding. Requires the block to be held by the arm. Example: robot_arm releases block_1."
+    }
     
     action_construction = ActionConstruction()
     action_construction.set_prompt(
