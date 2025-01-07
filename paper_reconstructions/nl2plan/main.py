@@ -6,7 +6,12 @@ Run: python3 -m paper_reconstructions.nl2plan.main
 
 import argparse
 from l2p import *
-from .nl2plan import *
+from .nl2plan.type_extraction import TypeExtraction
+from .nl2plan.hierarchy_construction import HierarchyConstruction
+from .nl2plan.action_extraction import ActionExtraction
+from .nl2plan.action_construction import ActionConstruction
+from .nl2plan.task_extraction import TaskExtraction
+from .nl2plan.utils import set_prompt
 
 DOMAINS = [
     "blocksworld",
@@ -45,7 +50,8 @@ def run_nl2plan(args, domain: str, problem: str):
     
     # A. Type Extraction
     type_extraction = TypeExtraction()
-    type_extraction.set_prompt(
+    type_extraction.prompt_template = set_prompt(
+        type_extraction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/type_extraction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/type_extraction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/type_extraction/task.txt")
@@ -61,7 +67,8 @@ def run_nl2plan(args, domain: str, problem: str):
     
     # B. Hierarchy Construction
     hierarchy_construction = HierarchyConstruction()
-    hierarchy_construction.set_prompt(
+    hierarchy_construction.prompt_template = set_prompt(
+        hierarchy_construction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt")
@@ -78,7 +85,8 @@ def run_nl2plan(args, domain: str, problem: str):
     
     # C. Action Extraction
     action_extraction = ActionExtraction()
-    action_extraction.set_prompt(
+    action_extraction.prompt_template = set_prompt(
+        action_extraction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/action_extraction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/action_extraction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/action_extraction/task.txt")
@@ -95,7 +103,8 @@ def run_nl2plan(args, domain: str, problem: str):
     
     # D. Action Construction
     action_construction = ActionConstruction()
-    action_construction.set_prompt(
+    action_construction.prompt_template = set_prompt(
+        action_construction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/action_construction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/action_construction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/action_construction/task.txt")
@@ -120,7 +129,8 @@ def run_nl2plan(args, domain: str, problem: str):
     
     # E. Task Extraction
     task_extraction = TaskExtraction()
-    task_extraction.set_prompt(
+    task_extraction.prompt_template = set_prompt(
+        task_extraction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/task_extraction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/task_extraction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/task_extraction/task.txt")
@@ -206,13 +216,25 @@ def run_nl2plan(args, domain: str, problem: str):
 
 if __name__ == "__main__":
     
-    # load in arguments to run program
-    parser = argparse.ArgumentParser(description="NL2Plan")
-    parser.add_argument('--model', type=str, default="gpt-4o-mini")
-    parser.add_argument('--domain', type=str, choices=DOMAINS, default="blocksworld")
-    parser.add_argument('--requirements', type=list[str], default=REQUIREMENTS)
-    parser.add_argument('--planner', type=str, default="/Users/marcustantakoun/Downloads/downward/fast-downward.py")
-    args = parser.parse_args()
+    # # load in arguments to run program
+    # parser = argparse.ArgumentParser(description="NL2Plan")
+    # parser.add_argument('--model', type=str, default="gpt-4o-mini")
+    # parser.add_argument('--domain', type=str, choices=DOMAINS, default="blocksworld")
+    # parser.add_argument('--requirements', type=list[str], default=REQUIREMENTS)
+    # parser.add_argument('--planner', type=str, default="/Users/marcustantakoun/Downloads/downward/fast-downward.py")
+    # args = parser.parse_args()
     
-    # run LLM+P method
-    run_nl2plan(args=args, domain="blocksworld", problem="task1")
+    # # run LLM+P method
+    # run_nl2plan(args=args, domain="blocksworld", problem="task2")
+
+    planner = FastDownward(planner_path="/Users/marcustantakoun/Downloads/downward/fast-downward.py")
+    domain_file = "paper_reconstructions/nl2plan/results/blocksworld/task2/domain.pddl"
+    problem_file = "paper_reconstructions/nl2plan/results/blocksworld/task2/problem.pddl"
+
+    # Run planner
+    _, plan = planner.run_fast_downward(domain_file=domain_file, problem_file=problem_file)
+
+    # Write plan file
+    plan_file = "paper_reconstructions/nl2plan/results/blocksworld/task2/plan.txt"
+    with open(plan_file, "w") as f:
+        f.write(plan)

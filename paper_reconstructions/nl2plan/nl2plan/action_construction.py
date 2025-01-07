@@ -1,5 +1,6 @@
 import os
 from l2p import *
+from .utils import set_prompt
 
 class ActionConstruction:
     def __init__(self):
@@ -7,28 +8,6 @@ class ActionConstruction:
         self.domain_builder = DomainBuilder()
         self.feedback_builder = FeedbackBuilder()
         self.syntax_validator = SyntaxValidator()
-        self.pddl_actions = list[Action]
-        self.pddl_predicates = list[Predicate]
-        
-    
-    def set_prompt(self, role_path: str, examples_path: str, task_path: str):
-        
-        role = load_file(role_path)
-        examples = load_files(examples_path)
-        task = load_file(task_path)
-        
-        self.prompt_template.set_role(role=role)
-        for ex in examples:
-            self.prompt_template.set_examples(example=ex)
-        self.prompt_template.set_task(task=task)
-        
-        
-    def set_actions(self, actions: list[Action]):
-        self.pddl_actions = actions
-        
-        
-    def set_predicates(self, predicates: list[Predicate]):
-        self.pddl_predicates = predicates
         
     
     def construct_action(
@@ -228,7 +207,9 @@ if __name__ == "__main__":
     }
     
     action_construction = ActionConstruction()
-    action_construction.set_prompt(
+    
+    action_construction.prompt_template = set_prompt(
+        action_construction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/action_construction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/action_construction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/action_construction/task.txt")

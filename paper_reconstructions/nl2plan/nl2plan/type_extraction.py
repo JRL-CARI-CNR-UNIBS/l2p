@@ -1,26 +1,13 @@
 import os
 from l2p import *
+from .utils import set_prompt
 
 class TypeExtraction:
     def __init__(self):
         self.prompt_template = PromptBuilder()
         self.domain_builder = DomainBuilder()
         self.feedback_builder = FeedbackBuilder()
-        self.types = dict[str, str]
-    
-    def set_prompt(self, role_path: str, examples_path: str, task_path: str):
         
-        role = load_file(role_path)
-        examples = load_files(examples_path)
-        task = load_file(task_path)
-        
-        self.prompt_template.set_role(role=role)
-        for ex in examples:
-            self.prompt_template.set_examples(example=ex)
-        self.prompt_template.set_task(task=task)
-        
-    def set_types(self, types: dict[str,str]):
-        self.types = types
         
     def type_extraction(
         self, 
@@ -55,7 +42,9 @@ if __name__ == "__main__":
     openai_llm = OPENAI(model=engine, api_key=api_key)
     
     type_extraction = TypeExtraction()
-    type_extraction.set_prompt(
+    
+    type_extraction.prompt_template = set_prompt(
+        type_extraction.prompt_template, 
         role_path="paper_reconstructions/nl2plan/prompts/type_extraction/role.txt", 
         examples_path="paper_reconstructions/nl2plan/prompts/type_extraction/examples",
         task_path="paper_reconstructions/nl2plan/prompts/type_extraction/task.txt")
