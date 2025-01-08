@@ -7,6 +7,10 @@ Assumes the following:
     1. NL descriptions of all the actions
     2. A description of the domain
     3. Information of the object types and hierarchy - fixed set of object types specified in prompt
+    
+This file contains 2 main module components (Step 1+2 in LLM+DM):
+    1. `construct_action_models.py`
+    2. `correct_action_models.py`
 """
 
 import os

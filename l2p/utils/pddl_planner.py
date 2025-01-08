@@ -35,24 +35,26 @@ DRIVER_UNSUPPORTED = 37
 
 
 class FastDownward:
-    
-    def __init__(self, planner_path: str):
-        self.planner_path = planner_path # directory of FastDownward planner
 
-    def run_fast_downward(self, domain_file: str, problem_file: str, search_alg: str="lama-first"):
+    def __init__(self, planner_path: str):
+        self.planner_path = planner_path  # directory of FastDownward planner
+
+    def run_fast_downward(
+        self, domain_file: str, problem_file: str, search_alg: str = "lama-first"
+    ):
         """
         Main function to run planner.
-        
+
         Args:
             - domain_file (str): PDDL domain file path
             - problem_file (str): PDDL problem file path
-            - search_alg (str): search algorithm/heuristic to use 
+            - search_alg (str): search algorithm/heuristic to use
                 + refer to: https://www.fast-downward.org/PlannerUsage
-        
+
         Returns:
             - success (bool): if a plan was found, otherwise False for incomplete.
             - plan_output (str): plan output information.
-        
+
         """
         try:
             result = subprocess.run(

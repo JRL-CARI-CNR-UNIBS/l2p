@@ -58,7 +58,9 @@ class TaskBuilder:
 
         # replace prompt placeholders
         predicate_str = (
-            "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates]) if predicates else "No predicates provided."
+            "\n".join([f"- {pred['name']}: {pred['desc']}" for pred in predicates])
+            if predicates
+            else "No predicates provided."
         )
         types_str = "\n".join(types) if types else "No types provided."
 
@@ -433,7 +435,9 @@ class TaskBuilder:
         return desc
 
     def format_objects(self, objects: dict[str, str]) -> str:
-        objects = "\n".join([f"{obj} - {type}" if type else f"{obj}" for obj, type in objects.items()])
+        objects = "\n".join(
+            [f"{obj} - {type}" if type else f"{obj}" for obj, type in objects.items()]
+        )
         return objects
 
     def format_initial(self, initial_states: list[dict[str, str]]) -> str:

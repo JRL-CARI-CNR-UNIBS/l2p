@@ -5,117 +5,79 @@
    (:types 
       movable_object - object
       block - movable_object
-      table - object
+      surface - object
+      table - surface
    )
 
    (:predicates 
-      (on_table ?b - block) ;  true if the block ?b is on the table.
-      (held ?b - block) ;  true if the block ?b is currently held by the robot arm.
-      (on ?b1 - block ?b2 - block) ;  true if block ?b1 is on top of block ?b2.
+      (is_robot_arm ?r - object) ;  true if the object ?r is a robot arm
+      (clear ?b - block) ;  true if no other block is on top of block ?b
+      (arm_free ?r - object) ;  true if the robot arm ?r is not holding any block
+      (on ?b - block ?s - surface) ;  true if block ?b is on surface ?s
+      (holding ?r - object ?b - block) ;  true if the robot arm ?r is holding block ?b
+      (table_space_available ?t - table) ;  true if the table ?t has space available for a block
+      (on_block ?b1 - block ?b2 - block) ;  true if block ?b1 is on block ?b2
    )
 
-   (:action pick_block
+   (:action pick_up_block
       :parameters (
+         ?r - object
          ?b - block
+         ?s - surface
       )
       :precondition
          (and
-             (or (on_table ?b) (exists (?b2 - block) (on ?b ?b2))) ; The block is either on the table or on another block
-             (not (held ?b)) ; The block is not currently held by the arm
+             (is_robot_arm ?r) ; The object ?r is a robot arm
+             (clear ?b) ; The block ?b is clear (no block on top of it)
+             (arm_free ?r) ; The robot arm ?r is free (not holding any block)
+             (on ?b ?s) ; The block ?b is on the surface ?s
          )
       :effect
          (and
-             (held ?b) ; The block is now held by the robot arm
-             (not (on_table ?b)) ; The block is no longer on the table
-             (not (on ?b ?b2)) ; The block is no longer on top of another block (for all blocks ?b2)
+             (not (on ?b ?s)) ; The block ?b is no longer on the surface ?s
+             (holding ?r ?b) ; The robot arm ?r is now holding the block ?b
+             (not (arm_free ?r)) ; The robot arm ?r is no longer free
          )
    )
 
-   (:action place_on_table
+   (:action place_block_on_table
       :parameters (
+         ?r - object
          ?b - block
+         ?t - table
       )
       :precondition
          (and
-             (held ?b) ; The block is currently held by the robot arm
+             (is_robot_arm ?r) ; The object ?r is a robot arm
+             (holding ?r ?b) ; The robot arm ?r is holding the block ?b
+             (table_space_available ?t) ; The table ?t has space available for the block
          )
       :effect
          (and
-             (not (held ?b)) ; The block is no longer held by the robot arm
-             (on_table ?b) ; The block is now on the table
+             (not (holding ?r ?b)) ; The robot arm ?r is no longer holding the block ?b
+             (on ?b ?t) ; The block ?b is now on the table ?t
+             (arm_free ?r) ; The robot arm ?r is now free
          )
    )
 
-   (:action place_on_block
+   (:action place_block_on_block
       :parameters (
+         ?r - object
          ?b1 - block
          ?b2 - block
-         ?b3 - block
       )
       :precondition
          (and
-             (held ?b1) ; The block being placed is currently held by the robot arm.
-             (or (on_table ?b2) (on ?b2 ?b3)) ; The target block must be on the table or already stacked.
-             (not (held ?b2)) ; The target block must not be held by the arm.
+             (is_robot_arm ?r) ; The object ?r is a robot arm
+             (holding ?r ?b1) ; The robot arm ?r is holding block ?b1
+             (clear ?b2) ; The block ?b2 is clear, i.e., no other block is on top of it
          )
       :effect
          (and
-             (not (held ?b1)) ; The block being placed is no longer held by the robot arm.
-             (on ?b1 ?b2) ; The block being placed is now on top of the target block.
-         )
-   )
-
-   (:action release_block
-      :parameters (
-         ?b - block
-         ?b2 - block
-      )
-      :precondition
-         (and
-             (held ?b) ; The block is currently held by the robot arm
-             (or (on_table ?b) (exists (?b2 - block) (on ?b ?b2))) ; The block is being released onto the table or onto another block
-         )
-      :effect
-         (and
-             (not (held ?b)) ; The block is no longer held by the robot arm
-             (or (on_table ?b) (exists (?b2 - block) (on ?b ?b2))) ; The block is now on the table or on another block
-         )
-   )
-
-   (:action pick_and_place_on_table
-      :parameters (
-         ?b - block
-      )
-      :precondition
-         (and
-             (or (on_table ?b) (on ?b ?b2)) ; The block is either on the table or on another block
-             (not (held ?b)) ; The block is not currently held by the robot arm
-         )
-      :effect
-         (and
-             (held ?b) ; The block is now held by the robot arm
-             (not (on_table ?b)) ; The block is no longer on the table
-             (not (on ?b ?b2)) ; The block is no longer on top of another block (if it was)
-         )
-   )
-
-   (:action pick_and_place_on_block
-      :parameters (
-         ?b1 - block
-         ?b2 - block
-         ?b3 - block
-      )
-      :precondition
-         (and
-             (or (on_table ?b1) (on ?b1 ?b2)) ; ?b1 must be on the table or on another block
-             (not (held ?b1)) ; ?b1 must not be currently held by the robot arm
-             (or (on_table ?b2) (on ?b2 ?b3)) ; ?b2 must be on the table or on another block
-         )
-      :effect
-         (and
-             (held ?b1) ; ?b1 is now held by the robot arm
-             (not (on_table ?b1)) ; ?b1 is no longer on the table
-             (on ?b1 ?b2) ; ?b1 is now on top of ?b2
+             (not (holding ?r ?b1)) ; The robot arm ?r is no longer holding block ?b1
+             (on_block ?b1 ?b2) ; Block ?b1 is now on block ?b2
+             (clear ?b1) ; Block ?b1 is clear after being placed
+             (not (clear ?b2)) ; Block ?b2 is no longer clear after ?b1 is placed on it
          )
    )
 )

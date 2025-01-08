@@ -3,26 +3,31 @@
    (:domain blocksworld)
 
    (:objects 
-      block1 - block
-      block2 - block
-      block3 - block
-      block4 - block
+      blue - block
+      red - block
+      green - block
+      yellow - block
       table1 - table
+      robot_arm1 - object
    )
 
    (:init
-      (on block1 table1)
-      (on block2 block1)
-      (on block3 table1)
-      (on block4 block3)
+      (is_robot_arm robot_arm1)
+      (clear blue)
+      (clear green)
+      (arm_free robot_arm1)
+      (on blue red)
+      (on green yellow)
+      (on yellow table1)
+      (table_space_available table1)
    )
 
    (:goal
       (and 
-         (on block1 table1) 
-         (on block3 block1) 
-         (on block2 block3) 
-         (on block4 block2) 
+         (on green red) 
+         (on blue green) 
+         (on yellow blue) 
+         (clear yellow) 
       )
    )
 

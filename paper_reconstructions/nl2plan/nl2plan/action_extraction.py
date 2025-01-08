@@ -1,24 +1,39 @@
-import os
+"""
+Step 3 (Action Extraction) of NL2Plan
+
+This class queries the LLM to construct the actions (in natural language) for given domain in 
+Python dictionary format {'name':'description'}.
+"""
+
 from l2p import *
-from .utils import set_prompt
+
 
 class ActionExtraction:
     def __init__(self):
         self.prompt_template = PromptBuilder()
         self.domain_builder = DomainBuilder()
         self.feedback_builder = FeedbackBuilder()
-        self.nl_actions = dict[str,str]
-    
 
     def action_extraction(
         self,
-        model: LLM, 
-        domain_desc: str, 
+        model: LLM,
+        domain_desc: str,
         action_extraction_prompt: PromptBuilder,
-        type_hierarchy: dict[str,str],
-        feedback_prompt: str
-        ) -> dict[str, str]:
-        
+        type_hierarchy: dict[str, str],
+        feedback_prompt: str,
+    ) -> dict[str, str]:
+        """
+        Main function of the action extraction construction step.
+
+        Args:
+            - model (LLM): LLM to inquire.
+            - domain_desc (str): specific domain description to work off.
+            - action_extraction_prompt (PromptBuilder): base prompt to extract actions.
+            - feedback_prompt (str): feedback template for LLM to correct output.
+        Returns:
+            - nl_actions (dict[str,str]): dictionary of extracted actions {'name':'desc'}
+        """
+
         nl_actions, response = self.domain_builder.extract_nl_actions(
             model=model,
             domain_desc=domain_desc,
@@ -37,44 +52,3 @@ class ActionExtraction:
         )
 
         return nl_actions
-    
-if __name__ == "__main__":
-    
-    engine = "gpt-4o-mini"
-    api_key = os.environ.get("OPENAI_API_KEY")
-    
-    openai_llm = OPENAI(model=engine, api_key=api_key)
-    
-    hierarchy = {
-        'object': 'Object is always root, everything is an object', 
-        'children': [
-            {'movable_object': 'A meta-type that includes all objects that can be moved by the robot arm.', 
-                'children': [
-                    {'block': 'A type of movable_object.', 'children': []}
-                    ]
-            }, 
-            {'surface': 'A parent type for all surfaces, including tables.', 
-                'children': [
-                    {'table': 'A type of surface that serves as a base for the blocks.', 'children': []}
-                    ]
-            }
-            ]
-        }
-    
-    action_extraction = ActionExtraction()
-    
-    action_extraction.prompt_template = set_prompt(
-        action_extraction.prompt_template, 
-        role_path="paper_reconstructions/nl2plan/prompts/action_extraction/role.txt", 
-        examples_path="paper_reconstructions/nl2plan/prompts/action_extraction/examples",
-        task_path="paper_reconstructions/nl2plan/prompts/action_extraction/task.txt")
-    
-    nl_actions = action_extraction.action_extraction(
-        model=openai_llm, 
-        domain_desc=load_file("paper_reconstructions/nl2plan/domains/blocksworld/desc.txt"), 
-        action_extraction_prompt=action_extraction.prompt_template,
-        type_hierarchy=hierarchy,
-        feedback_prompt=load_file("paper_reconstructions/nl2plan/prompts/action_extraction/feedback.txt"))
-    
-    for i in nl_actions:
-        print(i)

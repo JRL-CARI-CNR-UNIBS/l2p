@@ -1,24 +1,39 @@
-import os
+"""
+Step 2 (Hierarchy Construction) of NL2Plan
+
+This class queries the LLM to organize the types for given domain in a nested Python dictionary format.
+"""
+
 from l2p import *
-from .utils import set_prompt
+
 
 class HierarchyConstruction:
     def __init__(self):
         self.prompt_template = PromptBuilder()
         self.domain_builder = DomainBuilder()
         self.feedback_builder = FeedbackBuilder()
-        self.type_hierarchy = dict[str, str]
 
-    
     def hierarchy_construction(
-        self, 
-        model: LLM, 
-        domain_desc: str, 
-        type_hierarchy_prompt: PromptBuilder, 
-        types: dict[str,str],
-        feedback_prompt: str
-        ) -> dict[str, str]:
+        self,
+        model: LLM,
+        domain_desc: str,
+        type_hierarchy_prompt: PromptBuilder,
+        types: dict[str, str],
+        feedback_prompt: str,
+    ) -> dict[str, str]:
+        """
+        Main function of the hierarchy construction step.
 
+        Args:
+            - model (LLM): LLM to inquire.
+            - domain_desc (str): specific domain description to work off.
+            - type_hierarchy_prompt (PromptBuilder): base prompt to organize types.
+            - feedback_prompt (str): feedback template for LLM to correct output.
+        Returns:
+            - type_hierarchy (dict[str,str]): organized hierarchy type dictionary
+        """
+
+        # prompt LLM to extract type hierarchy (using L2P)
         type_hierarchy, _ = self.domain_builder.extract_type_hierarchy(
             model=model,
             domain_desc=domain_desc,
@@ -26,6 +41,7 @@ class HierarchyConstruction:
             types=types,
         )
 
+        # feedback mechanism
         type_hierarchy, _ = self.feedback_builder.type_hierarchy_feedback(
             model=model,
             domain_desc=domain_desc,
@@ -36,32 +52,3 @@ class HierarchyConstruction:
         )
 
         return type_hierarchy
-    
-if __name__ == "__main__":
-    
-    engine = "gpt-4o-mini"
-    api_key = os.environ.get("OPENAI_API_KEY")
-    
-    openai_llm = OPENAI(model=engine, api_key=api_key)
-    
-    types = {
-        'block': 'The individual units that can be picked and placed by the robot arm. They can be stacked or placed on a table.', 
-        'table': 'A flat surface where blocks can be placed. It serves as a base for the blocks.', 
-        'movable_object': 'A meta-type that includes all objects that can be moved by the robot arm, specifically blocks in this case.'}
-    
-    hierarchy_construction = HierarchyConstruction()
-    
-    hierarchy_construction.prompt_template = set_prompt(
-        hierarchy_construction.prompt_template, 
-        role_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/role.txt", 
-        examples_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/examples",
-        task_path="paper_reconstructions/nl2plan/prompts/hierarchy_construction/task.txt")
-    
-    type_hierarchy = hierarchy_construction.hierarchy_construction(
-        model=openai_llm, 
-        domain_desc=load_file("paper_reconstructions/nl2plan/domains/blocksworld/desc.txt"), 
-        type_hierarchy_prompt=hierarchy_construction.prompt_template,
-        types=types,
-        feedback_prompt=load_file("paper_reconstructions/nl2plan/prompts/hierarchy_construction/feedback.txt"))
-    
-    print(type_hierarchy)

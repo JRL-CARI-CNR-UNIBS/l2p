@@ -241,11 +241,11 @@ class DomainBuilder:
         # replace prompt placeholders
         types_str = format_dict(types) if types else "No types provided."
         predicates_str = (
-            "\n".join([f"- {pred['clean']}" for pred in predicates]) if predicates else "No predicates provided."
+            "\n".join([f"- {pred['clean']}" for pred in predicates])
+            if predicates
+            else "No predicates provided."
         )
-        action_list_str = (
-            action_list if action_list else "No other actions provided"
-        )
+        action_list_str = action_list if action_list else "No other actions provided"
 
         prompt_template = prompt_template.replace("{domain_desc}", domain_desc)
         prompt_template = prompt_template.replace("{action_list}", action_list_str)
@@ -269,27 +269,51 @@ class DomainBuilder:
                     llm_response=llm_response, action_name=action_name
                 )
                 new_predicates = parse_new_predicates(llm_response)
-                
+
                 validation_info = [True, "All validations passed."]
                 if syntax_validator:
                     for e in syntax_validator.error_types:
-                        if e == 'invalid_header':
-                            validation_info = syntax_validator.validate_header(llm_response)
-                        elif e == 'invalid_keyword_usage':
-                            validation_info = syntax_validator.validate_keyword_usage(llm_response)
-                        elif e == 'unsupported_keywords':
-                            validation_info = syntax_validator.validate_unsupported_keywords(llm_response, syntax_validator.unsupported_keywords)
-                        elif e == 'invalid_param_types':
-                            validation_info = syntax_validator.validate_params(action['params'], types)
-                        elif e == 'invalid_predicate_name':
-                            validation_info = syntax_validator.validate_types_predicates(new_predicates, types)
-                        elif e == 'invalid_predicate_format':
-                            validation_info = syntax_validator.validate_format_predicates(predicates, types)
-                        elif e == 'invalid_predicate_usage':
-                            validation_info = syntax_validator.validate_usage_predicates(llm_response, predicates, types)
+                        if e == "invalid_header":
+                            validation_info = syntax_validator.validate_header(
+                                llm_response
+                            )
+                        elif e == "invalid_keyword_usage":
+                            validation_info = syntax_validator.validate_keyword_usage(
+                                llm_response
+                            )
+                        elif e == "unsupported_keywords":
+                            validation_info = (
+                                syntax_validator.validate_unsupported_keywords(
+                                    llm_response, syntax_validator.unsupported_keywords
+                                )
+                            )
+                        elif e == "invalid_param_types":
+                            validation_info = syntax_validator.validate_params(
+                                action["params"], types
+                            )
+                        elif e == "invalid_predicate_name":
+                            validation_info = (
+                                syntax_validator.validate_types_predicates(
+                                    new_predicates, types
+                                )
+                            )
+                        elif e == "invalid_predicate_format":
+                            validation_info = (
+                                syntax_validator.validate_format_predicates(
+                                    predicates, types
+                                )
+                            )
+                        elif e == "invalid_predicate_usage":
+                            validation_info = (
+                                syntax_validator.validate_usage_predicates(
+                                    llm_response, predicates, types
+                                )
+                            )
                         else:
-                            raise NotImplementedError(f"Validation type '{e}' is not implemented.")
-                        
+                            raise NotImplementedError(
+                                f"Validation type '{e}' is not implemented."
+                            )
+
                         if not validation_info[0]:
                             return action, new_predicates, llm_response, validation_info
 
@@ -753,14 +777,15 @@ class DomainBuilder:
         """
         desc = ""
         desc += f"(define (domain {domain})\n"
-        desc += indent(string=f"(:requirements\n   {' '.join(requirements)})", level=1) + "\n\n"
+        desc += (
+            indent(string=f"(:requirements\n   {' '.join(requirements)})", level=1)
+            + "\n\n"
+        )
         desc += f"   (:types \n{indent(string=types, level=2)}\n   )\n\n"
         desc += f"   (:predicates \n{indent(string=predicates, level=2)}\n   )"
         desc += self.action_descs(actions)
         desc += "\n)"
-        desc = desc.replace("AND", "and").replace(
-            "OR", "or"
-        )
+        desc = desc.replace("AND", "and").replace("OR", "or")
         return desc
 
     def action_desc(self, action: Action) -> str:

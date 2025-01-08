@@ -9,9 +9,27 @@ class TestDomainBuilder(unittest.TestCase):
         self.domain_builder = DomainBuilder()
 
     def test_extract_type(self):
-        mock_llm_1 = MockLLM([load_file("tests/test_prompts/test_domain_builder/test_extract_type/01.txt")])
-        mock_llm_2 = MockLLM([load_file("tests/test_prompts/test_domain_builder/test_extract_type/02.txt")])
-        mock_llm_3 = MockLLM([load_file("tests/test_prompts/test_domain_builder/test_extract_type/03.txt")])
+        mock_llm_1 = MockLLM(
+            [
+                load_file(
+                    "tests/test_prompts/test_domain_builder/test_extract_type/01.txt"
+                )
+            ]
+        )
+        mock_llm_2 = MockLLM(
+            [
+                load_file(
+                    "tests/test_prompts/test_domain_builder/test_extract_type/02.txt"
+                )
+            ]
+        )
+        mock_llm_3 = MockLLM(
+            [
+                load_file(
+                    "tests/test_prompts/test_domain_builder/test_extract_type/03.txt"
+                )
+            ]
+        )
 
         types, _ = self.domain_builder.extract_type(
             model=mock_llm_1,
@@ -48,15 +66,27 @@ class TestDomainBuilder(unittest.TestCase):
         self.assertIn("Max retries exceeded", str(context.exception))
 
     def test_extract_type_hierarchy(self):
-        
+
         mock_llm_1 = MockLLM(
-            [load_file("tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/01.txt")]
+            [
+                load_file(
+                    "tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/01.txt"
+                )
+            ]
         )
         mock_llm_2 = MockLLM(
-            [load_file("tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/02.txt")]
+            [
+                load_file(
+                    "tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/02.txt"
+                )
+            ]
         )
         mock_llm_3 = MockLLM(
-            [load_file("tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/03.txt")]
+            [
+                load_file(
+                    "tests/test_prompts/test_domain_builder/test_extract_type_hierarchy/03.txt"
+                )
+            ]
         )
 
         expected_hierarchy = {
@@ -132,7 +162,7 @@ class TestDomainBuilder(unittest.TestCase):
         pass
 
     def test_generate_domain(self):
-        
+
         domain = "test_domain"
         types = "robot location"
         predicates = "(at ?r - robot ?l - location)\n(connected ?l1 ?l2 - location)"
@@ -151,8 +181,9 @@ class TestDomainBuilder(unittest.TestCase):
             },
         ]
         requirements = [":strips", ":typing"]
-        
-        expected_output = textwrap.dedent("""\
+
+        expected_output = textwrap.dedent(
+            """\
             (define (domain test_domain)
                (:requirements
                   :strips :typing)
@@ -189,13 +220,19 @@ class TestDomainBuilder(unittest.TestCase):
                      (holding ?r)
                )
             )
-        """).strip()
+        """
+        ).strip()
 
-        result = self.domain_builder.generate_domain(domain=domain, types=types, predicates=predicates, actions=actions, requirements=requirements)
-        
+        result = self.domain_builder.generate_domain(
+            domain=domain,
+            types=types,
+            predicates=predicates,
+            actions=actions,
+            requirements=requirements,
+        )
+
         self.assertEqual(result.strip(), expected_output.strip())
 
 
 if __name__ == "__main__":
     unittest.main()
-

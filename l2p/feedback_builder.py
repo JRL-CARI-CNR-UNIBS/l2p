@@ -75,21 +75,23 @@ class FeedbackBuilder:
         )
 
         if not no_fb:
-            structure_prompt = textwrap.dedent("""
+            structure_prompt = textwrap.dedent(
+                """
             ## OUTPUT
             {
                 "type_1": "description",
                 "type_2": "description",
                 "type_3": "description",
             }                              
-            """)
-            
+            """
+            )
+
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
-                f"\nEnd your final answer starting with \"## OUTPUT\" and then re-iterate an updated version of the Python dictionary pair like so:\n{structure_prompt}"
+                f'\nEnd your final answer starting with "## OUTPUT" and then re-iterate an updated version of the Python dictionary pair like so:\n{structure_prompt}'
                 f"\n\nApply the suggestions to your original answer:\n{type_str}"
             )
-            
+
             model.reset_tokens()
 
             types, llm_response = domain_builder.extract_type(
@@ -125,7 +127,8 @@ class FeedbackBuilder:
         )
 
         if not no_fb:
-            structure_prompt = textwrap.dedent("""
+            structure_prompt = textwrap.dedent(
+                """
             ## OUTPUT
             {
                 "parent_type_1": "description",
@@ -139,16 +142,17 @@ class FeedbackBuilder:
                     }
                 ]
             }
-            """)
-            
+            """
+            )
+
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
-                f"\nEnd your final answer starting with \"## OUTPUT\" and then re-iterate an updated version of the Python dictionary pair like so:\n{structure_prompt}"
+                f'\nEnd your final answer starting with "## OUTPUT" and then re-iterate an updated version of the Python dictionary pair like so:\n{structure_prompt}'
                 f"\n\nApply the suggestions to your original answer:\n{type_str}"
             )
-            
+
             model.reset_tokens()
-            
+
             type_hierarchy, llm_response = domain_builder.extract_type_hierarchy(
                 model, domain_desc, prompt, type_str
             )
@@ -187,23 +191,25 @@ class FeedbackBuilder:
         )
 
         if not no_fb:
-            structure_prompt = textwrap.dedent("""
+            structure_prompt = textwrap.dedent(
+                """
             ## OUTPUT
             {
                 "action_name_1": "action_description",
                 "action_name_2": "action_description",
                 "action_name_3": "action_description"
             }
-            """)
-            
+            """
+            )
+
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
-                f"\nEnd your final answer starting with \"## OUTPUT\" and then re-iterate an updated version of the Python dictionary pair like so:\n{structure_prompt}"
+                f'\nEnd your final answer starting with "## OUTPUT" and then re-iterate an updated version of the Python dictionary pair like so:\n{structure_prompt}'
                 f"\n\nApply the suggestions to your original answer:\n{nl_action_str}"
             )
-            
+
             model.reset_tokens()
-            
+
             nl_actions, llm_response = domain_builder.extract_type_hierarchy(
                 model, domain_desc, prompt
             )
@@ -221,7 +227,7 @@ class FeedbackBuilder:
         action: Action = None,
         predicates: list[Predicate] = None,
         types: dict[str, str] = None,
-    ) -> tuple[Action, list[Predicate], str, tuple[bool,str], bool]:
+    ) -> tuple[Action, list[Predicate], str, tuple[bool, str], bool]:
         """Makes LLM call using feedback prompt, then parses it into action format"""
 
         model.reset_tokens()
@@ -258,8 +264,9 @@ class FeedbackBuilder:
 
         validation_info = [True, "All validations passed."]
         if not no_fb:
-            
-            structure_prompt = textwrap.dedent("""
+
+            structure_prompt = textwrap.dedent(
+                """
             End your final answers underneath the headers: '### Action Parameters,' '### Action Preconditions,' '### Action Effects,' and '### New Predicates' with ''' ''' comment blocks in PDDL as so:
 
             ### Action Parameters
@@ -287,18 +294,21 @@ class FeedbackBuilder:
             ``` 
 
             If there are no new predicates created, keep an empty space enclosed ```  ``` with the '### New Predicates' header.
-            """)
-            
+            """
+            )
+
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\n{structure_prompt}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
-            action, predicates, llm_response, validation_info = domain_builder.extract_pddl_action(
-                model, domain_desc, prompt, action_name
+            action, predicates, llm_response, validation_info = (
+                domain_builder.extract_pddl_action(
+                    model, domain_desc, prompt, action_name
+                )
             )
         return action, predicates, llm_response, validation_info, no_fb
 
@@ -344,7 +354,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             param, param_raw, llm_response = domain_builder.extract_parameters(
@@ -406,7 +416,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             preconditions, new_predicates, llm_response = (
@@ -473,7 +483,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             effects, new_predicates, llm_response = domain_builder.extract_effects(
@@ -520,7 +530,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             new_predicates, llm_response = domain_builder.extract_predicates(
@@ -579,8 +589,9 @@ class FeedbackBuilder:
         )
 
         if not no_fb:
-            
-            structure_prompt = textwrap.dedent("""
+
+            structure_prompt = textwrap.dedent(
+                """
             End your final answer starting with headers (in order) "### OBJECTS" (with no brackets) "### INITIAL" and "### GOAL" containg respective content with ''' ''' comment blocks in PDDL as so:
 
             ### OBJECTS
@@ -605,14 +616,15 @@ class FeedbackBuilder:
             ```
 
             Even if there is one goal state, it must contain the PDDL 'and' syntax. Each object must be declared separately with their type and not grouped - even if objects share the same type.
-            """)
-            
+            """
+            )
+
             prompt = (
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\n{structure_prompt}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             objects, initial, goal, _ = task_builder.extract_task(
@@ -664,7 +676,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             objects, llm_response = task_builder.extract_objects(
@@ -725,7 +737,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             initial, llm_response = task_builder.extract_initial_state(
@@ -791,7 +803,7 @@ class FeedbackBuilder:
                 f"\n\nYou now are revising your answer using feedback. Here is the feedback you outputted:\n{fb_msg}"
                 f"\n\nFollow the same syntax format as the original output in your answer:\n{llm_response}"
             )
-            
+
             model.reset_tokens()
 
             goal, llm_response = task_builder.extract_goal_state(
