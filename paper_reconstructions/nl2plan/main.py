@@ -302,5 +302,5 @@ if __name__ == "__main__":
     parser.add_argument("--planner", type=str, default="downward/fast-downward.py")
     args = parser.parse_args()
 
-    # run LLM+P method
+    # run NL2Plan
     run_nl2plan(args=args, domain="blocksworld", problem="task1")

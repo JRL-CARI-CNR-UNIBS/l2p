@@ -8,8 +8,6 @@ Make sure to reply with all four parts of the action: parameters, preconditions,
 ## Action
 {action_name}
 
-{action_desc}
-
 ### Available Predicates
 {predicates}
 

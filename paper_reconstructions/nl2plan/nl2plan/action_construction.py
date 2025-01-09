@@ -131,7 +131,7 @@ class ActionConstruction:
                     error_template = f.read().strip()
                 error_prompt = error_template.replace("{action_name}", action_name)
                 error_prompt = error_prompt.replace("{action_desc}", action_desc)
-                error_prompt = error_prompt.replace("{predicate_list}", predicate_str)
+                error_prompt = error_prompt.replace("{predicates}", predicate_str)
                 error_prompt = error_prompt.replace("{error_msg}", error_msg)
                 error_prompt = error_prompt.replace("{llm_response}", llm_response)
 
