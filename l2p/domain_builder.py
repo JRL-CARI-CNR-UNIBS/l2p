@@ -229,6 +229,7 @@ class DomainBuilder:
             action_list (dict[str,str]): dictionary of other actions to be translated
             predicates (list[Predicate]): list of predicates in current model
             types (dict[str,str]): current types in model
+            syntax_validator (SyntaxValidator): custom syntax validator, defaults to None
             max_retries (int): max # of retries if failure occurs
 
         Returns:
@@ -270,6 +271,7 @@ class DomainBuilder:
                 )
                 new_predicates = parse_new_predicates(llm_response)
 
+                # if syntax validator is enabled, run through checks, returns check message
                 validation_info = [True, "All validations passed."]
                 if syntax_validator:
                     for e in syntax_validator.error_types:
