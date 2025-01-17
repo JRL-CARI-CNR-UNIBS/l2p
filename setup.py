@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="lang2pddl",
-    version="0.1.6",
+    name="l2p",
+    version="0.1.7",
     packages=find_packages(exclude=["tests"]),
     description="Library to connect LLMs and planning tasks",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Marcus Tantakoun",
-    author_email="mtantakoun@gmail.com",
+    author="Marcus Tantakoun, Christian Muise",
+    author_email="mtantakoun@gmail.com, christian.muise@gmail.com",
     install_requires=["retry", "pddl", "typing_extensions"],
     license="MIT",
     url="https://github.com/AI-Planning/l2p",
