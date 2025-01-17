@@ -5,9 +5,7 @@ Installing
 ----------
 L2P can be installed with pip::
 
-    pip install lang2pddl
-
-**NOT** `pip install l2p`
+    pip install l2p
 
 Using L2P
 -------------
@@ -20,11 +18,11 @@ L2P requires access to an LLM. Set up your LLM class and methods using the abstr
 
     export OPENAI_API_KEY='YOUR-KEY' # e.g. OPENAI_API_KEY='sk-123456'
     engine = "gpt-4o-mini"
-    api_key = os.environ.get('OPENAI_API_KEY') 
+    api_key = os.environ.get('OPENAI_API_KEY')
     openai_llm = OPENAI(model=engine, api_key=api_key)
 
 Create your customised prompts using the ``PromptBuilder`` class. These prompt templates can be used for any of the extraction methods. This is an example of creating a prompt for type extraction: ::
-    
+
     prompt_builder = PromptBuilder()
 
     role_desc = "Your role is to..."
@@ -33,8 +31,8 @@ Create your customised prompts using the ``PromptBuilder`` class. These prompt t
     task_desc = "Here are the given information..."
 
     type_extraction_prompt = PromptBuilder(
-        role = role_desc, 
-        technique = tech_desc, 
+        role = role_desc,
+        technique = tech_desc,
         examples = [ex_desc]
         task = task_desc
     )
@@ -94,7 +92,7 @@ Below are actual runnable usage examples. This is the general setup to build dom
 
     domain_builder = DomainBuilder()
 
-    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY 
+    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY', None)) # REPLACE WITH YOUR OWN OPENAI API KEY
     model = GPT_Chat(client=client, engine="gpt-4o-mini")
 
     # load in assumptions
@@ -116,7 +114,7 @@ Below are actual runnable usage examples. This is the general setup to build dom
     predicate_str = "\n".join([pred["clean"].replace(":", " ; ") for pred in predicates])
 
     print(f"PDDL domain predicates:\n{predicate_str}")
-        
+
 The following output is: ::
 
     ### OUTPUT
@@ -159,19 +157,19 @@ Here is how you would setup a PDDL problem:
     print(f"PDDL problem: {pddl_problem}")
 
 The following output is: ::
-        
+
     ### OUTPUT
     (define
         (problem blocksworld_problem_problem)
         (:domain blocksworld_problem)
-    
-        (:objects 
+
+        (:objects
             blue_block - object
             red_block - object
             yellow_block - object
             green_block - object
         )
-    
+
         (:init
             (on_top blue_block red_block)
             (on_top red_block yellow_block)
@@ -181,10 +179,10 @@ The following output is: ::
             (clear green_block)
             (empty arm)
         )
-    
+
         (:goal
-            (and 
-                (on_top red_block green_block) 
+            (and
+                (on_top red_block green_block)
             )
         )
     )
@@ -201,25 +199,25 @@ Here is how you would setup a Feedback Mechanism:
     feedback_template = load_file(r'tests/usage/prompts/problem/feedback.txt')
 
     objects, initial, goal, feedback_response = feedback_builder.task_feedback(
-        model=model, 
-        problem_desc=problem_desc, 
-        feedback_template=feedback_template, 
-        feedback_type="llm", 
+        model=model,
+        problem_desc=problem_desc,
+        feedback_template=feedback_template,
+        feedback_type="llm",
         predicates=predicates,
-        types=types, 
+        types=types,
         llm_response=llm_response)
 
     print("FEEDBACK:\n", feedback_response)
 
 The following output is: ::
-        
+
     ### OUTPUT
     My concrete suggestions are the following:
     - Add the arm as an object:
         - arm - object
     - Include the missing predicate for the yellow block in the initial state:
         - (clear yellow_block): yellow_block is clear
-    
+
     The revised initial state should look like this:
     ```
     (on_top blue_block red_block)
@@ -230,7 +228,7 @@ The following output is: ::
     (clear yellow_block)
     (empty arm)
     ```
-    
+
     Overall, the response is: Yes.
 
 ***IMPORTANT***
