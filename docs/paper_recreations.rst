@@ -9,6 +9,19 @@ Below is L2P code reconstruction of "action-by-action algorithm" from `"Leveragi
 .. code-block:: python
     :linenos:
 
+    DOMAINS = [
+    "household",
+    "logistics",
+    "tyreworld",
+    ]
+
+    UNSUPPORTED_KEYWORDS = [
+        "forall", 
+        "when", 
+        "exists", 
+        "implies"
+    ]
+
     def construct_action(
         model: LLM,
         act_pred_prompt: str,
@@ -18,6 +31,25 @@ Below is L2P code reconstruction of "action-by-action algorithm" from `"Leveragi
         max_iter: int = 8,
         syntax_validator: bool = True
         ):
+        """
+        This is the inner function of the overall `Action-by-action` algorithm. Specifically,
+        this function generates a single action from the list of actions and new predicates created.
+        Process looping until it abides the custom syntax validation check.
+        
+        Args:
+            - model (LLM): the large language model to be inferenced
+            - act_pred_prompt (str): contains information of action and format creation passed to LLM
+            - action_name (str): current action to be generated
+            - predicates (list[Predicate]): current list of predicates generated
+            - types (dict[str,str]): domain types - used for validation checks
+            - max_iter (int): max attempts of generating action (defaults at 8)
+            - syntax_validator (bool): flag if syntax checker is on (defaults to True)
+            
+        Returns:
+            - action (Action): action data type containing parameters, preconditions, and effects
+            - predicates (list[Predicate]): list of updated predicates
+            - llm_response (str): original LLM output
+        """
 
         # better format for LLM to interpret
         predicate_str = "\n".join([f"- {pred['clean']}" for pred in predicates])
@@ -173,3 +205,60 @@ Below is L2P code reconstruction of "action-by-action algorithm" from `"Leveragi
 
             if gen_done:
                 break
+            
+            
+        # format components for PDDL generation
+        predicate_str = "\n".join(
+                [pred["clean"].replace(":", " ; ") for pred in predicates]
+            )
+            
+        pruned_types = {
+            name: description
+            for name, description in types.items()
+            if name not in UNSUPPORTED_KEYWORDS
+        }  # remove unsupported words
+        types_str = "\n".join(pruned_types)
+            
+        # generate PDDL format
+        pddl_domain = domain_builder.generate_domain(
+                domain=domain,
+                requirements=reqs,
+                types=types_str,
+                predicates=predicate_str,
+                actions=action_list,
+            )
+
+
+    # helper functions
+    def get_action_prompt(prompt_template: str, action_desc: str):
+    """Creates prompt for specific action."""
+    
+    action_desc_prompt = action_desc['desc']
+    for i in action_desc['extra_info']:
+        action_desc_prompt += ' ' + i
+    
+    full_prompt = str(prompt_template) + ' ' + action_desc_prompt
+    
+    return full_prompt, action_desc_prompt
+
+
+    def get_predicate_prompt(predicates):
+        """Creates prompt for list of available predicates generated so far."""
+        
+        predicate_prompt = 'You can create and define new predicates, but you may also reuse the following predicates:'
+        if len(predicates) == 0:
+            predicate_prompt += '\nNo predicate has been defined yet'
+        else:
+            predicate_prompt += "\n".join([f"- {pred['clean']}" for pred in predicates])
+        return predicate_prompt
+
+
+    def get_types(hierarchy_requirements):
+        """Creates proper dictionary types (for L2P) from JSON format."""
+        
+        types = {
+            name: description
+            for name, description in hierarchy_requirements["hierarchy"].items()
+            if name
+        }
+        return types
