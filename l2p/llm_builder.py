@@ -258,6 +258,8 @@ class OPENAI(LLM):
             "gpt-4-32k",
             "gpt-4o",
             "gpt-4o-mini",
+            "o1",
+            "o3-mini"
         ]
 
 

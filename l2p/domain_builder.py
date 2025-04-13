@@ -759,7 +759,7 @@ class DomainBuilder:
     def generate_domain(
         self,
         domain: str,
-        types: str,
+        types: str | None,
         predicates: str,
         actions: list[Action],
         requirements: list[str],
@@ -783,7 +783,8 @@ class DomainBuilder:
             indent(string=f"(:requirements\n   {' '.join(requirements)})", level=1)
             + "\n\n"
         )
-        desc += f"   (:types \n{indent(string=types, level=2)}\n   )\n\n"
+        if types:  # Only add types if not None or empty string
+            desc += f"   (:types \n{indent(string=types, level=2)}\n   )\n\n"
         desc += f"   (:predicates \n{indent(string=predicates, level=2)}\n   )"
         desc += self.action_descs(actions)
         desc += "\n)"
