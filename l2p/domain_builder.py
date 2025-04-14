@@ -289,31 +289,27 @@ class DomainBuilder:
                                     llm_response, syntax_validator.unsupported_keywords
                                 )
                             )
-                        elif e == "invalid_param_types":
+                        elif e == "invalid_param_types" and types:
                             validation_info = syntax_validator.validate_params(
                                 action["params"], types
                             )
-                        elif e == "invalid_predicate_name":
+                        elif e == "invalid_predicate_name" and types:
                             validation_info = (
                                 syntax_validator.validate_types_predicates(
                                     new_predicates, types
                                 )
                             )
-                        elif e == "invalid_predicate_format":
+                        elif e == "invalid_predicate_format" and types:
                             validation_info = (
                                 syntax_validator.validate_format_predicates(
                                     predicates, types
                                 )
                             )
-                        elif e == "invalid_predicate_usage":
+                        elif e == "invalid_predicate_usage" and types:
                             validation_info = (
                                 syntax_validator.validate_usage_predicates(
                                     llm_response, predicates, types
                                 )
-                            )
-                        else:
-                            raise NotImplementedError(
-                                f"Validation type '{e}' is not implemented."
                             )
 
                         if not validation_info[0]:

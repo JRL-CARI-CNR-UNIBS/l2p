@@ -46,12 +46,15 @@ class SyntaxValidator:
         # If no types are defined, inform the user and check for parameter types
         if not types:
             for param_name, param_type in parameters.items():
-                if param_type is not None:
+                if param_type is not None and param_type != "":
                     feedback_msg = (
                         f'The parameter `{param_name}` has an object type `{param_type}` '
                         'while no types are defined. Please remove the object type from this parameter.'
                     )
                     return False, feedback_msg
+            
+            # if all parameter names do not contain a type
+            return True, "PASS: All parameters are valid."
 
         # Otherwise, check that parameter types are valid in the given types
         for param_name, param_type in parameters.items():
