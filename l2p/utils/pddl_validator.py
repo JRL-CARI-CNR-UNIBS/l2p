@@ -37,12 +37,27 @@ class SyntaxValidator:
     # PARAMETER CHECKS
 
     def validate_params(
-        self, parameters: OrderedDict, types: dict[str, str]
+        self, parameters: OrderedDict, types: dict[str, str] | None
     ) -> tuple[bool, str]:
         """Checks whether a PDDL action parameter contains types found in object types."""
+        
+        types = types or {}
+        
+        # If no types are defined, inform the user and check for parameter types
+        if not types:
+            for param_name, param_type in parameters.items():
+                if param_type is not None and param_type != "":
+                    feedback_msg = (
+                        f'The parameter `{param_name}` has an object type `{param_type}` '
+                        'while no types are defined. Please remove the object type from this parameter.'
+                    )
+                    return False, feedback_msg
+            
+            # if all parameter names do not contain a type
+            return True, "PASS: All parameters are valid."
 
-        for param_name in parameters:
-            param_type = parameters[param_name]
+        # Otherwise, check that parameter types are valid in the given types
+        for param_name, param_type in parameters.items():
 
             if not any(param_type in t for t in types.keys()):
                 feedback_msg = f'There is an invalid object type `{param_type}` for the parameter {param_name} not found in the types {types.keys()}. If you need to use a new type, you can emulate it with an "is_{{type}} ?o - object" precondition. Please revise the PDDL model to fix this error.'
@@ -54,9 +69,16 @@ class SyntaxValidator:
     # PREDICATE CHECKS
 
     def validate_types_predicates(
-        self, predicates: list[dict], types: dict[str, str]
+        self, predicates: list[dict], types: dict[str, str] | None
     ) -> tuple[bool, str]:
         """Check if predicate name is found within any type definitions"""
+        
+        # Handle the case where types is None or empty
+        types = types or {}
+        
+        if not types:
+            feedback_msg = "PASS: All predicate names are unique to object type names"
+            return True, feedback_msg
 
         invalid_predicates = list()
         for pred in predicates:
