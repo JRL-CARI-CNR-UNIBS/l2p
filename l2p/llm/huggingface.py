@@ -50,6 +50,11 @@ class HUGGING_FACE(BaseLLM):
                 "The 'torch' library is required for HUGGING_FACE but is not installed. "
                 "Install it using: `pip install torch`."
             )
+        try:
+            from transformers import BitsAndBytesConfig
+            self.BitsAndBytesConfig = BitsAndBytesConfig
+        except ImportError:
+            self.BitsAndBytesConfig = None  # fallback
 
         self.device = "cuda" if self.torch.cuda.is_available() else "cpu"
 
@@ -84,11 +89,20 @@ class HUGGING_FACE(BaseLLM):
         self.query_log = []
 
         # set model
-        self.llm = AutoModelForCausalLM.from_pretrained(
-            pretrained_model_name_or_path=self.model_path,
-            device_map=self.device_map,
-            torch_dtype=self.dtype,
-        ).to(self.device)
+        load_args = {
+            "pretrained_model_name_or_path": self.model_path,
+            "device_map": self.device_map,
+        }
+
+        if self.quantization_config:
+            load_args["quantization_config"] = self.quantization_config
+        else:
+            load_args["torch_dtype"] = self.dtype
+        
+        self.llm = self.AutoModelForCausalLM.from_pretrained(**load_args)
+        if not self.quantization_config:
+            self.llm.to(self.device)
+
 
     def _load_transformer(self):
         """Checks and loads model tokenizer/context length if exists."""
@@ -133,34 +147,49 @@ class HUGGING_FACE(BaseLLM):
             setattr(self, key, parameters.get(key, default))
 
     def _set_configs(self, model_config: dict) -> None:
-        """Set model hardware configuration."""
+        """Set model hardware configuration and quantization setup."""
 
         # Mapping from string to torch.dtype
         dtype_map = {
             "float32": self.torch.float32,
             "float16": self.torch.float16,
             "bfloat16": self.torch.bfloat16,
-            "int8": self.torch.int8,
         }
 
-        # Extract inner config if it exists
         configs = model_config.get("model_config", {})
 
-        # Get and parse torch_dtype
-        d_type = configs.get("dtype", "float32")
-        if isinstance(d_type, str):
-            if d_type in dtype_map:
-                self.dtype = dtype_map[d_type]
-            else:
-                raise ValueError(
-                    f"Unsupported dtype string: '{d_type}'. Must be one of {list(dtype_map.keys())}."
-                )
-        elif isinstance(d_type, self.torch.dtype):
-            self.dtype = d_type
-        else:
-            raise TypeError("dtype must be a string or torch.dtype instance.")
+        # 1. Check for quantization flags
+        self.use_8bit = configs.get("use_8bit", False)
+        self.use_4bit = configs.get("use_4bit", False)
 
-        # Set other default config values
+        # 2. If quantized, BitsAndBytesConfig
+        if self.use_8bit or self.use_4bit:
+            if self.BitsAndBytesConfig is None:
+                raise ImportError("BitsAndBytes is required for 8/4-bit quantization. Install with `pip install bitsandbytes`.")
+            
+            self.quantization_config = self.BitsAndBytesConfig(
+                load_in_8bit=self.use_8bit,
+                load_in_4bit=self.use_4bit,
+                llm_int8_threshold=6.0,
+                llm_int8_has_fp16_weight=False
+            )
+            self.dtype = None  # required for bitsandbytes
+        else:
+            # Standard dtype parsing
+            d_type = configs.get("dtype", "float32")
+            if isinstance(d_type, str):
+                if d_type in dtype_map:
+                    self.dtype = dtype_map[d_type]
+                else:
+                    raise ValueError(
+                        f"Unsupported dtype string: '{d_type}'. Must be one of {list(dtype_map.keys())}."
+                    )
+            elif isinstance(d_type, self.torch.dtype):
+                self.dtype = d_type
+            else:
+                raise TypeError("dtype must be a string or torch.dtype instance.")
+
+            self.quantization_config = None  # not used
         self.device_map = configs.get("device_map", "auto")
 
     def generate_prompt(self, system_message, prompt):
